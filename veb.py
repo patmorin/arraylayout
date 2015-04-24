@@ -1,4 +1,5 @@
 import sys
+import random
 
 class Node(object):
     """Represents a node in a (complete) binary tree"""
@@ -85,16 +86,17 @@ def sequencer(h, s, d):
     h1 = h-h0-1 
     sequencer(h0, s, d)
     # (add, multiply, base depth, number of bits of p)
-    s[d+h0] = (2**(h0+1)-1, 2**(h1+1)-1, d, h0+1)
+    s[d+h0] = (h0, h1, d, h0+1)
     sequencer(h1, s, d+h0+1)
 
 def try_it2(a, h, x):
     # The magic sequence
     s = [None]*(h+1)
     sequencer(h, s, 0)
-    s[h] = (0, 0, h, 0)
+    s[h] = (0, 0, h, 1)
 
-    rtl = [None]*(h+1)   # the root to leaf path
+    # the root to leaf path
+    rtl = [None]*(h+1)   
 
     y = -1
     i = 0
@@ -112,8 +114,10 @@ def try_it2(a, h, x):
             print "{} = {} done".format(x, a[i][0])
             return a[i][0]
         
-        m = (1 << s[d][3])-1
-        i = rtl[s[d][2]] + s[d][0] + (p&m)*s[d][1]
+        m = (1 << (s[d][0]+1))-1
+        assert(s[d][2] == d-s[d][0])
+        assert(s[d][3] == s[d][0]+1)
+        i = rtl[d-s[d][0]] + (2<<s[d][0])-1 + (p&m)*((2<<s[d][1])-1)
     return y
              
 def try_it(a, h, i, x):
@@ -167,9 +171,21 @@ if __name__ == "__main__":
     t.label_veb(h, 0)
     a = [None]*n
     t.veb_to_array(a)
+    for x in a:
+        print "{} {} {}".format(x[0], x[1], x[2]);
+    sys.exit(0)
+
     a = [(a[i][0], a[i][1]+i, a[i][2]+i) for i in range(len(a))]
-    print a
+
+    for _ in range(5000):
+        x = random.randrange(2*n)
+        try_it2(a, h, x)
+        print "==========="
+
+    #print a
+    print "try_it"
     try_it(a, h, 0, 127)
+    print "try_it2"
     try_it2(a, h, 127)
     print "===="
     aa = [None]*(h+1)

@@ -30,6 +30,23 @@ I binary_successor(const T &x, const T *a, I n) {
 	return ans == NULL ? n0 : ans-a0;
 }
 
+// An implementation of binary search on a sorted array
+template<class T, class I>
+I binary_successor2(const T &x, const T *a, I n) {
+	I lo = 0;
+	I hi = n;
+	while (n > 0) {
+		I m = (lo + hi) / 2;
+		if (x < a[m]) {
+			hi = m;
+		} else if (x > a[m]) {
+			lo = m+1;
+		} else {
+			return m;
+		}
+	}
+	return hi;
+}
 
 
 int main(int argc, char *argv[]) {
@@ -80,7 +97,7 @@ int main(int argc, char *argv[]) {
     sum = 0; // to keep things from getting optimized out
     for (int i = 0; i < m; i++) {
       int x = rand() % (2*n);
-      int j = binary_successor(x, a, n);
+      int j = binary_successor2(x, a, n);
       int y = j < n ? a[j] : -1;
       // cout << x << "=>" << y << " ";
       sum += y;

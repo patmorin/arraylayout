@@ -83,13 +83,17 @@ public:
 		copy_data(a0, rtl, 0, 0, 0);
 	}
 
+	~veb_array() {
+		delete[] a;
+	}
+
 	I search(const T &x) {
 		I rtl[MAX_H+1];
 
-		I j = n+1;
+		I j = n;
 		I i = 0;
 		I p = 0;
-		for (int d = 0; d <= h; d++) {
+		for (int d = 0; i < n; d++) {
 			rtl[d] = i;
 			if (x < a[i]) {
 				p <<= 1;

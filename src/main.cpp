@@ -6,7 +6,10 @@
  */
 
 #include <chrono>
+#include <random>
 #include "veb_array.h"
+
+// #include <cpucounters.h>
 
 
 // An implementation of binary search on a sorted array
@@ -35,7 +38,7 @@ template<class T, class I>
 I binary_successor2(const T &x, const T *a, I n) {
 	I lo = 0;
 	I hi = n;
-	while (n > 0) {
+	while (lo < hi) {
 		I m = (lo + hi) / 2;
 		if (x < a[m]) {
 			hi = m;
@@ -50,15 +53,19 @@ I binary_successor2(const T &x, const T *a, I n) {
 
 
 int main(int argc, char *argv[]) {
-
 	int n = (argc > 1) ? atoi(argv[1]) : 52;
+
+	//std::random_device rd;   -- using this causes a memory leak
+        auto seed = 23433; // rd();
+	std::mt19937 re;
+	std::uniform_int_distribution<int> ui(0, 2*n+1);
 
 	cout << "Allocating and filling sorted array...";
 	cout.flush();
 	auto start = std::chrono::high_resolution_clock::now();
 	int *a = new int[n];
 	for (int i = 0; i < n; i++)
-		a[i] = 2*i;
+		a[i] = 2*(i+1);
     auto stop =  std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = stop - start;
     cout << "done (" << elapsed.count() << "s)" << endl;
@@ -71,36 +78,31 @@ int main(int argc, char *argv[]) {
     elapsed = stop - start;
     cout << "done (" << elapsed.count() << "s)" << endl;
 
-    srand(0);
-    int m = 5*n;
-    std::cout << "Performing " << m << " VEB2 searches...";
+    re.seed(seed);
+    int m = 30000000;
+    // m = n > m ? n : m;
+    std::cout << "Performing " << m << " VEB searches...";
     std::cout.flush();
     start = std::chrono::high_resolution_clock::now();
-    int sum = 0; // to keep things from getting optimized out
+    int sum = 0; 
     for (int i = 0; i < m; i++) {
-      int x = rand() % (2*n);
+      int x = ui(re); 
       int j = va.search(x);
-      int y = (j < n) ? va.get_data(j) : -1;
-      // cout << x << "=>" << y << " ";
-      sum += y;
+      sum += (j < n) ? va.get_data(j) : -1;
     }
     stop = std::chrono::high_resolution_clock::now();
     elapsed = stop - start;
     std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")" << std::endl;
 
-    // cout << endl;
-
-    srand(0);
+    re.seed(seed);
     std::cout << "Performing " << m << " binary searches...";
     std::cout.flush();
     start = std::chrono::high_resolution_clock::now();
-    sum = 0; // to keep things from getting optimized out
+    sum = 0; 
     for (int i = 0; i < m; i++) {
-      int x = rand() % (2*n);
+      int x = ui(re); 
       int j = binary_successor2(x, a, n);
-      int y = j < n ? a[j] : -1;
-      // cout << x << "=>" << y << " ";
-      sum += y;
+      sum += j < n ? a[j] : -1;
     }
     stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed2 = stop - start;
@@ -108,8 +110,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Slowdown factor = " << elapsed2.count()/elapsed.count() << std::endl;
 
-
-
+    delete[] a;
 }
 
 

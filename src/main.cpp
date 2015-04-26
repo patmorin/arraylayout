@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
     elapsed = stop - start;
     std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")" << std::endl;
 
+/*
     re.seed(seed);
     std::cout << "Performing " << m << " binary searches...";
     std::cout.flush();
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
     std::cout << "done in " << elapsed2.count() << "s (sum = " << sum << ")" << std::endl;
 
     std::cout << "Slowdown factor = " << elapsed2.count()/elapsed.count() << std::endl;
-
+*/
     delete[] a;
 }
 

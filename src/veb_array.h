@@ -89,6 +89,8 @@ public:
 
 	I search(const T &x) {
 		I rtl[MAX_H+1];
+		//dumdum s[MAX_H+1];
+		//std::copy_n(this->s, h+1, s);
 
 		I j = n;
 		I i = 0;
@@ -99,12 +101,16 @@ public:
 				p <<= 1;
 				j = i;
 			} else if (x > a[i]) {
-				p = (p << 1) + 1;
+				p = (p << 1) | 1;
 			} else {
 				return i;
 			}
 			I m = (1 << (s[d].h0+1))-1;
-			i = rtl[d-s[d].h0] + (2<<s[d].h0)-1 + (p&m)*((2<<s[d].h1)-1);
+			I a0 = d-s[d].h0;
+			I a1 = (2<<s[d].h0)-1;
+			I a2 = p&m;
+			I a3 = a2<<(s[d].h1+1);
+			i = rtl[a0] + a1 + a3 - a2;
 		}
 		return j;
 	}

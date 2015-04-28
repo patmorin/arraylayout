@@ -11,14 +11,85 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <bitset>
 #include <stdexcept>
 
 using std::cout;
 using std::endl;
+using std::string;
+using std::ostringstream;
+using std::bitset;
 
 template<class T, class I>
 class veb_array {
 protected:
+
+	class my_sequencer {
+	protected:
+		static const int w = 8*sizeof(I);
+		I h, i;
+		I path, depth, parity, label;
+
+		static string bin_fmt(int x, int d) {
+			bitset<8> bsx(x);
+			ostringstream os;
+			os << bsx;
+			return os.str().substr(8-d,d);
+		}
+
+		static string bin_fmt_r(int x, int d) {
+			string s = bin_fmt(x, d);
+			reverse(s.begin(), s.end());
+			return s;
+		}
+
+	public:
+		my_sequencer(I h0) {
+			cout << "***h = " << h0 << endl;
+			h = h0;
+			label = 0;
+			parity = h0;   // the parities of the labels on the r-t-l path
+			path = 0;     // an encoding of the root-to-leaf path
+			depth = w - __builtin_clz(h0);
+			i = 0;
+		}
+
+		I next() {
+			// walk up the right roof of the current subtree
+			int t1s = __builtin_clz(~(path<<(w-depth)));
+			int mask = (1<<depth)-1;
+			depth -= t1s;
+			int plus_ones = parity >> depth;
+			int plus_twos = ((~parity & mask) >> depth) << 1;
+			label += plus_ones + plus_twos;
+			parity &= (1<<depth)-1;
+			path &= (1<<depth)-1;
+
+			// now step up to the crotch (from left child)
+			label = (label << 1) | ((parity >> (depth-1)) & 1);
+			int retval = label;
+			cout << "retval = " << retval << endl;
+
+			// step down to right child of crotch
+			path |= 1 << (depth-1);
+			label = (label-1)>>1;
+
+			// walk down the left roof
+			int down = label == 0 ? 0 : w - __builtin_clz(label);
+			parity |= label << depth;
+			depth += down;
+			label = 0;
+
+		    cout << "label = " << label << endl;
+			cout << "depth = " << depth << endl;
+			cout << "path = " << bin_fmt_r(path, depth) << endl;
+			cout << "parity = " << bin_fmt_r(parity, depth) << endl;
+
+			return retval;
+		}
+	};
+
+
 	T *a;    // the data
 	I n;     // the length of a
 	I h;     // the height of the tree
@@ -86,7 +157,7 @@ veb_array<T,I>::veb_array(T *a0, I n0) {
 
 	int m = 1;
 	for (h = 0; m < n; h++, m += 1<<h);
-	h = 0xffffffff >> __builtin_clz(h); // FIXME: portability
+	// h = 0xffffffff >> __builtin_clz(h); // FIXME: portability
 	cout << "h = " << h << endl;
 
 	this->a = new T[n];
@@ -111,10 +182,16 @@ template<class T, class I>
 I veb_array<T,I>::search(const T &x) {
 	I rtl[MAX_H+1];
 
+	my_sequencer seq(h);
+	for (int d = 0; d < h; d++) {
+		cout << "d = " << d << ", seq[d] = " << seq.next() << endl;
+	}
+	exit(0);
 	I j = n;
 	I i = 0;
 	I p = 0;
 	for (int d = 0; i < n; d++) {
+		cout << "d = " << d << ", seq[d] = " << seq.next() << endl;
 		rtl[d] = i;
 		if (x < a[i]) {
 			p <<= 1;

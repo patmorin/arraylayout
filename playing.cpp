@@ -3,62 +3,85 @@
 
 #include<iostream>
 #include<bitset>
+#include<strstream>
+#include<cstdlib>
 
 using namespace std;
 
-int main(void) {
+string bin_fmt(int x, int d) {
+	bitset<8> bsx(x);
+	ostrstream os;
+	os << bsx;
+	return std::string(os.str()).substr(8-d,d);
+}
 
-	int h = 13;
-	int base_h = h;
-	int px = 0;
+int main(int argc, char **argv) {
+	
+	if (argc != 2) {
+		cerr << "Usage: " << argv[0] << " <h>" << endl;
+		exit(-1);
+	}
+
+	int h = atoi(argv[1]);
        
 	int q = (8*sizeof(h))-__builtin_clz(h); // number of bits in h
 	cout << "q = " << q << endl;
-	for (int d = 0; d <= base_h; d++) {
 
-		std::bitset<8> bspx(px);
-		cout << "px = " << bspx << endl;
+	// make the initial path
+	int path = 0;     // an encoding of the root-to-leaf path
+	int depth = 0;    // the depth of the root-to-leaf path
+	int parity = 0;   // the parities of the labels on the r-t-l path
+	int label = h;
+	while (label > 0) { 
+		parity = (parity << 1) | (label & 1);
+		label >>= 1;	
+		depth++;
+	}
+    cout << "label = " << label << endl;
+	cout << "depth = " << depth << endl;
+	cout << "path = " << bin_fmt(path, depth) << endl;
+	cout << "parity = " << bin_fmt(parity, depth) << endl;
 
-		// number of trailing ones in the path
-		int t1s = __builtin_ctz(~px);  
+	for (int i = 0; i <= h; i++)  {
+		cout << "=======" << endl;
+		int t1s = __builtin_ctz(~path);
 		cout << "trailing ones = " << t1s << endl;
 
-		// The path to the crotch eats up the lowest-order z bits
-		int z = q-t1s-1;
+		// walk up the right roof ot the current subtree
+		for (int j = 0; j < t1s; j++) {
+			path >>= 1;
+			depth--;
+			label <<= 1;
+			label += (1<<((~parity)&1));
+			parity >>= 1;
+		}
 
-		// the label at the crotch of the current step
-		int label = h >> z;
-		cout << "crotch label = " << label 
-			<< " is " << ((label&1)? "odd" : "even") << endl;
+		// now step up to the crotch 
+		label <<= 1;
+		label += parity&1;
+		parity >>= 1;
+		path >>= 1;
+		depth--;
+		cout << "crotch label = " << label << endl;
 
-		// the label also gives us the labels of its two children
-		int h0 = label >> 1;
-		int h1 = h0 - (~label&1);
-		cout << "h0 = " << h0 << ", h1 = " << h1 << endl;
+		// step down to right child of crotch
+		path = (path << 1) | 1;
+		depth++;
+		parity = (parity << 1) | (label&1);
+		label = (label-1)>>1;
 
-		// on the way down from the crotch, we messed up the high-order
-		// t1s bits of h --- restore them now
-   
-        // mask looks like 1111111110000
-		//                    |--------|
-		//                        q
-		//                    |---||---|
-		//                     t1s   z
-		int mask = ~((2 << z)-1);  
-		std::bitset<8> bspmask(mask);
-		cout << "mask = " << bspmask << endl;
-		h = (base_h & mask) | (h & ~mask);
-		cout << "restored h = " << h << endl;
-
-		// if the label was odd we want to (effectively) subtract 2 from it
-		int sub = (~label&1)<<(z+1);
-		cout << "sub = " << sub << endl;
-		h -= sub;
-		cout << "new h = " << h << endl;
-
-		cout << "======" << endl;
-		px++;
-		if (label == 2) px++;
+		// walk down the left roof
+		while (label > 0) { 
+			parity = (parity << 1) | (label & 1);
+			path <<= 1;
+			label >>= 1;	
+			depth++;
+		}
+	    cout << "label = " << label << endl;
+		cout << "depth = " << depth << endl;
+		cout << "path = " << bin_fmt(path, depth) << endl;
+		cout << "parity = " << bin_fmt(parity, depth) << endl;
 	}
+
 	return 0;
 }

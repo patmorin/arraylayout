@@ -69,10 +69,9 @@ int main(int argc, char **argv) {
 		cout << "trailing ones = " << t1s << endl;
 
 		// walk up the right roof of the current subtree
+		/* The following code:
+		 * -----------------------snip------------------------
 		cout << "Walking up right roof of height " << t1s << endl;
-		int parity0 = parity;
-		int depth0 = depth;
-		int label0 = label;
 		for (int j = 0; j < t1s; j++) {
 			depth--;
 			path &= ~(1<<depth);
@@ -86,21 +85,15 @@ int main(int argc, char **argv) {
 		}
 		cout << "  label = " << label << " (" << bin_fmt(label, 8) 
 		     << ")" << endl;
-
-		// convert to this:
-		int mask = (1<<depth0)-1;
-		cout << " mask = " << bin_fmt(mask, 8) << endl;
-		depth0 -= t1s;
-		int plus_ones = parity0 >> depth0;
-		cout << "+1's = " << bin_fmt(plus_ones, 8);
-		int plus_twos = ((~parity0 & mask) >> depth0) << 1;
-		cout << " +2's = " << bin_fmt(plus_twos, 8) << endl;
-		label0 += plus_ones + plus_twos;
-		cout << "left-thigh label = " << label0 << endl;
-		parity0 &= (1<<depth0)-1;
-		if (parity0 != parity || depth0 != depth || label0 != label) {
-			cerr << "!!!!!!!!!!!!!!!!!Fuck!!!!!!!!!!!!!!!!!!!" << endl;
-		}
+		 * -----------------------snip------------------------
+		 * was converted to this: */
+		int mask = (1<<depth)-1;
+		depth -= t1s;
+		int plus_ones = parity >> depth;
+		int plus_twos = ((~parity & mask) >> depth) << 1;
+		label += plus_ones + plus_twos;
+		parity &= (1<<depth)-1;
+		path &= (1<<depth)-1;
 
 		// now step up to the crotch 
 		// depth--; (C) redundant with D 

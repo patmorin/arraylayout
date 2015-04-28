@@ -3,17 +3,22 @@
 
 #include<iostream>
 #include<bitset>
-#include<strstream>
+#include<sstream>
 #include<algorithm>
+
 #include<cstdlib>
 
 using namespace std;
 
 string bin_fmt(int x, int d) {
 	bitset<8> bsx(x);
-	ostrstream os;
+	ostringstream os;
 	os << bsx;
-	string s = std::string(os.str()).substr(8-d,d);
+	return os.str().substr(8-d,d);
+}
+
+string bin_fmt_r(int x, int d) {
+	string s = bin_fmt(x, d);
 	reverse(s.begin(), s.end());
 	return s;
 }
@@ -55,8 +60,8 @@ int main(int argc, char **argv) {
 
     cout << "label = " << label << endl;
 	cout << "depth = " << depth << endl;
-	cout << "path = " << bin_fmt(path, depth) << endl;
-	cout << "parity = " << bin_fmt(parity, depth) << endl;
+	cout << "path = " << bin_fmt_r(path, depth) << endl;
+	cout << "parity = " << bin_fmt_r(parity, depth) << endl;
 
 	for (int i = 0; i <= h; i++)  {
 		cout << "=======" << endl;
@@ -65,14 +70,37 @@ int main(int argc, char **argv) {
 
 		// walk up the right roof of the current subtree
 		cout << "Walking up right roof of height " << t1s << endl;
+		int parity0 = parity;
+		int depth0 = depth;
+		int label0 = label;
 		for (int j = 0; j < t1s; j++) {
 			depth--;
 			path &= ~(1<<depth);
 			label <<= 1;
+			cout << "  label = " << label << " (" << bin_fmt(label, 8) 
+			     << ") [left shift] j = " << j << endl;
 			label += 1<<((~(parity>>depth))&1);
+			cout << "  label = " << label << " (" << bin_fmt(label, 8) 
+			     << ") [add] j = " << j << endl;
 			parity &= ~(1<<depth);
 		}
-		cout << "  label = " << label << endl;
+		cout << "  label = " << label << " (" << bin_fmt(label, 8) 
+		     << ")" << endl;
+
+		// convert to this:
+		int mask = (1<<depth0)-1;
+		cout << " mask = " << bin_fmt(mask, 8) << endl;
+		depth0 -= t1s;
+		int plus_ones = parity0 >> depth0;
+		cout << "+1's = " << bin_fmt(plus_ones, 8);
+		int plus_twos = ((~parity0 & mask) >> depth0) << 1;
+		cout << " +2's = " << bin_fmt(plus_twos, 8) << endl;
+		label0 += plus_ones + plus_twos;
+		cout << "left-thigh label = " << label0 << endl;
+		parity0 &= (1<<depth0)-1;
+		if (parity0 != parity || depth0 != depth || label0 != label) {
+			cerr << "!!!!!!!!!!!!!!!!!Fuck!!!!!!!!!!!!!!!!!!!" << endl;
+		}
 
 		// now step up to the crotch 
 		// depth--; (C) redundant with D 
@@ -109,8 +137,8 @@ int main(int argc, char **argv) {
 
 	    cout << "label = " << label << endl;
 		cout << "depth = " << depth << endl;
-		cout << "path = " << bin_fmt(path, depth) << endl;
-		cout << "parity = " << bin_fmt(parity, depth) << endl;
+		cout << "path = " << bin_fmt_r(path, depth) << endl;
+		cout << "parity = " << bin_fmt_r(parity, depth) << endl;
 	}
 
 	return 0;

@@ -45,7 +45,6 @@ protected:
 
 	public:
 		my_sequencer(I h0) {
-			cout << "***h = " << h0 << endl;
 			h = h0;
 			label = 0;
 			parity = h0;   // the parities of the labels on the r-t-l path
@@ -68,7 +67,6 @@ protected:
 			// now step up to the crotch (from left child)
 			label = (label << 1) | ((parity >> (depth-1)) & 1);
 			int retval = label;
-			cout << "retval = " << retval << endl;
 
 			// step down to right child of crotch
 			path |= 1 << (depth-1);
@@ -79,11 +77,6 @@ protected:
 			parity |= label << depth;
 			depth += down;
 			label = 0;
-
-		    cout << "label = " << label << endl;
-			cout << "depth = " << depth << endl;
-			cout << "path = " << bin_fmt_r(path, depth) << endl;
-			cout << "parity = " << bin_fmt_r(parity, depth) << endl;
 
 			return retval;
 		}
@@ -96,18 +89,14 @@ protected:
 
 	static const int MAX_H = 32;
 
-	struct dumdum {
-		I h0, h1;
-	};
-	dumdum s[MAX_H];
+	I s[MAX_H];
 
-	static void sequencer(I h, dumdum *s, unsigned d) {
+	static void sequencer(I h, I *s, unsigned d) {
 		if (h == 0) return;
 		I h0 = h/2;
 		I h1 = h-h0-1;
 		sequencer(h0, s, d);
-		s[d+h0].h0 = h0;
-		s[d+h0].h1 = h1;
+		s[d+h0] = h;
 		sequencer(h1, s, d+h0+1);
 	}
 
@@ -136,15 +125,17 @@ I veb_array<T,I>::copy_data(T *a0, I *rtl, I i, I path, unsigned d) {
 
 	// visit left child
 	path <<= 1;
-	I mask = (1 << (s[d].h0+1))-1;
-	rtl[d+1] = rtl[d-s[d].h0] + (2<<s[d].h0)-1 + (path&mask)*((2<<s[d].h1)-1);
+	I h0 = s[d] >> 1;
+	I h1 = (s[d]-1) >> 1;
+	I mask = (1 << (h0+1))-1;
+	rtl[d+1] = rtl[d-h0] + (2<<h0)-1 + (path&mask)*((2<<h1)-1);
 	i = copy_data(a0, rtl, i, path, d+1);
 
 	a[rtl[d]] = a0[i++];
 
 	// visit right child
 	path += 1;
-	rtl[d+1] = rtl[d-s[d].h0] + (2<<s[d].h0)-1 + (path&mask)*((2<<s[d].h1)-1);
+	rtl[d+1] = rtl[d-h0] + (2<<h0)-1 + (path&mask)*((2<<h1)-1);
 	i = copy_data(a0, rtl, i, path, d+1);
 
 	return i;
@@ -162,8 +153,7 @@ veb_array<T,I>::veb_array(T *a0, I n0) {
 
 	this->a = new T[n];
 
-	dumdum q = {h, 0};
-	std::fill_n(s, MAX_H+1, q); // to get SIGFAULTs
+	std::fill_n(s, MAX_H+1, h+1);
 	sequencer(h, s, 0);
 
 	I rtl[MAX_H+1];
@@ -182,16 +172,11 @@ template<class T, class I>
 I veb_array<T,I>::search(const T &x) {
 	I rtl[MAX_H+1];
 
-	my_sequencer seq(h);
-	for (int d = 0; d < h; d++) {
-		cout << "d = " << d << ", seq[d] = " << seq.next() << endl;
-	}
-	exit(0);
 	I j = n;
 	I i = 0;
 	I p = 0;
-	for (int d = 0; i < n; d++) {
-		cout << "d = " << d << ", seq[d] = " << seq.next() << endl;
+	my_sequencer seq(h);
+	for (int d = 0; d <= h && i < n; d++) {
 		rtl[d] = i;
 		if (x < a[i]) {
 			p <<= 1;
@@ -201,8 +186,11 @@ I veb_array<T,I>::search(const T &x) {
 		} else {
 			return i;
 		}
-		I m = (1 << (s[d].h0+1))-1;
-		i = rtl[d-s[d].h0] + (2<<s[d].h0)-1 + (p&m)*((2<<s[d].h1)-1);
+		I hx = seq.next();
+		I h0 = hx >> 1;
+		I h1 = (hx-1) >> 1;
+		I m = (1 << (h0+1))-1;
+		i = rtl[d-h0] + (2<<h0)-1 + (p&m)*((2<<h1)-1);
 	}
 	return j;
 }

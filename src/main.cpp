@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 	cout << "done (" << elapsed.count() << "s)" << endl;
 
 	re.seed(seed);
-	int m = 30000000;
+	int m = 3000000;
 	// m = n > m ? n : m;
 	std::cout << "Performing " << m << " VEB searches...";
 	std::cout.flush();

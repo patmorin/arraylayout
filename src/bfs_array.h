@@ -43,7 +43,8 @@ public:
 template<class T, class I>
 I bfs_array<T,I>::copy_data(T *a0, I i0, I i) {
 
-	if (i0 >= n) return i0;
+	// std::cout << "copy_data(a0, " << i0 << ", " << i << std::endl;
+	if (i0 >= n || i >= n) return i0;
 
 	// visit left child
 	i0 = copy_data(a0, i0, 2*i+1);

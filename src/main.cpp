@@ -10,8 +10,6 @@
 #include "veb_array.h"
 #include "bfs_array.h"
 
-// #include <cpucounters.h>
-
 class fake_int_128 {
 	long long a[2];
 public:
@@ -73,54 +71,56 @@ void run_tests(I n) {
 	std::chrono::duration<double> elapsed = stop - start;
 	cout << "done (" << elapsed.count() << "s)" << endl;
 
-	cout << "Building VEB array...";
-	cout.flush();
-	start = std::chrono::high_resolution_clock::now();
-	veb_array<T,I> va(a, n);
-	stop =  std::chrono::high_resolution_clock::now();
-	elapsed = stop - start;
-	cout << "done (" << elapsed.count() << "s)" << endl;
+	int m = 10000000, sum;
+	{
+		cout << "Building VEB array...";
+		cout.flush();
+		start = std::chrono::high_resolution_clock::now();
+		veb_array<T,I> va(a, n);
+		stop =  std::chrono::high_resolution_clock::now();
+		elapsed = stop - start;
+		cout << "done (" << elapsed.count() << "s)" << endl;
 
-	int m = 10000000;
-	std::cout << "Performing " << m << " VEB searches...";
-	std::cout.flush();
-	re.seed(seed);
-	start = std::chrono::high_resolution_clock::now();
-	int sum = 0;
-	for (int i = 0; i < m; i++) {
-		T x = ui(re);
-		I j = va.search(x);
-		sum += (j < n) ? (int)va.get_data(j) : -1;
+		std::cout << "Performing " << m << " VEB searches...";
+		std::cout.flush();
+		re.seed(seed);
+		start = std::chrono::high_resolution_clock::now();
+		sum = 0;
+		for (int i = 0; i < m; i++) {
+			T x = ui(re);
+			I j = va.search(x);
+			sum += (j < n) ? (int)va.get_data(j) : -1;
+		}
+		stop = std::chrono::high_resolution_clock::now();
+		elapsed = stop - start;
+		std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
+				<< std::endl;
 	}
-	stop = std::chrono::high_resolution_clock::now();
-	elapsed = stop - start;
-	std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
-			<< std::endl;
 
+	{
+		cout << "Building BFS array...";
+		cout.flush();
+		start = std::chrono::high_resolution_clock::now();
+		bfs_array<T,I> ba(a, n);
+		stop =  std::chrono::high_resolution_clock::now();
+		elapsed = stop - start;
+		cout << "done (" << elapsed.count() << "s)" << endl;
 
-	cout << "Building BFS array...";
-	cout.flush();
-	start = std::chrono::high_resolution_clock::now();
-	bfs_array<T,I> ba(a, n);
-	stop =  std::chrono::high_resolution_clock::now();
-	elapsed = stop - start;
-	cout << "done (" << elapsed.count() << "s)" << endl;
-
-	std::cout << "Performing " << m << " BFS searches...";
-	std::cout.flush();
-	re.seed(seed);
-	start = std::chrono::high_resolution_clock::now();
-	sum = 0;
-	for (int i = 0; i < m; i++) {
-		T x = ui(re);
-		I j = ba.search(x);
-		sum += (j < n) ? (int)ba.get_data(j) : -1;
+		std::cout << "Performing " << m << " BFS searches...";
+		std::cout.flush();
+		re.seed(seed);
+		start = std::chrono::high_resolution_clock::now();
+		sum = 0;
+		for (int i = 0; i < m; i++) {
+			T x = ui(re);
+			I j = ba.search(x);
+			sum += (j < n) ? (int)ba.get_data(j) : -1;
+		}
+		stop = std::chrono::high_resolution_clock::now();
+		elapsed = stop - start;
+		std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
+				<< std::endl;
 	}
-	stop = std::chrono::high_resolution_clock::now();
-	elapsed = stop - start;
-	std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
-			<< std::endl;
-
 
 	std::cout << "Performing " << m << " binary searches...";
 	std::cout.flush();
@@ -146,9 +146,9 @@ void run_tests(I n) {
 int main(int argc, char *argv[]) {
 	int n = (argc > 1) ? atoi(argv[1]) : 52;
 
-	run_tests<int,unsigned>(n);
-	run_tests<long long int,unsigned>(n);
-	run_tests<fake_int_128,unsigned>(n);
+	run_tests<int,unsigned long long>(n);
+	//run_tests<long long int,unsigned>(n);
+	//run_tests<fake_int_128,unsigned>(n);
 }
 
 

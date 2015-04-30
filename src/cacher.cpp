@@ -49,8 +49,6 @@ std::chrono::duration<double> burn_it(int nbytes, int m) {
 }
 
 int main(int argc, char *argv[]) {
-	int n0, n1;
-
 	if (argc != 2) {
 		cerr << "Usage: " << argv[0] << " <cache size (KB)>" << endl;
 		std::exit(0);
@@ -62,7 +60,7 @@ int main(int argc, char *argv[]) {
 	int m = 20*nbytes;
 	std::chrono::duration<double> t0 = burn_it0(nbytes, m);
 	std::chrono::duration<double> t1 = burn_it(nbytes, m);
-	std::chrono::duration<double> t2 = burn_it(20*nbytes, m);
+	std::chrono::duration<double> t2 = burn_it(100*nbytes, m);
 
 	cout << "Estimated cache speedup " 
 	     << ((t2.count()-t0.count())/(t1.count()-t0.count())) << endl;

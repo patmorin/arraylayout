@@ -54,8 +54,7 @@ I binary_search(const T &x, const T *a, I n) {
 template<class Array, class T, class I>
 void run_test1(T *a, I n, I m, const std::string &name) {
 
-	auto seed = 23433;
-	std::mt19937 re;
+	std::mt19937 re(23433);
 	std::uniform_int_distribution<T> ui(0, 2*n+1);
 
 	cout << "Building " << name << " array...";

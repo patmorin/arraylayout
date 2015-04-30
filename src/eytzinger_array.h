@@ -1,12 +1,12 @@
 /*
- * bfsarray.h
+ * eytzinger_array.h
  *
  *  Created on: 2015-04-24
  *      Author: morin
  */
 
-#ifndef BFSARRAY_H_
-#define BFSARRAY_H_
+#ifndef EYTZINGERARRAY_H_
+#define EYTZINGERARRAY_H_
 
 #include <algorithm>
 #include <iostream>
@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 
 template<class T, class I>
-class bfs_array {
+class eytzinger_array {
 protected:
 	T *a;    // the data
 	I n;     // the length of a
@@ -25,8 +25,8 @@ protected:
 	I copy_data(T *a0, I i0, I i);
 
 public:
-	bfs_array(T *a0, I n0);
-	~bfs_array();
+	eytzinger_array(T *a0, I n0);
+	~eytzinger_array();
 	I search(const T &x);
 
 	const T& get_data(const I &i) {
@@ -41,7 +41,7 @@ public:
 };
 
 template<class T, class I>
-I bfs_array<T,I>::copy_data(T *a0, I i0, I i) {
+I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 
 	// std::cout << "copy_data(a0, " << i0 << ", " << i << std::endl;
 	if (i0 >= n || i >= n) return i0;
@@ -60,7 +60,7 @@ I bfs_array<T,I>::copy_data(T *a0, I i0, I i) {
 
 
 template<class T, class I>
-bfs_array<T,I>::bfs_array(T *a0, I n0) {
+eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
 	n = n0;
 
 	// allocate new array and copy data into it
@@ -69,12 +69,12 @@ bfs_array<T,I>::bfs_array(T *a0, I n0) {
 }
 
 template<class T, class I>
-bfs_array<T,I>::~bfs_array() {
+eytzinger_array<T,I>::~eytzinger_array() {
 	delete[] a;
 }
 
 template<class T, class I>
-I bfs_array<T,I>::search(const T &x) {
+I eytzinger_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	for (int d = 0; i < n; d++) {
@@ -92,4 +92,4 @@ I bfs_array<T,I>::search(const T &x) {
 
 
 
-#endif /* BFSARRAY_H_ */
+#endif /* EYTZINGERARRAY_H_ */

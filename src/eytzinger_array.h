@@ -50,6 +50,7 @@ I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 	i0 = copy_data(a0, i0, 2*i+1);
 
 	// put data at the root
+	cout << "a[" << i << "] <= " << "a0[" << i0 << "]" << endl;
 	a[i] = a0[i0++];
 
 	// visit right child

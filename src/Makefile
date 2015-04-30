@@ -1,7 +1,7 @@
 
 all: main cacher
 
-main : main.cpp veb_array.h
+main : main.cpp veb_array.h eytzinger_array.h sorted_array.h btree_array.h
 	g++ -std=c++11 -Wall -O4 -march=native main.cpp -o main
 
 cacher : cacher.cpp 

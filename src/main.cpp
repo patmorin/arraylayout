@@ -10,6 +10,7 @@
 #include "veb_array.h"
 #include "eytzinger_array.h"
 #include "sorted_array.h"
+#include "btree_array.h"
 
 class fake_int_128 {
 	long long a[2];
@@ -32,24 +33,6 @@ public:
 	};
 };
 
-
-// An implementation of binary search on a sorted array
-template<class T, class I>
-I binary_search(const T &x, const T *a, I n) {
-	I lo = 0;
-	I hi = n;
-	while (lo < hi) {
-		I m = (lo + hi) / 2;
-		if (x < a[m]) {
-			hi = m;
-		} else if (x > a[m]) {
-			lo = m+1;
-		} else {
-			return m;
-		}
-	}
-	return hi;
-}
 
 template<class Array, class T, class I>
 void run_test1(T *a, I n, I m, const std::string &name) {
@@ -105,6 +88,7 @@ void run_tests(I n) {
 		run_test1<sorted_array<T,I>,T,I>(a, n, m, "binary");
 		run_test1<veb_array<T,I>,T,I>(a, n, m, "veb");
 		run_test1<eytzinger_array<T,I>,T,I>(a, n, m, "eytzinger");
+		run_test1<btree_array<2,T,I>,T,I>(a, n, m, "2-tree");
 	}
 }
 

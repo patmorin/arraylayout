@@ -7,3 +7,13 @@ This project is about trying different memory layouts for searching in an array,
 2. eytzinger: The Eytzinger (or BFS) layout most commonly used implicit binary heaps
 3. btree: A (B+1)-ary variant of the Eytzinger layout
 3. veb: The van Emde Boas layout from the cache-oblivious literature
+
+To run an experiment on your own (linux) machine (with g++ installed):
+
+  cd src
+  make main
+  ./main 100000000
+
+This will test the cost of performing ten million searches in an array of one hundred million integers.  You'd better have at least 80MB of free RAM, which you can check with
+
+  free -h

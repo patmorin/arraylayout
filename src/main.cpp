@@ -88,7 +88,7 @@ void run_tests(I n) {
 		run_test1<sorted_array<T,I>,T,I>(a, n, m, "binary");
 		run_test1<veb_array<T,I>,T,I>(a, n, m, "veb");
 		run_test1<eytzinger_array<T,I>,T,I>(a, n, m, "eytzinger");
-		run_test1<btree_array<2,T,I>,T,I>(a, n, m, "2-tree");
+		run_test1<btree_array<1,T,I>,T,I>(a, n, m, "2-tree");
 	}
 }
 

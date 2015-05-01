@@ -13,31 +13,23 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "base_array.h"
+
 using std::cout;
 using std::endl;
 
 namespace fbs {
 
 template<class T, class I>
-class sorted_array {
+class sorted_array : public base_array<T,I> {
 protected:
-	T *a;    // the data
-	I n;     // the length of a
+	using base_array<T,I>::a;
+	using base_array<T,I>::n;
 
 public:
 	sorted_array(T *a0, I n0);
 	~sorted_array();
 	I search(const T &x);
-
-	const T& get_data(const I &i) {
-		if (i < 0 || i >= n) {
-			std::ostringstream ss;
-			ss << "index " << i << " is out of bounds ({0,...," << n-1 << "})";
-			throw std::out_of_range(ss.str());
-		}
-		return a[i];
-
-	}
 };
 
 

@@ -13,16 +13,15 @@
 #include <sstream>
 #include <stdexcept>
 
-using std::cout;
-using std::endl;
+#include "base_array.h"
 
 namespace fbs {
 
 template<class T, class I>
-class eytzinger_array {
+class eytzinger_array : public base_array<T,I> {
 protected:
-	T *a;    // the data
-	I n;     // the length of a
+	using base_array<T,I>::a;
+	using base_array<T,I>::n;
 
 	I copy_data(T *a0, I i0, I i);
 
@@ -30,16 +29,6 @@ public:
 	eytzinger_array(T *a0, I n0);
 	~eytzinger_array();
 	I search(const T &x);
-
-	const T& get_data(const I &i) {
-		if (i < 0 || i >= n) {
-			std::ostringstream ss;
-			ss << "index " << i << " is out of bounds ({0,...," << n-1 << "})";
-			throw std::out_of_range(ss.str());
-		}
-		return a[i];
-
-	}
 };
 
 template<class T, class I>
@@ -62,9 +51,12 @@ I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 
 template<class T, class I>
 eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
+	if (n > std::numeric_limits<I>::max()/2) {
+		std::ostringstream ss;
+		ss << "array length " << n0 << " is too big, use a larger I class";
+		throw std::out_of_range(ss.str());
+	}
 	n = n0;
-
-	// allocate new array and copy data into it
 	a = new T[n];
 	copy_data(a0, 0, 0);
 }

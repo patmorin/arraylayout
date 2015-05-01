@@ -13,13 +13,16 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "base_array.h"
+
 namespace fbs {
 
 template<class T, class I>
-class veb_array {
+class veb_array : public base_array<T,I> {
 protected:
-	T *a;    // the data
-	I n;     // the length of a
+	using base_array<T,I>::a;
+	using base_array<T,I>::n;
+
 	I h;     // the height of the tree
 
 	static const unsigned MAX_H = 32;
@@ -39,16 +42,6 @@ public:
 	veb_array(T *a0, I n0);
 	~veb_array();
 	I search(const T &x);
-
-	const T& get_data(const I &i) {
-		if (i < 0 || i >= n) {
-			std::ostringstream ss;
-			ss << "index " << i << " is out of bounds ({0,...," << n-1 << "})";
-			throw std::out_of_range(ss.str());
-		}
-		return a[i];
-
-	}
 };
 
 template<class T, class I>

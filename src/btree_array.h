@@ -14,8 +14,8 @@
 #include <stdexcept>
 #include <limits>
 
-using std::cout;
-using std::endl;
+#include "base_array.h"
+
 using std::min;
 
 namespace fbs {
@@ -24,10 +24,10 @@ namespace fbs {
  * btree_array
  */
 template<unsigned B, class T, class I>
-class btree_array {
+class btree_array : public base_array<T,I> {
 protected:
-	T *a;    // the data
-	I n;     // the length of a
+	using base_array<T,I>::a;
+	using base_array<T,I>::n;
 
 	I child(unsigned c, I i) {
 		return (B+1)*i + (c+1)*B;
@@ -39,15 +39,6 @@ public:
 	~btree_array();
 	I search(const T &x);
 
-	const T& get_data(const I &i) {
-		if (i < 0 || i >= n) {
-			std::ostringstream ss;
-			ss << "index " << i << " is out of bounds ({0,...," << n-1 << "})";
-			throw std::out_of_range(ss.str());
-		}
-		return a[i];
-
-	}
 };
 
 template<unsigned B, class T, class I>
@@ -68,7 +59,7 @@ I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 
 template<unsigned B, class T, class I>
 btree_array<B, T,I>::btree_array(T *a0, I n0) {
-	if (n-1 > std::numeric_limits<T>::max()/(B+1)-B) {
+	if (n-1 > std::numeric_limits<I>::max()/(B+1)-B) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";
 		throw std::out_of_range(ss.str());

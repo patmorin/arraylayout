@@ -1,7 +1,7 @@
 # veblayout
-Experiments with the Van Emde Boas ordered array layout
+Experiments with memory layouts for binary search
 
-This project is about trying different memory layouts for searching in an array. The layouts we try are:
+This project is about trying different memory layouts for searching in an array, with a focus on improving performance for the most common-case: When the input fits entirely in RAM. The layouts we try are:
 
 1. sorted: The usual sorted array on which we apply binary search
 2. eytzinger: The Eytzinger (or BFS) layout most commonly used implicit binary heaps

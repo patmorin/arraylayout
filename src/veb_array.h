@@ -5,16 +5,15 @@
  *      Author: morin
  */
 
-#ifndef VEBARRAY_H_
-#define VEBARRAY_H_
+#ifndef FBS_VEB_ARRAY_H_
+#define FBS_VEB_ARRAY_H_
 
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-using std::cout;
-using std::endl;
+namespace fbs {
 
 template<class T, class I>
 class veb_array {
@@ -132,6 +131,6 @@ I veb_array<T,I>::search(const T &x) {
 	return j;
 }
 
+} // namespace fbs
 
-
-#endif /* VEBARRAY_H_ */
+#endif /* FBS_VEB_ARRAY_H_ */

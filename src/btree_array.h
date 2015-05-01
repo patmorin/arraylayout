@@ -5,17 +5,24 @@
  *      Author: morin
  */
 
-#ifndef BTREEARRAY_H_
-#define BTREEARRAY_H_
+#ifndef FBS_BTREE_ARRAY_H_
+#define FBS_BTREE_ARRAY_H_
 
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <limits>
 
 using std::cout;
 using std::endl;
+using std::min;
 
+namespace fbs {
+
+/*
+ * btree_array
+ */
 template<unsigned B, class T, class I>
 class btree_array {
 protected:
@@ -47,11 +54,10 @@ template<unsigned B, class T, class I>
 I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 	if (i0 >= n || i >= n) return i0;
 
-	for (unsigned c = 0; c < B+1; c++) {
+	for (unsigned c = 0; c <= B; c++) {
 		// visit c'th child
 		i0 = copy_data(a0, i0, child(c,i));
-		if (i0 < n) {
-			cout << "a[" << i+c << "] <= " << "a0[" << i0 << "]" << endl;
+		if (c < B && i+c < n && i0 < n) {
 			a[i+c] = a0[i0++];
 		}
 	}
@@ -62,9 +68,12 @@ I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 
 template<unsigned B, class T, class I>
 btree_array<B, T,I>::btree_array(T *a0, I n0) {
+	if (n-1 > std::numeric_limits<T>::max()/(B+1)-B) {
+		std::ostringstream ss;
+		ss << "array length " << n0 << " is too big, use a larger I class";
+		throw std::out_of_range(ss.str());
+	}
 	n = n0;
-
-	// allocate new array and copy data into it
 	a = new T[n];
 	copy_data(a0, 0, 0);
 
@@ -79,19 +88,26 @@ template<unsigned B, class T, class I>
 I btree_array<B, T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
-	for (int d = 0; i < n; d++) {
-		if (x < a[i]) {
-			j = i;
-			i = 2*i + 1;
-		} else if (x > a[i]) {
-			i = 2*i + 2;
-		} else {
-			return i;
+	while (i < n) {
+		I lo = i;
+		I hi = std::min(i+B, n);
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = hi;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
 		}
+		i = child((unsigned)(hi-i), i);
 	}
 	return j;
 }
 
+} // namespace fbs
 
 
-#endif /* BTREEARRAY_H_ */
+#endif /* FBS_BTREE_ARRAY_H_ */

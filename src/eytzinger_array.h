@@ -5,8 +5,8 @@
  *      Author: morin
  */
 
-#ifndef EYTZINGERARRAY_H_
-#define EYTZINGERARRAY_H_
+#ifndef FBS_EYTZINGER_ARRAY_H_
+#define FBS_EYTZINGER_ARRAY_H_
 
 #include <algorithm>
 #include <iostream>
@@ -15,6 +15,8 @@
 
 using std::cout;
 using std::endl;
+
+namespace fbs {
 
 template<class T, class I>
 class eytzinger_array {
@@ -43,14 +45,12 @@ public:
 template<class T, class I>
 I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 
-	// std::cout << "copy_data(a0, " << i0 << ", " << i << std::endl;
 	if (i0 >= n || i >= n) return i0;
 
 	// visit left child
 	i0 = copy_data(a0, i0, 2*i+1);
 
 	// put data at the root
-	cout << "a[" << i << "] <= " << "a0[" << i0 << "]" << endl;
 	a[i] = a0[i0++];
 
 	// visit right child
@@ -91,6 +91,7 @@ I eytzinger_array<T,I>::search(const T &x) {
 	return j;
 }
 
+} // namespace fbs
 
 
-#endif /* EYTZINGERARRAY_H_ */
+#endif /* FBS_EYTZINGER_ARRAY_H_ */

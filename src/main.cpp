@@ -12,6 +12,8 @@
 #include "sorted_array.h"
 #include "btree_array.h"
 
+using namespace fbs;
+
 class fake_int_128 {
 	long long a[2];
 public:
@@ -65,6 +67,7 @@ void run_test1(T *a, I n, I m, const std::string &name) {
 			<< std::endl;
 }
 
+static const unsigned CACHE_LINE_WIDTH = 64;
 
 template<class T, class I>
 void run_tests(I n) {
@@ -83,12 +86,14 @@ void run_tests(I n) {
 	cout << "done (" << elapsed.count() << "s)" << endl;
 
 	int m = 10000000;
-
 	for (int i = 0; i < 3; i++) {
 		run_test1<sorted_array<T,I>,T,I>(a, n, m, "binary");
 		run_test1<veb_array<T,I>,T,I>(a, n, m, "veb");
 		run_test1<eytzinger_array<T,I>,T,I>(a, n, m, "eytzinger");
-		run_test1<btree_array<1,T,I>,T,I>(a, n, m, "2-tree");
+		const unsigned b = CACHE_LINE_WIDTH/sizeof(T);
+		std::ostringstream s;
+		s << (b+1) << "-tree";
+		run_test1<btree_array<64/sizeof(T),T,I>,T,I>(a, n, m, s.str());
 	}
 }
 

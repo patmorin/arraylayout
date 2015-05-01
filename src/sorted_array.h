@@ -5,8 +5,8 @@
  *      Author: morin
  */
 
-#ifndef SORTEDARRAY_H_
-#define SORTEDARRAY_H_
+#ifndef FBS_SORTED_ARRAY_H_
+#define FBS_SORTED_ARRAY_H_
 
 #include <algorithm>
 #include <iostream>
@@ -15,6 +15,8 @@
 
 using std::cout;
 using std::endl;
+
+namespace fbs {
 
 template<class T, class I>
 class sorted_array {
@@ -68,6 +70,6 @@ I sorted_array<T,I>::search(const T &x) {
 	return hi;
 }
 
+} // namespace fbs
 
-
-#endif /* SORTEDARRAY_H_ */
+#endif /* FBS_SORTED_ARRAY_H_ */

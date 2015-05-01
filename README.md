@@ -12,10 +12,10 @@ This project is about trying different memory layouts for searching in an array,
 ## Quick start
 To run an experiment on your own (linux) machine (with g++ installed):
 
-  cd src
-  make main
-  ./main 100000000
+    cd src
+    make main
+    ./main 100000000
 
 This will test the cost of performing ten million searches in an array of one hundred million integers.  You'd better have at least 80MB of free RAM, which you can check with
 
-  free -h
+    free -h

@@ -35,6 +35,46 @@ public:
 	};
 };
 
+template<class T, class I>
+T *build_and_fill(I n) {
+	T *a = new T[n];
+	for (I i = 0; i < n; i++)
+		a[i] = 2*(i+1);
+	return a;
+}
+
+template<class Array, class T, class I>
+void run_test2(I n, I m, const std::string &name) {
+	// Create n arrays of size n
+	T *a = build_and_fill<T,I>(n);
+	std::vector<Array> ap(n, Array(a, n));
+	//Array *ap = new Array[n](a, n);
+
+	auto seed = 23433;
+	std::mt19937 re(23433);
+	std::uniform_int_distribution<T> ui(0, 2*n+1);
+	std::uniform_int_distribution<T> ui2(0, n-1);
+
+	std::cout << "Performing " << m << " " << name << " searches...";
+	std::cout.flush();
+	re.seed(seed);
+	auto start = std::chrono::high_resolution_clock::now();
+	T sum = 0;
+	for (int i = 0; i < m; i++) {
+		I q = ui2(re);
+		T x = ui(re);
+		I j = ap[q].search(x);
+		sum += (j < n) ? (int)ap[q].get_data(j) : -1;
+	}
+	auto stop = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> elapsed = stop - start;
+	std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
+			<< std::endl;
+
+	//delete[] ap;
+}
+
+
 
 template<class Array, class T, class I>
 void run_test1(T *a, I n, I m, const std::string &name) {
@@ -78,9 +118,7 @@ void run_tests(I n) {
 	cout << "Allocating and filling sorted array...";
 	cout.flush();
 	auto start = std::chrono::high_resolution_clock::now();
-	T *a = new T[n];
-	for (I i = 0; i < n; i++)
-		a[i] = 2*(i+1);
+	T *a = build_and_fill<T,I>(n);
 	auto stop =  std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = stop - start;
 	cout << "done (" << elapsed.count() << "s)" << endl;
@@ -113,6 +151,8 @@ int main(int argc, char *argv[]) {
 		std::exit(-1);
 	}
 	std::cout << "n = " << n << std::endl;
+
+	run_test2<sorted_array<data_t,index_t>,data_t,index_t>(10, 10000000, "donkey");
 
 	run_tests<data_t,index_t>(n);
 	// run_tests<long long int,unsigned>(n);

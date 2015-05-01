@@ -59,7 +59,7 @@ I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 
 template<unsigned B, class T, class I>
 btree_array<B, T,I>::btree_array(T *a0, I n0) {
-	if (n-1 > std::numeric_limits<I>::max()/(B+1)-B) {
+	if (n0-1 > std::numeric_limits<I>::max()/(B+1)-B) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";
 		throw std::out_of_range(ss.str());

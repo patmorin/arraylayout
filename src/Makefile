@@ -28,7 +28,6 @@ datafiles = $(datadir)/cpuinfo $(datadir)/free-h \
 
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
-	echo $(ns)
 
 $(datadir) :
 	mkdir $@

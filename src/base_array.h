@@ -10,11 +10,13 @@
 
 namespace fbs {
 
-template<class T, class I>
+template<typename T, typename I>
 class base_array {
 protected:
 	T *a;
 	I n;
+	static_assert(std::is_integral<I>::value,
+			"template argument I must be an integral value");
 
 public:
 	base_array() { a = NULL; n = 0; };

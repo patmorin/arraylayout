@@ -23,7 +23,7 @@ namespace fbs {
 /*
  * btree_array
  */
-template<unsigned B, class T, class I>
+template<unsigned B, typename T, typename I>
 class btree_array : public base_array<T,I> {
 protected:
 	using base_array<T,I>::a;
@@ -41,7 +41,7 @@ public:
 
 };
 
-template<unsigned B, class T, class I>
+template<unsigned B, typename T, typename I>
 I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 	if (i0 >= n || i >= n) return i0;
 
@@ -57,7 +57,7 @@ I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
 }
 
 
-template<unsigned B, class T, class I>
+template<unsigned B, typename T, typename I>
 btree_array<B, T,I>::btree_array(T *a0, I n0) {
 	if (n0-1 > std::numeric_limits<I>::max()/(B+1)-B) {
 		std::ostringstream ss;
@@ -70,12 +70,12 @@ btree_array<B, T,I>::btree_array(T *a0, I n0) {
 
 }
 
-template<unsigned B, class T, class I>
+template<unsigned B, typename T, typename I>
 btree_array<B, T,I>::~btree_array() {
 	delete[] a;
 }
 
-template<unsigned B, class T, class I>
+template<unsigned B, typename T, typename I>
 I btree_array<B, T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;

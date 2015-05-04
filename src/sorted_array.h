@@ -15,12 +15,9 @@
 
 #include "base_array.h"
 
-using std::cout;
-using std::endl;
-
 namespace fbs {
 
-template<class T, class I>
+template<typename T, typename I>
 class sorted_array : public base_array<T,I> {
 protected:
 	using base_array<T,I>::a;
@@ -33,19 +30,19 @@ public:
 };
 
 
-template<class T, class I>
+template<typename T, typename I>
 sorted_array<T,I>::sorted_array(T *a0, I n0) {
 	n = n0;
 	a = new T[n];
 	std::copy_n(a0, n, a);
 }
 
-template<class T, class I>
+template<typename T, typename I>
 sorted_array<T,I>::~sorted_array() {
 	delete[] a;
 }
 
-template<class T, class I>
+template<typename T, typename I>
 I sorted_array<T,I>::search(const T &x) {
 	I lo = 0;
 	I hi = n;

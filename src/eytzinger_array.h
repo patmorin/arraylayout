@@ -17,7 +17,7 @@
 
 namespace fbs {
 
-template<class T, class I>
+template<typename T, typename I>
 class eytzinger_array : public base_array<T,I> {
 protected:
 	using base_array<T,I>::a;
@@ -31,7 +31,7 @@ public:
 	I search(const T &x);
 };
 
-template<class T, class I>
+template<typename T, typename I>
 I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 
 	if (i0 >= n || i >= n) return i0;
@@ -49,7 +49,7 @@ I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
 }
 
 
-template<class T, class I>
+template<typename T, typename I>
 eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
 	if (n0 > std::numeric_limits<I>::max()/2) {
 		std::ostringstream ss;
@@ -61,12 +61,12 @@ eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
 	copy_data(a0, 0, 0);
 }
 
-template<class T, class I>
+template<typename T, typename I>
 eytzinger_array<T,I>::~eytzinger_array() {
 	delete[] a;
 }
 
-template<class T, class I>
+template<typename T, typename I>
 I eytzinger_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;

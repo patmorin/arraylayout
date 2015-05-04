@@ -17,7 +17,7 @@
 
 namespace fbs {
 
-template<class T, class I>
+template<typename T, typename I>
 class veb_array : public base_array<T,I> {
 protected:
 	using base_array<T,I>::a;
@@ -44,7 +44,7 @@ public:
 	I search(const T &x);
 };
 
-template<class T, class I>
+template<typename T, typename I>
 void veb_array<T,I>::sequencer(I h, dumdum *s, unsigned d) {
 	if (h == 0) return;
 	I h0 = h/2;
@@ -57,7 +57,7 @@ void veb_array<T,I>::sequencer(I h, dumdum *s, unsigned d) {
 	sequencer(h1, s, d+h0+1);
 }
 
-template<class T, class I>
+template<typename T, typename I>
 I veb_array<T,I>::copy_data(T *a0, I *rtl, I i, I path, unsigned d) {
 
 	if (d > h || rtl[d] >= n || i >= n) return i;
@@ -78,7 +78,7 @@ I veb_array<T,I>::copy_data(T *a0, I *rtl, I i, I path, unsigned d) {
 }
 
 
-template<class T, class I>
+template<typename T, typename I>
 veb_array<T,I>::veb_array(T *a0, I n0) {
 	n = n0;
 
@@ -98,12 +98,12 @@ veb_array<T,I>::veb_array(T *a0, I n0) {
 	copy_data(a0, rtl, 0, 0, 0);
 }
 
-template<class T, class I>
+template<typename T, typename I>
 veb_array<T,I>::~veb_array() {
 	delete[] a;
 }
 
-template<class T, class I>
+template<typename T, typename I>
 I veb_array<T,I>::search(const T &x) {
 	I rtl[MAX_H+1];
 	I j = n;

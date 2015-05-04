@@ -22,7 +22,11 @@ nums=1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
 ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
-data : main cacher $(datadir) $(foreach n, $(ns), $(datadir)/$(n).dat)
+
+datafiles = $(datadir)/cpuinfo $(datadir)/free-h \
+		    $(foreach n, $(ns), $(datadir)/$(n).dat)
+
+data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
 	echo $(ns)
 

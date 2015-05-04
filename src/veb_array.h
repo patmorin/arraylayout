@@ -32,7 +32,7 @@ protected:
 		h_type h0, h1, dummy[2];
 		I m0, m1;
 	};
-	dumdum s[MAX_H];
+	dumdum s[MAX_H+1];
 
 	static void sequencer(I h, dumdum *s, unsigned d);
 

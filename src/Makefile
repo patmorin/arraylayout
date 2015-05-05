@@ -25,6 +25,7 @@ ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 
 datafiles = $(datadir)/cpuinfo $(datadir)/free-h \
 		    $(foreach n, $(ns), $(datadir)/$(n).dat)
+datafiles += $(foreach n, 150000000 200000000 250000000, $(datadir)/$(n).dat)
 
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
@@ -40,3 +41,8 @@ $(datadir)/free-h :
 
 $(datadir)/%.dat : main
 	./main uint32 uint32 $(patsubst run_data/%.dat,%,$(@)) $(m) > $@
+
+plots : $(datafiles)
+	./make_plots.sh
+	python ./relative.py
+	gnuplot "plotter.gp"

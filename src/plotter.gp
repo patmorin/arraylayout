@@ -151,5 +151,28 @@ set fontpath
 set psdir
 set fit noerrorvariables
 GNUTERM = "wxt"
-plot "run_data/binary.data" with lines, "run_data/veb.data" with lines, "run_data/fake.data" with lines, "run_data/eytzinger.data" with lines, "run_data/17-tree.data" with lines
+set xrange [100:250000000]
+set yrange [0:]
+set logscale x 10
+set format x "%L"
+set xlabel "log(n)/log(10)"
+set title "a million searches in an array of size n"
+
+set ylabel "speedup (relative to sorted array)"
+set term svg size 800 600
+set output "run_data/relative.svg"
+plot "run_data/binary-search-rel.data" with lines title "sorted array", \
+     "run_data/veb-search-rel.data" with lines title "vEB layout", \
+     "run_data/eytzinger-search-rel.data" with lines title "Eytzinger layout", \
+     "run_data/17-tree-search-rel.data" with lines title "b-tree"
+
+
+set ylabel "running time (seconds)"
+set output "run_data/absolute.svg"
+plot "run_data/binary-search.data" with lines title "sorted array", \
+     "run_data/veb-search.data" with lines title "vEB layout", \
+     "run_data/eytzinger-search.data" with lines title "Eytzinger layout", \
+     "run_data/17-tree-search.data" with lines title "b-tree", \
+     "run_data/fake-search.data" with lines title "dummy"
+#
 #    EOF

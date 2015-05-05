@@ -45,13 +45,9 @@ $(datadir)/free-h :
 	free -h > $@
 
 $(datadir)/%.dat : main
-<<<<<<< HEAD
-	./main $(patsubst $(datadir)/%.dat,% % % %,$(@)) $(m) > $@
-=======
-	./main uint32 uint32 $(patsubst run_data/%.dat,%,$(@)) $(m) > $@
+	./main $(subst -, ,$(patsubst $(datadir)/%.dat,%,$(@))) > $@
 
-plots : $(datafiles)
+plots : data
 	./make_plots.sh
 	python ./relative.py
 	gnuplot "plotter.gp"
->>>>>>> 0572ca31d9798a21d41a66d9b1ce88f47045d02d

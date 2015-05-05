@@ -21,11 +21,16 @@ magnitudes=00 000 0000 00000 000000 0000000
 nums=1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
+dtypes = uint32 float32 uint64 float64
+itypes = uint32 uint64 fast_uint32
 ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 
-datafiles = $(datadir)/cpuinfo $(datadir)/free-h \
-		    $(foreach n, $(ns), $(datadir)/$(n).dat)
+rawdata	= $(foreach dt, $(dtypes), \
+           $(foreach it, $(itypes), \
+            $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).dat)))
 
+datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(rawdata)
+	
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
 
@@ -39,4 +44,4 @@ $(datadir)/free-h :
 	free -h > $@
 
 $(datadir)/%.dat : main
-	./main uint32 uint32 $(patsubst run_data/%.dat,%,$(@)) $(m) > $@
+	./main $(patsubst $(datadir)/%.dat,% % % %,$(@)) $(m) > $@

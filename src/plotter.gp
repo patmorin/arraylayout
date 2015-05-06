@@ -160,19 +160,82 @@ set title "a million searches in an array of size n"
 
 set ylabel "speedup (relative to sorted array)"
 set term svg size 800 600
-set output "run_data/relative.svg"
-plot "run_data/binary-search-rel.data" with lines title "sorted array", \
-     "run_data/veb-search-rel.data" with lines title "vEB layout", \
-     "run_data/eytzinger-search-rel.data" with lines title "Eytzinger layout", \
-     "run_data/17-tree-search-rel.data" with lines title "b-tree"
+#set output "run_data/relative.svg"
+#plot "run_data/binary-search-rel.data" with lines title "sorted", \
+#     "run_data/veb-search-rel.data" with lines title "vEB", \
+#     "run_data/eytzinger-search-rel.data" with lines title "Eytzinger", \
+#     "run_data/17-tree-search-rel.data" with lines title "b-tree"
 
-
+dt="uint32"
+it="uint32"
+set title dt." data with ".it." indices"
+set output "run_data/absolute-".dt."-".it.".svg"
 set ylabel "running time (seconds)"
-set output "run_data/absolute.svg"
-plot "run_data/binary-search.data" with lines title "sorted array", \
-     "run_data/veb-search.data" with lines title "vEB layout", \
-     "run_data/eytzinger-search.data" with lines title "Eytzinger layout", \
-     "run_data/17-tree-search.data" with lines title "b-tree", \
-     "run_data/fake-search.data" with lines title "dummy"
+datadir = "run_data"
+binary = datadir."/".dt."-".it."-binary-search.data"
+veb = datadir."/".dt."-".it."-veb-search.data"
+eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
+btree = datadir."/".dt."-".it."-17-tree-search.data"
+fake = datadir."/".dt."-".it."-fake-search.data"
+plot binary with lines title "sorted", \
+     eytzinger with lines title "Eytzinger", \
+     btree with lines title "b-tree", \
+     veb with lines title "vEB", \
+     fake with lines title "overhead"
+
+dt="float32"
+it="uint32"
+set title dt." data with ".it." indices"
+set output "run_data/absolute-".dt."-".it.".svg"
+set ylabel "running time (seconds)"
+datadir = "run_data"
+binary = datadir."/".dt."-".it."-binary-search.data"
+veb = datadir."/".dt."-".it."-veb-search.data"
+eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
+btree = datadir."/".dt."-".it."-17-tree-search.data"
+fake = datadir."/".dt."-".it."-fake-search.data"
+plot binary with lines title "sorted", \
+     eytzinger with lines title "Eytzinger", \
+     btree with lines title "b-tree", \
+     veb with lines title "vEB", \
+     fake with lines title "overhead"
+
+dt="uint64"
+it="uint32"
+set title dt." data with ".it." indices"
+set output "run_data/absolute-".dt."-".it.".svg"
+set ylabel "running time (seconds)"
+datadir = "run_data"
+binary = datadir."/".dt."-".it."-binary-search.data"
+veb = datadir."/".dt."-".it."-veb-search.data"
+eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
+btree = datadir."/".dt."-".it."-17-tree-search.data"
+fake = datadir."/".dt."-".it."-fake-search.data"
+plot binary with lines title "sorted", \
+     eytzinger with lines title "Eytzinger", \
+     btree with lines title "b-tree", \
+     veb with lines title "vEB", \
+     fake with lines title "overhead"
+
+dt="float64"
+it="uint32"
+set title dt." data with ".it." indices"
+set output "run_data/absolute-".dt."-".it.".svg"
+set ylabel "running time (seconds)"
+datadir = "run_data"
+binary = datadir."/".dt."-".it."-binary-search.data"
+veb = datadir."/".dt."-".it."-veb-search.data"
+eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
+btree = datadir."/".dt."-".it."-17-tree-search.data"
+fake = datadir."/".dt."-".it."-fake-search.data"
+plot binary with lines title "sorted", \
+     eytzinger with lines title "Eytzinger", \
+     btree with lines title "b-tree", \
+     veb with lines title "vEB", \
+     fake with lines title "overhead"
+
+
+
+
 #
 #    EOF

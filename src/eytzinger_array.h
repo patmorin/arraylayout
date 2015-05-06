@@ -23,34 +23,38 @@ protected:
 	using base_array<T,I>::a;
 	using base_array<T,I>::n;
 
-	I copy_data(T *a0, I i0, I i);
+	template<typename Iter>
+	Iter copy_data(Iter a0, I i);
 
 public:
-	eytzinger_array(T *a0, I n0);
+	template<typename Iter>
+	eytzinger_array(Iter a0, I n0);
 	~eytzinger_array();
 	I search(const T &x);
 };
 
 template<typename T, typename I>
-I eytzinger_array<T,I>::copy_data(T *a0, I i0, I i) {
+template<typename Iter>
+Iter eytzinger_array<T,I>::copy_data(Iter a0, I i) {
 
-	if (i0 >= n || i >= n) return i0;
+	if (i >= n) return a0;
 
 	// visit left child
-	i0 = copy_data(a0, i0, 2*i+1);
+	a0 = copy_data(a0, 2*i+1);
 
 	// put data at the root
-	a[i] = a0[i0++];
+	a[i] = *a0++;
 
 	// visit right child
-	i0 = copy_data(a0, i0, 2*i+2);
+	a0 = copy_data(a0, 2*i+2);
 
-	return i0;
+	return a0;
 }
 
 
 template<typename T, typename I>
-eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
+template<typename Iter>
+eytzinger_array<T,I>::eytzinger_array(Iter a0, I n0) {
 	if (n0 > std::numeric_limits<I>::max()/2) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";
@@ -58,7 +62,7 @@ eytzinger_array<T,I>::eytzinger_array(T *a0, I n0) {
 	}
 	n = n0;
 	a = new T[n];
-	copy_data(a0, 0, 0);
+	copy_data(a0, 0);
 }
 
 template<typename T, typename I>

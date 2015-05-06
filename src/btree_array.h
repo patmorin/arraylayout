@@ -32,33 +32,40 @@ protected:
 	I child(unsigned c, I i) {
 		return (B+1)*i + (c+1)*B;
 	}
-	I copy_data(T *a0, I i0, I i);
+
+	template<class Iter>
+	Iter copy_data(Iter a0, I i);
 
 public:
-	btree_array(T *a0, I n0);
+	template<typename Iter>
+	btree_array(Iter a0, I n0);
+
 	~btree_array();
+
 	I search(const T &x);
 
 };
 
 template<unsigned B, typename T, typename I>
-I btree_array<B,T,I>::copy_data(T *a0, I i0, I i) {
-	if (i0 >= n || i >= n) return i0;
+template<typename Iter>
+Iter btree_array<B,T,I>::copy_data(Iter a0, I i) {
+	if (i >= n) return a0;
 
 	for (unsigned c = 0; c <= B; c++) {
 		// visit c'th child
-		i0 = copy_data(a0, i0, child(c,i));
-		if (c < B && i+c < n && i0 < n) {
-			a[i+c] = a0[i0++];
+		a0 = copy_data(a0, child(c,i));
+		if (c < B && i+c < n) {
+			a[i+c] = *a0++;
 		}
 	}
 
-	return i0;
+	return a0;
 }
 
 
 template<unsigned B, typename T, typename I>
-btree_array<B, T,I>::btree_array(T *a0, I n0) {
+template<typename Iter>
+btree_array<B, T,I>::btree_array(Iter a0, I n0) {
 	if (n0-1 > std::numeric_limits<I>::max()/(B+1)-B) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";
@@ -66,7 +73,7 @@ btree_array<B, T,I>::btree_array(T *a0, I n0) {
 	}
 	n = n0;
 	a = new T[n];
-	copy_data(a0, 0, 0);
+	copy_data(a0, 0);
 
 }
 

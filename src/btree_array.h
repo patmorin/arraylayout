@@ -33,12 +33,12 @@ protected:
 		return (B+1)*i + (c+1)*B;
 	}
 
-	template<class Iter>
-	Iter copy_data(Iter a0, I i);
+	template<class ForwardIterator>
+	ForwardIterator copy_data(ForwardIterator a0, I i);
 
 public:
-	template<typename Iter>
-	btree_array(Iter a0, I n0);
+	template<typename ForwardIterator>
+	btree_array(ForwardIterator a0, I n0);
 
 	~btree_array();
 
@@ -47,8 +47,8 @@ public:
 };
 
 template<unsigned B, typename T, typename I>
-template<typename Iter>
-Iter btree_array<B,T,I>::copy_data(Iter a0, I i) {
+template<typename ForwardIterator>
+ForwardIterator btree_array<B,T,I>::copy_data(ForwardIterator a0, I i) {
 	if (i >= n) return a0;
 
 	for (unsigned c = 0; c <= B; c++) {
@@ -64,8 +64,8 @@ Iter btree_array<B,T,I>::copy_data(Iter a0, I i) {
 
 
 template<unsigned B, typename T, typename I>
-template<typename Iter>
-btree_array<B, T,I>::btree_array(Iter a0, I n0) {
+template<typename ForwardIterator>
+btree_array<B, T,I>::btree_array(ForwardIterator a0, I n0) {
 	if (n0-1 > std::numeric_limits<I>::max()/(B+1)-B) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";

@@ -101,8 +101,8 @@ class fake_array  {
 protected:
 	I n;
 public:
-	template<typename Iter>
-	fake_array(Iter a0, I n0) {
+	template<typename ForwardIterator>
+	fake_array(ForwardIterator a0, I n0) {
 		(void)a0;
 		n = n0;
 	}

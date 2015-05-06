@@ -23,19 +23,19 @@ protected:
 	using base_array<T,I>::a;
 	using base_array<T,I>::n;
 
-	template<typename Iter>
-	Iter copy_data(Iter a0, I i);
+	template<typename ForwardIterator>
+	ForwardIterator copy_data(ForwardIterator a0, I i);
 
 public:
-	template<typename Iter>
-	eytzinger_array(Iter a0, I n0);
+	template<typename ForwardIterator>
+	eytzinger_array(ForwardIterator a0, I n0);
 	~eytzinger_array();
 	I search(const T &x);
 };
 
 template<typename T, typename I>
-template<typename Iter>
-Iter eytzinger_array<T,I>::copy_data(Iter a0, I i) {
+template<typename ForwardIterator>
+ForwardIterator eytzinger_array<T,I>::copy_data(ForwardIterator a0, I i) {
 
 	if (i >= n) return a0;
 
@@ -53,8 +53,8 @@ Iter eytzinger_array<T,I>::copy_data(Iter a0, I i) {
 
 
 template<typename T, typename I>
-template<typename Iter>
-eytzinger_array<T,I>::eytzinger_array(Iter a0, I n0) {
+template<typename ForwardIterator>
+eytzinger_array<T,I>::eytzinger_array(ForwardIterator a0, I n0) {
 	if (n0 > std::numeric_limits<I>::max()/2) {
 		std::ostringstream ss;
 		ss << "array length " << n0 << " is too big, use a larger I class";

@@ -24,16 +24,16 @@ protected:
 	using base_array<T,I>::n;
 
 public:
-	template<typename Iter>
-	sorted_array(Iter a0, I n0);
+	template<typename ForwardIterator>
+	sorted_array(ForwardIterator a0, I n0);
 	~sorted_array();
 	I search(const T &x);
 };
 
 
 template<typename T, typename I>
-template<typename Iter>
-sorted_array<T,I>::sorted_array(Iter a0, I n0)
+template<typename ForwardIterator>
+sorted_array<T,I>::sorted_array(ForwardIterator a0, I n0)
 {
 		n = n0;
 		a = new T[n];

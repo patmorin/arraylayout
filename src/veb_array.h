@@ -36,12 +36,12 @@ protected:
 
 	static void sequencer(I h, dumdum *s, unsigned d);
 
-	template<typename Iter>
-	Iter copy_data(Iter a0, I *rtl, I path, unsigned d);
+	template<typename ForwardIterator>
+	ForwardIterator copy_data(ForwardIterator a0, I *rtl, I path, unsigned d);
 
 public:
-	template<typename Iter>
-	veb_array(Iter a0, I n0);
+	template<typename ForwardIterator>
+	veb_array(ForwardIterator a0, I n0);
 
 	~veb_array();
 
@@ -62,8 +62,8 @@ void veb_array<T,I>::sequencer(I h, dumdum *s, unsigned d) {
 }
 
 template<typename T, typename I>
-template<typename Iter>
-Iter veb_array<T,I>::copy_data(Iter a0, I *rtl, I path, unsigned d) {
+template<typename ForwardIterator>
+ForwardIterator veb_array<T,I>::copy_data(ForwardIterator a0, I *rtl, I path, unsigned d) {
 
 	if (d > h || rtl[d] >= n) return a0;
 
@@ -84,8 +84,8 @@ Iter veb_array<T,I>::copy_data(Iter a0, I *rtl, I path, unsigned d) {
 
 
 template<typename T, typename I>
-template<typename Iter>
-veb_array<T,I>::veb_array(Iter a0, I n0) {
+template<typename ForwardIterator>
+veb_array<T,I>::veb_array(ForwardIterator a0, I n0) {
 	n = n0;
 
 	// find smallest h such that sum_i=0^h 2^h >= n

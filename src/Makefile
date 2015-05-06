@@ -11,7 +11,7 @@ main-debug : $(mainfiles)
 	g++ -std=c++11 -Wall -g3 main.cpp -o main-debug
 
 cacher : cacher.cpp 
-	g++ -std=c++11 -Wall -O0 cacher.cpp -o cacher
+	g++ -std=c++11 -Wall -O4 cacher.cpp -o cacher
 
 
 clean :

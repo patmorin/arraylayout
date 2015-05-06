@@ -150,14 +150,14 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	re.seed(seed);
 	start = std::chrono::high_resolution_clock::now();
 	T sum = 0;
-	for (int i = 0; i < m; i++) {
+	for (I i = 0; i < m; i++) {
 		T x = ui(re);
 		I j = aa.search(x);
 		sum += (j < n) ? (int)aa.get_data(j) : -1;
 	}
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;
-	std::cout << elapsed.count() << std::endl;
+	std::cout << elapsed.count() << " " << sum << std::endl;
 }
 
 // Next we use some traits magic to generate the right kind of random numbers,

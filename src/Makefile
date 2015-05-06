@@ -13,7 +13,6 @@ main-debug : $(mainfiles)
 cacher : cacher.cpp 
 	g++ -std=c++11 -Wall -O4 cacher.cpp -o cacher
 
-
 clean :
 	rm -f main cacher main-debug
 
@@ -68,3 +67,8 @@ plots : data
 	./make_plots.sh
 	#python ./relative.py
 	gnuplot "plotter.gp"
+
+html : plots
+	./make_html.sh
+
+

@@ -23,7 +23,7 @@ nums=1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
 dtypes = uint32 float32 uint64 float64 int128
-itypes = uint32 uint64 fast_uint32
+itypes = uint32 uint64
 ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 ns += 150000000 200000000 250000000
 
@@ -68,7 +68,7 @@ plots : data
 	#python ./relative.py
 	gnuplot "plotter.gp"
 
-html : plots
-	./make_html.sh
+$(datadir)/index.html : plots
+	./make_html.sh > $@
 
 

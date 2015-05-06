@@ -28,9 +28,10 @@ ns += 150000000 200000000 250000000
 
 rawdata	= $(foreach dt, $(dtypes), \
            $(foreach it, $(itypes), \
-            $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).dat)))
+            $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
-datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(rawdata)
+datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(datadir)/uname-a \
+            $(datadir)/gcc-v $(rawdata)
 	
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
@@ -44,8 +45,19 @@ $(datadir)/cpuinfo :
 $(datadir)/free-h :
 	free -h > $@
 
-$(datadir)/%.dat : main
-	./main $(subst -, ,$(patsubst $(datadir)/%.dat,%,$(@))) > $@
+$(datadir)/uname-a :
+	uname -a > $@
+
+$(datadir)/gcc-v :
+	gcc -v -march=native -Q --help=target > $@
+
+$(datadir)/%.t : main
+	./main $(subst -, ,$(patsubst $(datadir)/%.dat,%,$(@))) \
+		>> $(datadir)/alldata.dat 
+	touch $@
+
+clean-data :
+	rm -rf $(datadir)
 
 plots : data
 	./make_plots.sh

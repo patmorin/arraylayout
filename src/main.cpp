@@ -129,42 +129,6 @@ T *build_and_fill(I n) {
 	return a;
 }
 
-// Run tests that perform m searches on n arrays, each of size n
-template<typename A, typename T, typename I>
-void run_test2(I n, I m, const std::string &name) {
-	// Create n arrays of size n
-	T *a = build_and_fill<T,I>(n);
-	//std::vector<Array> ap(n, Array(a, n));
-	A **ap = new A*[n];
-	for (I i = 0; i < n; i++) 
-		ap[i] = new A(a, n);
-
-	auto seed = 23433;
-	std::mt19937 re(23433);
-	std::uniform_int_distribution<T> ui(0, 2*n+1);
-	std::uniform_int_distribution<T> ui2(0, n-1);
-
-	std::cout << "Performing " << m << " " << name << " NxN searches...";
-	std::cout.flush();
-	re.seed(seed);
-	auto start = std::chrono::high_resolution_clock::now();
-	T sum = 0;
-	for (int i = 0; i < m; i++) {
-		I q = ui2(re);
-		T x = ui(re);
-		I j = ap[q]->search(x);
-		sum += (j < n) ? (int)ap[q]->get_data(j) : -1;
-	}
-	auto stop = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> elapsed = stop - start;
-	std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
-			<< std::endl;
-
-	for (int i = 0; i < n; i++) 
-		delete ap[i];
-	delete[] ap;
-	delete[] a;
-}
 
 // Run tests that perform m searches on one array of size n
 // Note: D is one of uniform_int_distribution or uniform_real_distribution
@@ -174,15 +138,14 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	std::mt19937 re(23433);
 	D ui(0, 2*n+1);
 
-	std::cout << "Building " << name << " array...";
+	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
+			<< " " << n << " " << m << " ";
 	std::cout.flush();
 	auto start = std::chrono::high_resolution_clock::now();
 	Array aa(a, n);
 	auto stop =  std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = stop - start;
-	std::cout << "done (" << elapsed.count() << "s)" << std::endl;
-
-	std::cout << "Performing " << m << " " << name << " plain searches...";
+	std::cout << elapsed.count() << " ";
 	std::cout.flush();
 	re.seed(seed);
 	start = std::chrono::high_resolution_clock::now();
@@ -194,24 +157,101 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	}
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;
-	std::cout << "done in " << elapsed.count() << "s (sum = " << sum << ")"
-			<< std::endl;
+	std::cout << elapsed.count() << std::endl;
 }
 
-// Use this for integral types
-// Thanks to Erbureth: http://stackoverflow.com/a/19985238/1614328
+// Next we use some traits magic to generate the right kind of random numbers,
+// either integer or "real" depending on T.
 template<typename Array, typename T, typename I>
-void run_test1(T *a, I n, I m, const std::string &name,
-		typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
-	run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
-}
+class Tool { };
 
-// Use this template for floating-point types.
-template<typename Array, typename T, typename I>
-void run_test1(T *a, I n, I m, const std::string &name,
-		typename std::enable_if<std::is_floating_point<T>::value>::type* = 0) {
-	run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
-}
+template<typename Array, typename I>
+struct Tool<Array, std::uint32_t, I> {
+	static void run_test1(std::uint32_t *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, std::uint32_t, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+	}
+};
+
+template<typename Array, typename I>
+struct Tool<Array, std::uint64_t, I> {
+	static void run_test1(std::uint64_t *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, std::uint64_t, I, std::uniform_int_distribution<std::uint64_t> >(a, n, m, name);
+	}
+};
+
+template<typename Array, typename I>
+struct Tool<Array, float, I> {
+	static void run_test1(float *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, float, I, std::uniform_real_distribution<float> >(a, n, m, name);
+	}
+};
+
+template<typename Array, typename I>
+struct Tool<Array, double, I> {
+	static void run_test1(double *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, double, I, std::uniform_real_distribution<double> >(a, n, m, name);
+	}
+};
+
+template<typename Array, unsigned S, typename I>
+struct Tool<Array, fake_number<std::uint32_t,S>, I> {
+	static void run_test1(fake_number<std::uint32_t,S> *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, fake_number<std::uint32_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+	}
+};
+
+
+
+// I came close, but could never get this to work
+//template<typename Array, typename T, typename I>
+//struct Tool<Array, T, I,
+//      typename std::enable_if<std::is_integral<T>::value>::type> {
+//	static void run_test1(T *a, I n, I m, const std::string &name) {
+//		run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
+//	}
+//};
+//
+//template<typename Array, typename T, typename I>
+//struct Tool<Array, T, I,
+//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
+//	static void run_test1(T *a, I n, I m, const std::string &name) {
+//		run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
+//	}
+//};
+//
+//template<typename Array, typename I>
+//struct Tool<Array, fake_number<std::uint32_t,16>, I,
+//      typename std::enable_if<std::is_integral<std::uint32_t>::value>::type> {
+//	static void run_test1(fake_number<std::uint32_t,16> *a, I n, I m, const std::string &name) {
+//		run_test1_b<Array, fake_number<std::uint32_t,16>, I,
+//		std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+//	}
+//};
+//template<typename Array, typename T, unsigned S, typename I>
+//struct Tool<Array, fake_number<T,S>, I,
+//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
+//	static void run_test1(T *a, I n, I m, const std::string &name) {
+//		run_test1_b<Array, fake_number<T,S>, I, std::uniform_real_distribution<T> >(a, n, m, name);
+//	}
+//};
+
+
+// This actually did work, but not with the fake_number class
+//// Use this template for other types
+//template<typename Array, typename T, typename I>
+//void run_test1(T *a, I n, I m, const std::string &name,
+//		typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+//	run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
+//}
+//
+//
+//
+//// Use this template for floating-point types.
+//template<typename Array, typename T, typename I>
+//void run_test1(T *a, I n, I m, const std::string &name,
+//		typename std::enable_if<std::is_floating_point<T>::value>::type* = 0) {
+//	run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
+//}
 
 
 // The cache line width (in bytes)
@@ -220,20 +260,13 @@ static const unsigned CACHE_LINE_WIDTH = 64;
 // Our test driver
 template<typename T, typename I>
 void run_tests(I n, I m) {
-	std::cout << "======================================================="
-			<< std::endl;
-	std::cout << "Running tests with " << type_name<T>() << " data and "
-			<< 8*sizeof(I) << "-bit indices (n = " << n << ")" << std::endl;
-
 	T *a = build_and_fill<T,I>(n);
-	run_test1<fake_array<T,I>,T,I>(a, n, m, "fake");
-	run_test1<sorted_array<T,I>,T,I>(a, n, m, "binary");
-	run_test1<veb_array<T,I>,T,I>(a, n, m, "veb");
-	run_test1<eytzinger_array<T,I>,T,I>(a, n, m, "eytzinger");
-	const unsigned b = CACHE_LINE_WIDTH/sizeof(T);
-	std::ostringstream s;
-	s << (b+1) << "-tree";
-	run_test1<btree_array<64/sizeof(T),T,I>,T,I>(a, n, m, s.str());
+	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
+	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
+	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
+	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
 	delete[] a;
 
 //	std::cout << "=====" << std::endl;
@@ -284,13 +317,17 @@ int main(int argc, char *argv[]) {
 	if (argc == 5) {
 		for (dt = 0; dt < 5; dt++)
 			if (dtypes[dt] == argv[1]) break;
-		for (it = 0; it < 5; it++)
+		for (it = 0; it < 3; it++)
 			if (itypes[it] == argv[2]) break;
 		std::istringstream is_n(argv[3]);
 		is_n >> n;
 		std::istringstream is_m(argv[4]);
 		is_m >> m;
 	} else {
+		usage(argv[0]);
+		std::exit(-1);
+	}
+	if (dt < 0 || dt > 4 || it < 0 || it > 2) {
 		usage(argv[0]);
 		std::exit(-1);
 	}
@@ -323,12 +360,12 @@ int main(int argc, char *argv[]) {
 	else if (dt == 3 && it == 2)
 		run_it<double,std::uint_fast32_t>(n, m);
 
-//	else if (dt == 4 && it == 0)
-//		run_it<fake_number<std::uint32_t,16>,std::uint32_t>(n, m);
-//	else if (dt == 4 && it == 1)
-//		run_it<fake_number<std::uint32_t,16>,std::uint64_t>(n, m);
-//	else if (dt == 4 && it == 2)
-//		run_it<fake_number<std::uint32_t,16>,std::uint_fast32_t>(n, m);
+	else if (dt == 4 && it == 0)
+		run_it<fake_number<std::uint32_t,16>,std::uint32_t>(n, m);
+	else if (dt == 4 && it == 1)
+		run_it<fake_number<std::uint32_t,16>,std::uint64_t>(n, m);
+	else if (dt == 4 && it == 2)
+		run_it<fake_number<std::uint32_t,16>,std::uint_fast32_t>(n, m);
 
 	return 0;
 }

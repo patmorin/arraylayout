@@ -2,7 +2,7 @@
 
 dtypes=("uint32" "float32" "uint64" "float64")
 itypes=("uint32" "uint64" "fast_uint32")
-algs=("fake" "binary" "veb" "eytzinger" "17-tree")
+algs=("fake" "binary" "veb" "eytzinger" "tree")
 
 m=2000000
 

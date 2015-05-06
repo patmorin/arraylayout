@@ -49,5 +49,5 @@ $(datadir)/%.dat : main
 
 plots : data
 	./make_plots.sh
-	python ./relative.py
+	#python ./relative.py
 	gnuplot "plotter.gp"

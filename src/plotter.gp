@@ -164,7 +164,7 @@ set term svg size 800 600
 #plot "run_data/binary-search-rel.data" with lines title "sorted", \
 #     "run_data/veb-search-rel.data" with lines title "vEB", \
 #     "run_data/eytzinger-search-rel.data" with lines title "Eytzinger", \
-#     "run_data/17-tree-search-rel.data" with lines title "b-tree"
+#     "run_data/tree-search-rel.data" with lines title "b-tree"
 
 dt="uint32"
 it="uint32"
@@ -175,7 +175,7 @@ datadir = "run_data"
 binary = datadir."/".dt."-".it."-binary-search.data"
 veb = datadir."/".dt."-".it."-veb-search.data"
 eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
-btree = datadir."/".dt."-".it."-17-tree-search.data"
+btree = datadir."/".dt."-".it."-tree-search.data"
 fake = datadir."/".dt."-".it."-fake-search.data"
 plot binary with lines title "sorted", \
      eytzinger with lines title "Eytzinger", \
@@ -192,7 +192,7 @@ datadir = "run_data"
 binary = datadir."/".dt."-".it."-binary-search.data"
 veb = datadir."/".dt."-".it."-veb-search.data"
 eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
-btree = datadir."/".dt."-".it."-17-tree-search.data"
+btree = datadir."/".dt."-".it."-tree-search.data"
 fake = datadir."/".dt."-".it."-fake-search.data"
 plot binary with lines title "sorted", \
      eytzinger with lines title "Eytzinger", \
@@ -209,7 +209,7 @@ datadir = "run_data"
 binary = datadir."/".dt."-".it."-binary-search.data"
 veb = datadir."/".dt."-".it."-veb-search.data"
 eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
-btree = datadir."/".dt."-".it."-17-tree-search.data"
+btree = datadir."/".dt."-".it."-tree-search.data"
 fake = datadir."/".dt."-".it."-fake-search.data"
 plot binary with lines title "sorted", \
      eytzinger with lines title "Eytzinger", \
@@ -226,7 +226,7 @@ datadir = "run_data"
 binary = datadir."/".dt."-".it."-binary-search.data"
 veb = datadir."/".dt."-".it."-veb-search.data"
 eytzinger = datadir."/".dt."-".it."-eytzinger-search.data"
-btree = datadir."/".dt."-".it."-17-tree-search.data"
+btree = datadir."/".dt."-".it."-tree-search.data"
 fake = datadir."/".dt."-".it."-fake-search.data"
 plot binary with lines title "sorted", \
      eytzinger with lines title "Eytzinger", \

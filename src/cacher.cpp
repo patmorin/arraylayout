@@ -9,7 +9,7 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-	for (int nbytes = 16; nbytes <= (1<<27); nbytes *= 2) {
+	for (int nbytes = 16; nbytes <= (1<<28); nbytes *= 2) {
 		std::cout << nbytes << " ";
     	int n = nbytes/sizeof(int);
 		int m = 10000000;

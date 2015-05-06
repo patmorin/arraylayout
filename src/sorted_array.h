@@ -24,17 +24,20 @@ protected:
 	using base_array<T,I>::n;
 
 public:
-	sorted_array(T *a0, I n0);
+	template<typename Iter>
+	sorted_array(Iter a0, I n0);
 	~sorted_array();
 	I search(const T &x);
 };
 
 
 template<typename T, typename I>
-sorted_array<T,I>::sorted_array(T *a0, I n0) {
-	n = n0;
-	a = new T[n];
-	std::copy_n(a0, n, a);
+template<typename Iter>
+sorted_array<T,I>::sorted_array(Iter a0, I n0)
+{
+		n = n0;
+		a = new T[n];
+		std::copy_n(a0, n, a);
 }
 
 template<typename T, typename I>

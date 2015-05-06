@@ -49,8 +49,7 @@ $(datadir)/uname-a :
 	uname -a > $@
 
 $(datadir)/gcc-v :
-	gcc -v -march=native -Q --help=target > $@
-
+	gcc -march=native -Q --help=target > $@
 $(datadir)/%.t : main
 	./main $(subst -, ,$(patsubst $(datadir)/%.t,%,$(@))) \
 		>> $(datadir)/alldata.dat 

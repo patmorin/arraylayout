@@ -36,11 +36,15 @@ protected:
 
 	static void sequencer(I h, dumdum *s, unsigned d);
 
-	I copy_data(T *a0, I *rtl, I i, I path, unsigned d);
+	template<typename Iter>
+	Iter copy_data(Iter a0, I *rtl, I path, unsigned d);
 
 public:
-	veb_array(T *a0, I n0);
+	template<typename Iter>
+	veb_array(Iter a0, I n0);
+
 	~veb_array();
+
 	I search(const T &x);
 };
 
@@ -58,28 +62,30 @@ void veb_array<T,I>::sequencer(I h, dumdum *s, unsigned d) {
 }
 
 template<typename T, typename I>
-I veb_array<T,I>::copy_data(T *a0, I *rtl, I i, I path, unsigned d) {
+template<typename Iter>
+Iter veb_array<T,I>::copy_data(Iter a0, I *rtl, I path, unsigned d) {
 
-	if (d > h || rtl[d] >= n || i >= n) return i;
+	if (d > h || rtl[d] >= n) return a0;
 
 	// visit left child
 	path <<= 1;
 	rtl[d+1] = rtl[d-s[d].h0] + s[d].m0 + (path&s[d].m0)*(s[d].m1);
-	i = copy_data(a0, rtl, i, path, d+1);
+	a0 = copy_data(a0, rtl, path, d+1);
 
-	a[rtl[d]] = a0[i++];
+	a[rtl[d]] = *a0++;
 
 	// visit right child
 	path += 1;
 	rtl[d+1] = rtl[d-s[d].h0] + s[d].m0 + (path&s[d].m0)*(s[d].m1);
-	i = copy_data(a0, rtl, i, path, d+1);
+	a0 = copy_data(a0, rtl, path, d+1);
 
-	return i;
+	return a0;
 }
 
 
 template<typename T, typename I>
-veb_array<T,I>::veb_array(T *a0, I n0) {
+template<typename Iter>
+veb_array<T,I>::veb_array(Iter a0, I n0) {
 	n = n0;
 
 	// find smallest h such that sum_i=0^h 2^h >= n
@@ -95,7 +101,7 @@ veb_array<T,I>::veb_array(T *a0, I n0) {
 	a = new T[n];
 	I rtl[MAX_H+1];
 	rtl[0] = 0;
-	copy_data(a0, rtl, 0, 0, 0);
+	copy_data(a0, rtl, 0, 0);
 }
 
 template<typename T, typename I>

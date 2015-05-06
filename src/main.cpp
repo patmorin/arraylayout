@@ -101,13 +101,12 @@ class fake_array  {
 protected:
 	I n;
 public:
-	fake_array(T *a0, I n0) {
+	template<typename Iter>
+	fake_array(Iter a0, I n0) {
 		(void)a0;
 		n = n0;
 	}
-	I search(const T &x) {
-		return std::max((I)0, std::min(n, (I)(x+1)/2));
-	}
+	I search(const T &x);
 	T get_data(const I &i) {
 #ifdef _DEBUG
 		if (i < 0 || i >= n) {
@@ -119,6 +118,12 @@ public:
 		return (T)(2*i);
 	}
 };
+
+template<typename T, typename I>
+I fake_array<T,I>::search(const T &x) {
+	return std::max((I)0, std::min(n, (I)(x+1)/2));
+}
+
 
 // Build an array of size n and fill it with 0, 2, 4,...,2n-2
 template<class T, class I>

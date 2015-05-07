@@ -70,6 +70,8 @@ const char *type_name() {
 		return "unknown32";
 	case 8:
 		return "unknown64";
+	case 16:
+		return "int128";
 	}
 	return "unknown";
 }

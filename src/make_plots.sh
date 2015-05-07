@@ -1,7 +1,7 @@
 #!/bin/bash
 
-dtypes=("uint32" "float32" "uint64" "float64")
-itypes=("uint32" "uint64" "fast_uint32")
+dtypes=("uint32" "float32" "uint64" "float64" "int128")
+itypes=("uint32" "uint64")
 algs=("fake" "binary" "veb" "eytzinger" "btree")
 
 m=2000000

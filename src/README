@@ -1,0 +1,21 @@
+To run tests on a Linux system, do
+
+    make data
+
+This will create a file called run_data.tgz that you can just email to me:
+
+    morin@scs.carleton.ca
+
+If you want to be extra helpful, you can also run:
+
+    sudo dmidecode --type 17
+or
+    sudo dmidecode --type memory
+
+and include the output in your email.  This will give me information about
+the amount and type of memory installed in your computer, as described here:
+
+    http://www.cyberciti.biz/faq/check-ram-speed-linux/
+    
+
+Thanks!    

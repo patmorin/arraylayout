@@ -43,25 +43,29 @@ rawdata	= $(foreach dt, $(dtypes), \
 dtypes = uint64 float64 
 ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 rawdata	+= $(foreach dt, $(dtypes), \
-           $(foreach it, $(itypes), \
-            $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
+            $(foreach it, $(itypes), \
+             $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
 dtypes = int128
 magnitudes=00 000 0000 00000 000000 
 ns = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 ns += 20000000 30000000 40000000 50000000 60000000
 rawdata	+= $(foreach dt, $(dtypes), \
-           $(foreach it, $(itypes), \
-            $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
+            $(foreach it, $(itypes), \
+             $(foreach n, $(ns), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
 datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(datadir)/uname-a \
-            $(datadir)/gcc-v $(datadir)/cacher.data $(rawdata)
+            $(datadir)/gcc-v $(datadir)/cacher.data $(datadir)/sha1sums \
+            $(rawdata)
 	
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
 
 $(datadir) :
 	mkdir $@
+
+$(datadir)/sha1sums :
+	sha1sum *.cpp *.h > $@
 
 $(datadir)/cpuinfo : 
 	cat /proc/cpuinfo > $@		
@@ -85,7 +89,6 @@ $(datadir)/%.t : main
 
 run_data.tgz : data
 	tar czvf run_data.tgz run_data --exclude "*.t"
-	
 
 clean-data :
 	rm -rf $(datadir)

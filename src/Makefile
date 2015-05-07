@@ -60,6 +60,10 @@ $(datadir)/%.t : main
 		>> $(datadir)/alldata.dat 
 	touch $@
 
+run_data.tgz : data
+	tar czvf run_data.tgz run_data --exclude "*.t"
+	
+
 clean-data :
 	rm -rf $(datadir)
 

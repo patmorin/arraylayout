@@ -67,6 +67,7 @@ plots : data
 	./make_plots.sh
 	#python ./relative.py
 	gnuplot "plotter.gp"
+	gnuplot "cacher.gp"
 
 $(datadir)/index.html : plots
 	./make_html.sh > $@

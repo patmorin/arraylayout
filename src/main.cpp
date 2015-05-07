@@ -132,7 +132,7 @@ template<class T, class I>
 T *build_and_fill(I n) {
 	T *a = new T[n];
 	for (I i = 0; i < n; i++)
-		a[i] = 2*(i+1);
+		a[i] = 2*i;
 	return a;
 }
 

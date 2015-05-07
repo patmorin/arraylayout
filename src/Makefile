@@ -78,6 +78,7 @@ $(datadir)/uname-a :
 
 $(datadir)/gcc-v :
 	gcc -march=native -Q --help=target > $@
+	echo | gcc -dM -E - -march=native >> $@
 
 $(datadir)/cacher.data : cacher
 	./cacher > $@

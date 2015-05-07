@@ -58,8 +58,8 @@ datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(datadir)/uname-a \
             $(datadir)/gcc-v $(datadir)/cacher.data $(datadir)/sha1sums \
             $(rawdata)
 	
-data : main cacher $(datadir) $(datafiles)
-	free -h > $(datadir)/free-h
+data : main cacher $(datadir) $(datafiles) run_data.tgz
+	echo "Done! Please send run_data.tgz to morin@scs.carleton.ca"
 
 $(datadir) :
 	mkdir $@

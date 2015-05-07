@@ -60,9 +60,6 @@ datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(datadir)/uname-a \
 data : main cacher $(datadir) $(datafiles)
 	free -h > $(datadir)/free-h
 
-paf :
-	echo $(rawdata)
-
 $(datadir) :
 	mkdir $@
 

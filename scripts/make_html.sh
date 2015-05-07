@@ -10,6 +10,13 @@ cpu=`grep '^model name\s*:' ${datadir}/cpuinfo | head -1 \
 cat <<.END
 <html>
   <head>
+   <style type="text/css">
+     body {
+         max-width: 60em;
+         margin-left: auto;
+         margin-right: auto;
+     }
+   </style>
   </head>
   <body>
     <h1>$cpu</h1>
@@ -28,7 +35,14 @@ for dt in ${dtypes[@]}; do
   for it in ${itypes[@]}; do
     cat <<.ENDER
     <h2>${dt} data with ${it} indices</h2>
-    <img src="absolute-${dt}-${it}.svg">
+    <table><tr>
+      <td>
+      <a href="absolute-${dt}-${it}.svg"><img src="absolute-${dt}-${it}.svg" width="400"></a>
+      </td>
+      <td>
+      <a href="relative-${dt}-${it}-rel.svg"><img src="relative-${dt}-${it}-rel.svg"  width="400"></a>
+      </td>
+    </tr></table>
 .ENDER
   done
 done

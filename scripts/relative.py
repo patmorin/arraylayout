@@ -12,7 +12,7 @@ def load_data(datadir, alg, dtype, itype):
 
 if __name__ == "__main__":
     datadir = "run_data"
-    for dtype in ["uint32", "uint64", "int128"]:
+    for dtype in ["uint32", "float32", "uint64", "float64", "int128"]:
       for itype in ["uint32", "uint64"]:
         fake = load_data(datadir, "fake", dtype, itype)
         binary = load_data(datadir, "binary", dtype, itype)

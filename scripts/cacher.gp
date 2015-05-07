@@ -7,4 +7,4 @@ set xlabel "log(n)/log(10)"
 set yrange [0:]
 set key off
 set format x "%L"
-plot "run_data/cacher.data" with lines
+plot "run_data/cacher.data" with lines lw 3

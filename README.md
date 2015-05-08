@@ -19,3 +19,10 @@ To run an experiment on your own (linux) machine (with g++ installed):
 This will test the cost of performing ten million searches in an array of one hundred million integers.  You'd better have at least 80MB of free RAM, which you can check with
 
     free -h
+
+## Results
+
+A webpage with some collected results is being maintained here:
+
+http://cglab.ca/~morin/misc/arraylayout/
+

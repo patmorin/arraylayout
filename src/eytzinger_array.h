@@ -88,7 +88,7 @@ I eytzinger_array<T,I>::search(const T &x) {
 }
 
 
-template<typename T, typename I>
+template<typename T, typename I, unsigned D>
 class eytzprefetch_array : public eytzinger_array<T,I> {
 	using eytzinger_array<T,I>::a;
 	using eytzinger_array<T,I>::n;
@@ -99,14 +99,42 @@ public:
 	I search(const T &x);
 };
 
-template<typename T, typename I>
-I eytzprefetch_array<T,I>::search(const T &x) {
+template<typename T, typename I, unsigned D>
+I eytzprefetch_array<T,I,D>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
-		//__builtin_prefetch(a+2*i+1);
-		//__builtin_prefetch(a+4*i+4);
-		__builtin_prefetch(a+16*i+16);
+		__builtin_prefetch(a+(1<<D)*i + (1<<D) + (1<<(D-1)) - 1, 0, 0);
+		if (x < a[i]) {
+			j = i;
+			i = 2*i + 1;
+		} else if (x > a[i]) {
+			i = 2*i + 2;
+		} else {
+			return i;
+		}
+	}
+	return j;
+}
+
+template<typename T, typename I, unsigned D>
+class eytzprefetch2_array : public eytzinger_array<T,I> {
+	using eytzinger_array<T,I>::a;
+	using eytzinger_array<T,I>::n;
+public:
+	template<typename ForwardIterator>
+	eytzprefetch2_array(ForwardIterator a0, I n) : eytzinger_array<T,I>(a0, n) {
+	}
+	I search(const T &x);
+};
+
+template<typename T, typename I, unsigned D>
+I eytzprefetch2_array<T,I,D>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		__builtin_prefetch(a+4*i + 5, 0, 0);
+		__builtin_prefetch(a+16*i + 23, 0, 0);
 		if (x < a[i]) {
 			j = i;
 			i = 2*i + 1;

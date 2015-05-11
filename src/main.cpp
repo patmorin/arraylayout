@@ -271,9 +271,21 @@ void run_tests(I n, I m) {
 	//Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 	//Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
 	//Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
-	Tool<eytzprefetch_array<T,I>,T,I>::run_test1(a, n, m, "eytzprefetch1");
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	Tool<eytzprefetch_array<T,I>,T,I>::run_test1(a, n, m, "eytzprefetch2");
+	Tool<eytzprefetch_array<T,I,1u>,T,I>::run_test1(a, n, m, "eytzprefetch1");
+	Tool<eytzprefetch_array<T,I,2u>,T,I>::run_test1(a, n, m, "eytzprefetch2");
+	Tool<eytzprefetch_array<T,I,3u>,T,I>::run_test1(a, n, m, "eytzprefetch3");
+	Tool<eytzprefetch_array<T,I,4u>,T,I>::run_test1(a, n, m, "eytzprefetch4");
+	Tool<eytzprefetch_array<T,I,5u>,T,I>::run_test1(a, n, m, "eytzprefetch5");
+	Tool<eytzprefetch_array<T,I,6u>,T,I>::run_test1(a, n, m, "eytzprefetch6");
+
+	Tool<eytzprefetch2_array<T,I,1u>,T,I>::run_test1(a, n, m, "eytzprefetch2-1");
+	Tool<eytzprefetch2_array<T,I,2u>,T,I>::run_test1(a, n, m, "eytzprefetch2-2");
+	Tool<eytzprefetch2_array<T,I,3u>,T,I>::run_test1(a, n, m, "eytzprefetch2-3");
+	Tool<eytzprefetch2_array<T,I,4u>,T,I>::run_test1(a, n, m, "eytzprefetch2-4");
+	Tool<eytzprefetch2_array<T,I,5u>,T,I>::run_test1(a, n, m, "eytzprefetch2-5");
+	Tool<eytzprefetch2_array<T,I,6u>,T,I>::run_test1(a, n, m, "eytzprefetch2-6");
+
 	//const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 	//Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
 	delete[] a;

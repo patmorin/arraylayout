@@ -268,12 +268,14 @@ static const unsigned CACHE_LINE_WIDTH = 64;
 template<typename T, typename I>
 void run_tests(I n, I m) {
 	T *a = build_and_fill<T,I>(n);
-	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
-	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
-	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+	//Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
+	//Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
+	//Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+	Tool<eytzprefetch_array<T,I>,T,I>::run_test1(a, n, m, "eytzprefetch1");
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
+	Tool<eytzprefetch_array<T,I>,T,I>::run_test1(a, n, m, "eytzprefetch2");
+	//const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	//Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
 	delete[] a;
 
 //	std::cout << "=====" << std::endl;

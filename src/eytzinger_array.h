@@ -74,7 +74,7 @@ template<typename T, typename I>
 I eytzinger_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
-	for (int d = 0; i < n; d++) {
+	while (i < n) {
 		if (x < a[i]) {
 			j = i;
 			i = 2*i + 1;
@@ -86,6 +86,39 @@ I eytzinger_array<T,I>::search(const T &x) {
 	}
 	return j;
 }
+
+
+template<typename T, typename I>
+class eytzprefetch_array : public eytzinger_array<T,I> {
+	using eytzinger_array<T,I>::a;
+	using eytzinger_array<T,I>::n;
+public:
+	template<typename ForwardIterator>
+	eytzprefetch_array(ForwardIterator a0, I n) : eytzinger_array<T,I>(a0, n) {
+	}
+	I search(const T &x);
+};
+
+template<typename T, typename I>
+I eytzprefetch_array<T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		//__builtin_prefetch(a+2*i+1);
+		//__builtin_prefetch(a+4*i+4);
+		__builtin_prefetch(a+16*i+16);
+		if (x < a[i]) {
+			j = i;
+			i = 2*i + 1;
+		} else if (x > a[i]) {
+			i = 2*i + 2;
+		} else {
+			return i;
+		}
+	}
+	return j;
+}
+
 
 } // namespace fbs
 

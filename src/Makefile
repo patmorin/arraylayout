@@ -27,7 +27,7 @@ clean :
 
 # This is all stuff for doing the test battery
 datadir = run_data
-magnitudes = 00 000 0000 00000 000000 0000000
+magnitudes = 0 00 000 0000 00000 000000 0000000
 nums = 1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
@@ -47,7 +47,7 @@ rawdata += $(foreach dt, $(dtypes64), \
              $(foreach n, $(ns64), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
 dtypes128 = int128
-magnitudes = 00 000 0000 00000 000000
+magnitudes = 0 00 000 0000 00000 000000
 ns128 = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
 ns128 += 20000000 30000000 40000000 50000000 60000000
 rawdata += $(foreach dt, $(dtypes128), \
@@ -84,7 +84,7 @@ $(datadir)/cacher.data : cacher
 	./cacher > $@
 
 $(datadir)/%.t : main
-	./main $(subst -, ,$(patsubst $(datadir)/%.t,%,$(@))) \
+	numactl -N 0 -C 7 ./main $(subst -, ,$(patsubst $(datadir)/%.t,%,$(@))) \
 		>> $(datadir)/alldata.dat 
 	touch $@
 

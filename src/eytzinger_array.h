@@ -74,7 +74,7 @@ template<typename T, typename I>
 I eytzinger_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
-	for (int d = 0; i < n; d++) {
+	while (i < n) {
 		if (x < a[i]) {
 			j = i;
 			i = 2*i + 1;

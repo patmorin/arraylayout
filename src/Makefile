@@ -27,7 +27,7 @@ clean :
 
 # This is all stuff for doing the test battery
 datadir = run_data
-magnitudes = 00 000 0000 00000 000000 0000000
+magnitudes = "" 0 00 000 0000 00000 000000 0000000
 nums = 1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
@@ -92,7 +92,7 @@ run_data.tgz : data
 	tar czvf run_data.tgz run_data --exclude "*.t"
 
 clean-data :
-	rm -rf $(datadir)
+	rm -rf $(datadir) run_data.tgz
 
 plots : data
 	./make_plots.sh

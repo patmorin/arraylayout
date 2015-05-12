@@ -272,15 +272,12 @@ void run_tests(I n, I m) {
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
+	Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
+	Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
+	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
+	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
 	delete[] a;
-
-//	std::cout << "=====" << std::endl;
-//	run_test2<sorted_array<T,I>,T,I>(10000, 10000000, "sorted");
-//	run_test2<veb_array<T,I>,T,I>(10000, 10000000, "veb");
-//	run_test2<eytzinger_array<T,I>,T,I>(10000, 10000000, "eytzinger");
-//	run_test2<btree_array<64/sizeof(T),T,I>,T,I>(10000, 10000000, "b-tree");
 }
 
 // Unsigned 32 bit integer

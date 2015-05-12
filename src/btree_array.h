@@ -105,6 +105,45 @@ I btree_array<B, T,I>::search(const T &x) {
 	return j;
 }
 
+template<unsigned B, typename T, typename I>
+class btree_arraypf : public btree_array<B, T,I> {
+protected:
+	using btree_array<B,T,I>::a;
+	using btree_array<B,T,I>::n;
+	using btree_array<B,T,I>::child;
+
+public:
+	template<typename ForwardIterator>
+	btree_arraypf(ForwardIterator a0, I n0)
+		: btree_array<B,T,I>(a0, n0) {};
+	I search(const T &x);
+};
+
+template<unsigned B, typename T, typename I>
+I btree_arraypf<B,T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		I lo = i;
+		I hi = std::min(i+B, n);
+		__builtin_prefetch(&a[child(0, i)]);
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = hi;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
+		}
+		i = child((unsigned)(hi-i), i);
+	}
+	return j;
+}
+
+
 } // namespace fbs
 
 

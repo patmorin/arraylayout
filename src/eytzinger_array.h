@@ -12,6 +12,8 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <memory>
+#include <cassert>
 
 #include "base_array.h"
 
@@ -27,9 +29,13 @@ protected:
 	ForwardIterator copy_data(ForwardIterator a0, I i);
 
 public:
+	eytzinger_array() { };
+
 	template<typename ForwardIterator>
 	eytzinger_array(ForwardIterator a0, I n0);
+
 	~eytzinger_array();
+
 	I search(const T &x);
 };
 
@@ -87,7 +93,77 @@ I eytzinger_array<T,I>::search(const T &x) {
 	return j;
 }
 
-} // namespace fbs
 
+template<typename T, typename I>
+class eytzingerpf_array : public eytzinger_array<T,I> {
+protected:
+	using eytzinger_array<T,I>::a;
+	using eytzinger_array<T,I>::n;
+
+public:
+	template<typename ForwardIterator>
+	eytzingerpf_array(ForwardIterator a0, I n0)
+		: eytzinger_array<T,I>(a0, n0) {} ;
+	I search(const T &x);
+};
+
+template<typename T, typename I>
+I eytzingerpf_array<T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		__builtin_prefetch(a+16*i + 23, 0, 0);
+		const T current = a[i];
+		I left = 2 * i + 1;
+		I right = 2 * i + 2;
+		j = (x <= current) ? i : j;
+		i = (x <= current) ? left : right;
+	}
+
+	return j;
+}
+
+
+template<typename T, typename I>
+class eytzingerpfa_array : public eytzinger_array<T,I> {
+protected:
+	using eytzinger_array<T,I>::a;
+	using eytzinger_array<T,I>::n;
+	using eytzinger_array<T,I>::copy_data;
+
+public:
+	template<typename ForwardIterator>
+	eytzingerpfa_array(ForwardIterator a0, I n0)
+		: eytzinger_array<T,I>() {
+			n = n0;
+			a = new T[n+1];
+			assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
+			a++;
+			copy_data(a0, 0);
+			//std::size_t space = sizeof(T)*(n+1);
+			//std::align(64, sizeof(T)*n, &a, &space);
+		} ;
+	I search(const T &x);
+	~eytzingerpfa_array() { a--; free(a); a = new T[1]; }
+};
+
+template<typename T, typename I>
+I eytzingerpfa_array<T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		__builtin_prefetch(a+16*i + 15, 0, 0);
+		const T current = a[i];
+		I left = 2 * i + 1;
+		I right = 2 * i + 2;
+		j = (x <= current) ? i : j;
+		i = (x <= current) ? left : right;
+	}
+
+	return j;
+}
+
+
+} // namespace fbs
 
 #endif /* FBS_EYTZINGER_ARRAY_H_ */

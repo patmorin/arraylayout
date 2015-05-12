@@ -105,6 +105,11 @@ I btree_array<B, T,I>::search(const T &x) {
 	return j;
 }
 
+// This class is designed to be prefetch-friendly. If L is the cache
+// line size and C=L/sizeo(T) is the number of values that fit into
+// a cache line, then we should take B=sqrt(C).  Then, when we're accessing
+// block i, all of its B children will fit into a single cache line that can
+// be prefetched before we search block i.
 template<unsigned B, typename T, typename I>
 class btree_arraypf : public btree_array<B, T,I> {
 protected:

@@ -63,8 +63,8 @@ eytzinger_array<T,I,e>::eytzinger_array(ForwardIterator a0, I n0) {
 		throw std::out_of_range(ss.str());
 	}
 	n = n0;
-        int r = posix_memalign((void **)&a, 1UL << 21, sizeof(T) * n);
-        assert(r == 0);
+	int r = posix_memalign((void **)&a, 1UL << 21, sizeof(T) * n);
+	assert(r == 0);
 	copy_data(a0, 0);
 }
 
@@ -78,17 +78,18 @@ __attribute__((noinline))
 I eytzinger_array<T,I,early_termination>::search(const T x) {
 	I j = n;
 	I i = 0;
-        while (i < n) {
-                const T current = a[i];
-                I left = 2 * i + 1;
-                I right = 2 * i + 2;
+	while (i < n) {
+		__builtin_prefetch(a+16*i + 23, 0, 0);
+		const T current = a[i];
+		I left = 2 * i + 1;
+		I right = 2 * i + 2;
 
-                if (early_termination && current == x) {
-                        return i;
-                }
+		if (early_termination && current == x) {
+			return i;
+		}
 
-                j = (x <= current) ? i : j;
-                i = (x <= current) ? left : right;
+		j = (x <= current) ? i : j;
+		i = (x <= current) ? left : right;
 	}
 
 	return j;

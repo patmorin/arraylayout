@@ -16,6 +16,7 @@
 #include "eytzinger_array.h"
 #include "sorted_array.h"
 #include "btree_array.h"
+#include "2level_array.h"
 
 using namespace fbs;
 
@@ -272,6 +273,7 @@ void run_tests(I n, I m) {
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
+	Tool<level2_array<T,I>,T,I>::run_test1(a, n, m, "2level");
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree");
 	delete[] a;

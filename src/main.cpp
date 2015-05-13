@@ -277,6 +277,7 @@ void run_tests(I n, I m) {
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
 	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
+	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
 	delete[] a;
 }
 

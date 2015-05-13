@@ -17,6 +17,9 @@
 
 #include "base_array.h"
 
+using std::cout;
+using std::endl;
+
 namespace fbs {
 
 template<typename T, typename I>
@@ -99,11 +102,16 @@ class eytzingerpf_array : public eytzinger_array<T,I> {
 protected:
 	using eytzinger_array<T,I>::a;
 	using eytzinger_array<T,I>::n;
+	I mask;
 
 public:
 	template<typename ForwardIterator>
 	eytzingerpf_array(ForwardIterator a0, I n0)
-		: eytzinger_array<T,I>(a0, n0) {} ;
+		: eytzinger_array<T,I>(a0, n0) {
+		for (mask = 1; 2*mask < n; mask <<= 1);
+		mask -= 1;
+		cout << mask << endl;
+	} ;
 	I search(const T &x);
 };
 
@@ -114,8 +122,8 @@ I eytzingerpf_array<T,I>::search(const T &x) {
 	while (i < n) {
 		__builtin_prefetch(a+16*i + 23, 0, 0);
 		const T current = a[i];
-		I left = 2 * i + 1;
-		I right = 2 * i + 2;
+		I left = 2*i + 1;
+		I right = 2*i + 2;
 		j = (x <= current) ? i : j;
 		i = (x <= current) ? left : right;
 	}
@@ -154,8 +162,8 @@ I eytzingerpfa_array<T,I>::search(const T &x) {
 	while (i < n) {
 		__builtin_prefetch(a+16*i + 15, 0, 0);
 		const T current = a[i];
-		I left = 2 * i + 1;
-		I right = 2 * i + 2;
+		I left = 2*i + 1;
+		I right = 2*i + 2;
 		j = (x <= current) ? i : j;
 		i = (x <= current) ? left : right;
 	}

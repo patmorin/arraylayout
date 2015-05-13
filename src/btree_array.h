@@ -16,6 +16,8 @@
 
 #include "base_array.h"
 
+using std::cout;
+using std::endl;
 using std::min;
 
 namespace fbs {
@@ -148,6 +150,57 @@ I btree_arraypf<B,T,I>::search(const T &x) {
 	return j;
 }
 
+// A branch free variant of btree_array
+template<unsigned B, typename T, typename I>
+class bfbtree_array : public btree_array<B, T,I> {
+protected:
+	using btree_array<B,T,I>::a;
+	using btree_array<B,T,I>::n;
+	using btree_array<B,T,I>::child;
+
+public:
+	template<typename ForwardIterator>
+	bfbtree_array(ForwardIterator a0, I n0)
+		: btree_array<B,T,I>(a0, n0) {};
+	I search(const T &x);
+};
+
+
+template<unsigned B, typename T, typename I>
+inline I inner_search2(const T *a, I i, const T &x) {
+	if (B==0) return i;
+	if (x <= a[i+B/2])
+		return inner_search2<B/2>(a, i, x);
+	return inner_search2<B-B/2-1>(a, i+B/2+1, x);
+}
+
+template<unsigned B, typename T, typename I>
+I bfbtree_array<B,T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	while (i+B <= n) {
+		I t = inner_search2<B>(a, i, x);
+		j = t < i+B ? t : j;
+		i = child((unsigned)(t-i), i);
+	}
+	if (__builtin_expect(i <= n, 0)) {
+		// Now we're in the last block
+		I lo = i;
+		I hi = n;
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = m;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
+		}
+	}
+	return j;
+}
 
 } // namespace fbs
 

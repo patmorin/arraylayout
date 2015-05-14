@@ -10,12 +10,12 @@
 #include <cstdint>
 #include <cstring>
 
-#include "base_array.h"
-
 #include "veb_array.h"
 #include "eytzinger_array.h"
 #include "sorted_array.h"
 #include "btree_array.h"
+
+#include "xorshift.h"
 
 using namespace fbs;
 
@@ -141,9 +141,10 @@ T *build_and_fill(I n) {
 // Note: D is one of uniform_int_distribution or uniform_real_distribution
 template<typename Array, typename T, typename I, typename D>
 void run_test1_b(T *a, I n, I m, const std::string &name) {
-	auto seed = 23433;
-	std::mt19937 re(23433);
-	D ui(0, 2*n+1);
+	//auto seed = 23433;
+	// std::mt19937 re(23433);
+	T limit = 2*n + 1;
+	D xs; //ui(0, 2*n+1);
 
 	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
 			<< " " << n << " " << m << " ";
@@ -154,11 +155,11 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	std::chrono::duration<double> elapsed = stop - start;
 	std::cout << elapsed.count() << " ";
 	std::cout.flush();
-	re.seed(seed);
+	//re.seed(seed);
 	start = std::chrono::high_resolution_clock::now();
 	T sum = 0;
 	for (I i = 0; i < m; i++) {
-		T x = ui(re);
+		T x = xs(limit);
 		I j = aa.search(x);
 		sum += (j < n) ? (int)aa.get_data(j) : -1;
 	}
@@ -175,35 +176,35 @@ class Tool { };
 template<typename Array, typename I>
 struct Tool<Array, std::uint32_t, I> {
 	static void run_test1(std::uint32_t *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, std::uint32_t, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+		run_test1_b<Array, std::uint32_t, I, xs_gen_int>(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, std::uint64_t, I> {
 	static void run_test1(std::uint64_t *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, std::uint64_t, I, std::uniform_int_distribution<std::uint64_t> >(a, n, m, name);
+		run_test1_b<Array, std::uint64_t, I, xs_gen_int >(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, float, I> {
 	static void run_test1(float *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, float, I, std::uniform_real_distribution<float> >(a, n, m, name);
+		run_test1_b<Array, float, I, xs_gen_real >(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, double, I> {
 	static void run_test1(double *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, double, I, std::uniform_real_distribution<double> >(a, n, m, name);
+		run_test1_b<Array, double, I, xs_gen_real >(a, n, m, name);
 	}
 };
 
 template<typename Array, unsigned S, typename I>
 struct Tool<Array, fake_number<std::uint32_t,S>, I> {
 	static void run_test1(fake_number<std::uint32_t,S> *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, fake_number<std::uint32_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+		run_test1_b<Array, fake_number<std::uint32_t,S>, I, xs_gen_int >(a, n, m, name);
 	}
 };
 
@@ -268,16 +269,16 @@ static const unsigned CACHE_LINE_WIDTH = 64;
 template<typename T, typename I>
 void run_tests(I n, I m) {
 	T *a = build_and_fill<T,I>(n);
-	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
+	//Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
-	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
-	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
-	Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
-	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
-	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
-	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
+	//Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+	//Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
+	//Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
+	//Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
+	//const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	//Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
+	//Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
+	//Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
 	delete[] a;
 }
 

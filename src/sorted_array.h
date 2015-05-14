@@ -46,14 +46,16 @@ sorted_array<T,I>::~sorted_array() {
 }
 
 template<typename T, typename I>
-I sorted_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) sorted_array<T,I>::search(const T &x) {
+	const T t = x;
+	const T *a = this->a;
 	I lo = 0;
 	I hi = n;
 	while (lo < hi) {
 		I m = (lo + hi) / 2;
-		if (x < a[m]) {
+		if (t < a[m]) {
 			hi = m;
-		} else if (x > a[m]) {
+		} else if (t > a[m]) {
 			lo = m+1;
 		} else {
 			return m;

@@ -45,7 +45,7 @@ public:
 
 	~veb_array();
 
-	I search(const T &x);
+	I search(T x);
 };
 
 template<typename T, typename I>
@@ -110,7 +110,7 @@ veb_array<T,I>::~veb_array() {
 }
 
 template<typename T, typename I>
-I __attribute__ ((noinline)) veb_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) veb_array<T,I>::search(T x) {
 	I rtl[MAX_H+1];
 	I j = n;
 	I i = 0;

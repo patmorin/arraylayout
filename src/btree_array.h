@@ -45,7 +45,7 @@ public:
 
 	~btree_array();
 
-	I search(const T &x);
+	I search(T x);
 
 };
 
@@ -88,7 +88,7 @@ btree_array<B, T,I>::~btree_array() {
 }
 
 template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) btree_array<B, T,I>::search(const T &x) {
+I __attribute__ ((noinline)) btree_array<B, T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -128,7 +128,7 @@ public:
 			eytz_block(i);
 		}
 	};
-	I search(const T &x);
+	I search(T x);
 };
 
 template<unsigned B, typename T, typename I>
@@ -179,11 +179,13 @@ inline unsigned inner_eytzinger_search(T *block, T x) {
 }
 
 template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(const T &x) {
+I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(T x) {
 	I j = n;
 	I i = 0;
-	static const unsigned twist[] =
+	static const unsigned unwinder[] =
 	{8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 16};
+
+	// Search on complete b-tree blocks
 	while (i+B <= n) {
 		T *b = &a[i];
 		unsigned t = 0, j1 = B;
@@ -196,13 +198,11 @@ I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(const T &x) {
 		}
 		j1 = (t == B-1) ? (x <= b[t] ? t : j1) : j1;
 		j = j1 < B ? i+j1 : j;
-		// cout << "a[j] = " << a[j] << endl;
-		// cout << "going to " << j1 << "th child" << endl;
-		i = child(twist[j1], i);
-		// cout << "going to block " << (i/B) << endl;
+		i = child(unwinder[j1], i);
 	}
+
+	// Search last (partial) block if necessary
 	if (__builtin_expect(i <= n, 0)) {
-		// Now we're in the last block
 		I lo = i;
 		I hi = n;
 		while (lo < hi) {
@@ -239,11 +239,11 @@ public:
 	template<typename ForwardIterator>
 	btree_arraypf(ForwardIterator a0, I n0)
 		: btree_array<B,T,I>(a0, n0) {};
-	I search(const T &x);
+	I search(T x);
 };
 
 template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) btree_arraypf<B,T,I>::search(const T &x) {
+I __attribute__ ((noinline)) btree_arraypf<B,T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -278,12 +278,12 @@ public:
 	template<typename ForwardIterator>
 	bfbtree_array(ForwardIterator a0, I n0)
 		: btree_array<B,T,I>(a0, n0) {};
-	I search(const T &x);
+	I search(T x);
 };
 
 
 template<unsigned B, typename T, typename I>
-inline I inner_search2(const T *a, I i, const T &x) {
+inline I inner_search2(const T *a, I i, T x) {
 	if (B==0) return i;
 	if (x <= a[i+B/2])
 		return inner_search2<B/2>(a, i, x);
@@ -291,7 +291,7 @@ inline I inner_search2(const T *a, I i, const T &x) {
 }
 
 template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) bfbtree_array<B,T,I>::search(const T &x) {
+I __attribute__ ((noinline)) bfbtree_array<B,T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i+B <= n) {

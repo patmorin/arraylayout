@@ -39,7 +39,7 @@ public:
 
 	~eytzinger_array();
 
-	I search(const T &x);
+	I search(T x);
 };
 
 template<typename T, typename I>
@@ -80,7 +80,7 @@ eytzinger_array<T,I>::~eytzinger_array() {
 }
 
 template<typename T, typename I>
-I __attribute__ ((noinline)) eytzinger_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzinger_array<T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -112,11 +112,11 @@ public:
 		mask -= 1;
 //		cout << mask << endl;
 	} ;
-	I search(const T &x);
+	I search(T x);
 };
 
 template<typename T, typename I>
-I __attribute__ ((noinline)) eytzingerpf_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzingerpf_array<T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -151,12 +151,12 @@ public:
 			//std::size_t space = sizeof(T)*(n+1);
 			//std::align(64, sizeof(T)*n, &a, &space);
 		} ;
-	I search(const T &x);
+	I search(T x);
 	~eytzingerpfa_array() { a--; free(a); a = new T[1]; }
 };
 
 template<typename T, typename I>
-I __attribute__ ((noinline)) eytzingerpfa_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzingerpfa_array<T,I>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {

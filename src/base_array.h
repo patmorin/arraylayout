@@ -21,7 +21,7 @@ protected:
 public:
 	base_array() { a = NULL; n = 0; };
 
-	const T& get_data(const I &i) {
+	const T get_data(I i) {
 #ifdef _DEBUG
 		if (i < 0 || i >= n) {
 			std::ostringstream ss;

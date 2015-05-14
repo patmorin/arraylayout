@@ -27,7 +27,7 @@ public:
 	template<typename ForwardIterator>
 	sorted_array(ForwardIterator a0, I n0);
 	~sorted_array();
-	I search(const T &x);
+	I search(T x);
 };
 
 
@@ -46,7 +46,7 @@ sorted_array<T,I>::~sorted_array() {
 }
 
 template<typename T, typename I>
-I __attribute__ ((noinline)) sorted_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) sorted_array<T,I>::search(T x) {
 	const T t = x;
 	const T *a = this->a;
 	I lo = 0;

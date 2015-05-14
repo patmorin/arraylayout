@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <limits>
 
+#include <type_traits>
 #include "base_array.h"
 
 using std::cout;
@@ -60,7 +61,6 @@ ForwardIterator btree_array<B,T,I>::copy_data(ForwardIterator a0, I i) {
 			a[i+c] = *a0++;
 		}
 	}
-
 	return a0;
 }
 
@@ -74,18 +74,21 @@ btree_array<B, T,I>::btree_array(ForwardIterator a0, I n0) {
 		throw std::out_of_range(ss.str());
 	}
 	n = n0;
-	a = new T[n];
+	// FIXME: replace with std::align once gcc supports it
+	assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
+	//a = new T[n];
 	copy_data(a0, 0);
 
 }
 
 template<unsigned B, typename T, typename I>
 btree_array<B, T,I>::~btree_array() {
-	delete[] a;
+	//delete[] a;
+	free(a);
 }
 
 template<unsigned B, typename T, typename I>
-I btree_array<B, T,I>::search(const T &x) {
+I __attribute__ ((noinline)) btree_array<B, T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -107,6 +110,119 @@ I btree_array<B, T,I>::search(const T &x) {
 	return j;
 }
 
+template<unsigned B, typename T, typename I>
+class btree_eytzinger_array : public btree_array<B,T,I> {
+protected:
+	using btree_array<B,T,I>::a;
+	using btree_array<B,T,I>::n;
+	using btree_array<B,T,I>::child;
+
+	T* copy_eytz_data(T *b0, T *b, unsigned i);
+	void eytz_block(I i);
+
+public:
+	template<typename ForwardIterator>
+	btree_eytzinger_array(ForwardIterator a0, I n0)
+		: btree_array<B,T,I>(a0, n0) {
+		for (I i = 0; i+B <= n; i += B) {
+			eytz_block(i);
+		}
+	};
+	I search(const T &x);
+};
+
+template<unsigned B, typename T, typename I>
+T* btree_eytzinger_array<B,T,I>::copy_eytz_data(T *b0, T *b, unsigned i) {
+	if (i >= B) return b0;
+
+	// visit left child
+	b0 = copy_eytz_data(b0, b, 2*i+1);
+
+	// put data at the root
+	b[i] = *b0++;
+
+	// visit right child
+	b0 = copy_eytz_data(b0, b, 2*i+2);
+
+	return b0;
+}
+
+// Layout the btree block starting at a+i in an Eytzinger order
+template<unsigned B, typename T, typename I>
+void btree_eytzinger_array<B,T,I>::eytz_block(I i) {
+	T buf[B];
+//	cout << "i = " << i << endl;
+	copy_eytz_data(a+i, buf, 0);
+//	for (int j = 0; j < B; j++) {
+//		cout << a[i+j] << ",";
+//	}
+//	cout << " => ";
+//	for (int j = 0; j < B; j++) {
+//		cout << buf[j] << ",";
+//	}
+//	cout << endl;
+	std::copy_n(buf, B, a+i);
+}
+
+// Search in block, which is layed out in Eytzinger order and has
+// size B.
+template<unsigned B, typename T, unsigned i, unsigned j>
+inline unsigned inner_eytzinger_search(T *block, T x) {
+	if (i >= B) return j;
+    if (x < block[i]) {
+    	inner_eytzinger_search<B,T,2*i+1,i>(block, x);
+    } else if (x > block[i]) {
+    	inner_eytzinger_search<B,T,2*i+2,j>(block, x);
+    } else {
+    	return i;
+    }
+}
+
+template<unsigned B, typename T, typename I>
+I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(const T &x) {
+	I j = n;
+	I i = 0;
+	static const unsigned twist[] =
+	{8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 16};
+	while (i+B <= n) {
+		T *b = &a[i];
+		unsigned t = 0, j1 = B;
+		for (int _ = 0; _ < 4; _++) {
+			T current = b[t];
+			I left = 2*t + 1;
+			I right = 2*t + 2;
+			j1 = (x <= current) ? t : j1;
+			t = (x <= current) ? left : right;
+		}
+		j1 = (t == B-1) ? (x <= b[t] ? t : j1) : j1;
+		j = j1 < B ? i+j1 : j;
+		// cout << "a[j] = " << a[j] << endl;
+		// cout << "going to " << j1 << "th child" << endl;
+		i = child(twist[j1], i);
+		// cout << "going to block " << (i/B) << endl;
+	}
+	if (__builtin_expect(i <= n, 0)) {
+		// Now we're in the last block
+		I lo = i;
+		I hi = n;
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = m;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
+		}
+	}
+	return j;
+}
+
+
+
+
 // This class is designed to be prefetch-friendly. If L is the cache
 // line size and C=L/sizeo(T) is the number of values that fit into
 // a cache line, then we should take B=sqrt(C).  Then, when we're accessing
@@ -127,7 +243,7 @@ public:
 };
 
 template<unsigned B, typename T, typename I>
-I btree_arraypf<B,T,I>::search(const T &x) {
+I __attribute__ ((noinline)) btree_arraypf<B,T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -150,7 +266,7 @@ I btree_arraypf<B,T,I>::search(const T &x) {
 	return j;
 }
 
-// A branch free variant of btree_array
+// A btree array with a hardcoded inner search
 template<unsigned B, typename T, typename I>
 class bfbtree_array : public btree_array<B, T,I> {
 protected:
@@ -175,7 +291,7 @@ inline I inner_search2(const T *a, I i, const T &x) {
 }
 
 template<unsigned B, typename T, typename I>
-I bfbtree_array<B,T,I>::search(const T &x) {
+I __attribute__ ((noinline)) bfbtree_array<B,T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i+B <= n) {

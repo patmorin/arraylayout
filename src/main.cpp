@@ -269,16 +269,19 @@ static const unsigned CACHE_LINE_WIDTH = 64;
 template<typename T, typename I>
 void run_tests(I n, I m) {
 	T *a = build_and_fill<T,I>(n);
-	//Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
+	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
-	//Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
-	//Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	//Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
-	//Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
-	//const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	//Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
-	//Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
-	//Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
+	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
+	Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
+	Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
+	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
+	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
+	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
+	Tool<btree_eytzinger_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_eytzinger");
+	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
+	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
 	delete[] a;
 }
 

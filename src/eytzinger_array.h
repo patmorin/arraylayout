@@ -80,7 +80,7 @@ eytzinger_array<T,I>::~eytzinger_array() {
 }
 
 template<typename T, typename I>
-I eytzinger_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzinger_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -110,13 +110,13 @@ public:
 		: eytzinger_array<T,I>(a0, n0) {
 		for (mask = 1; 2*mask < n; mask <<= 1);
 		mask -= 1;
-		cout << mask << endl;
+//		cout << mask << endl;
 	} ;
 	I search(const T &x);
 };
 
 template<typename T, typename I>
-I eytzingerpf_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzingerpf_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -144,7 +144,7 @@ public:
 	eytzingerpfa_array(ForwardIterator a0, I n0)
 		: eytzinger_array<T,I>() {
 			n = n0;
-			a = new T[n+1];
+			// a = new T[n+1];
 			assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
 			a++;
 			copy_data(a0, 0);
@@ -156,7 +156,7 @@ public:
 };
 
 template<typename T, typename I>
-I eytzingerpfa_array<T,I>::search(const T &x) {
+I __attribute__ ((noinline)) eytzingerpfa_array<T,I>::search(const T &x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {

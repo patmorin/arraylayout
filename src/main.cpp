@@ -272,7 +272,10 @@ void run_tests(I n, I m) {
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	Tool<eytzingerpf_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpf");
+	Tool<branchfree_eytzinger_array<T,I,true>,T,I>::run_test1(a, n, m,
+			"bf_eytzinger_pf");
+	Tool<branchfree_eytzinger_array<T,I,false>,T,I>::run_test1(a, n, m,
+			"bf_eytzinger_nopf");
 	Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 	Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");

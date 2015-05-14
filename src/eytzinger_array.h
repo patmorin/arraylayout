@@ -97,37 +97,38 @@ I __attribute__ ((noinline)) eytzinger_array<T,I>::search(T x) {
 }
 
 
-template<typename T, typename I>
-class eytzingerpf_array : public eytzinger_array<T,I> {
+template<typename T, typename I, bool prefetch = true>
+class branchfree_eytzinger_array : public eytzinger_array<T,I> {
 protected:
 	using eytzinger_array<T,I>::a;
 	using eytzinger_array<T,I>::n;
+
+	// We always prefetch multiplier*i + offset
+	static const I multiplier = 64/sizeof(T);
+	static const I offset = multiplier + multiplier/2;
 	I mask;
 
 public:
 	template<typename ForwardIterator>
-	eytzingerpf_array(ForwardIterator a0, I n0)
-		: eytzinger_array<T,I>(a0, n0) {
-		for (mask = 1; 2*mask < n; mask <<= 1);
-		mask -= 1;
-//		cout << mask << endl;
-	} ;
+	branchfree_eytzinger_array(ForwardIterator a0, I n0)
+		: eytzinger_array<T,I>(a0, n0) { } ;
 	I search(T x);
 };
 
-template<typename T, typename I>
-I __attribute__ ((noinline)) eytzingerpf_array<T,I>::search(T x) {
+template<typename T, typename I, bool prefetch>
+I
+__attribute__ ((noinline))
+branchfree_eytzinger_array<T,I,prefetch>::search(T x) {
 	I j = n;
 	I i = 0;
 	while (i < n) {
-		__builtin_prefetch(a+16*i + 23, 0, 0);
+		if (prefetch) __builtin_prefetch(a+((multiplier*i + offset)&mask), 0, 0);
 		const T current = a[i];
 		I left = 2*i + 1;
 		I right = 2*i + 2;
 		j = (x <= current) ? i : j;
 		i = (x <= current) ? left : right;
 	}
-
 	return j;
 }
 

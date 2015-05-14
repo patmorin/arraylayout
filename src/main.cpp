@@ -15,7 +15,7 @@
 #include "sorted_array.h"
 #include "btree_array.h"
 
-#include "xorshift.h"
+// #include "xorshift.h"
 
 using namespace fbs;
 
@@ -141,10 +141,10 @@ T *build_and_fill(I n) {
 // Note: D is one of uniform_int_distribution or uniform_real_distribution
 template<typename Array, typename T, typename I, typename D>
 void run_test1_b(T *a, I n, I m, const std::string &name) {
-	//auto seed = 23433;
-	// std::mt19937 re(23433);
-	T limit = 2*n + 1;
-	D xs; //ui(0, 2*n+1);
+        auto seed=232342;
+	//std::mt19937 re(seed);
+	std::minstd_rand re(seed);
+	D ui(0, 2*n+1);
 
 	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
 			<< " " << n << " " << m << " ";
@@ -155,11 +155,10 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	std::chrono::duration<double> elapsed = stop - start;
 	std::cout << elapsed.count() << " ";
 	std::cout.flush();
-	//re.seed(seed);
 	start = std::chrono::high_resolution_clock::now();
 	T sum = 0;
 	for (I i = 0; i < m; i++) {
-		T x = xs(limit);
+		T x = ui(re);
 		I j = aa.search(x);
 		sum += (j < n) ? (int)aa.get_data(j) : -1;
 	}
@@ -176,35 +175,35 @@ class Tool { };
 template<typename Array, typename I>
 struct Tool<Array, std::uint32_t, I> {
 	static void run_test1(std::uint32_t *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, std::uint32_t, I, xs_gen_int>(a, n, m, name);
+		run_test1_b<Array, std::uint32_t, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, std::uint64_t, I> {
 	static void run_test1(std::uint64_t *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, std::uint64_t, I, xs_gen_int >(a, n, m, name);
+		run_test1_b<Array, std::uint64_t, I, std::uniform_int_distribution<std::uint64_t> >(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, float, I> {
 	static void run_test1(float *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, float, I, xs_gen_real >(a, n, m, name);
+		run_test1_b<Array, float, I, std::uniform_real_distribution<float> >(a, n, m, name);
 	}
 };
 
 template<typename Array, typename I>
 struct Tool<Array, double, I> {
 	static void run_test1(double *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, double, I, xs_gen_real >(a, n, m, name);
+		run_test1_b<Array, double, I, std::uniform_real_distribution<double> >(a, n, m, name);
 	}
 };
 
 template<typename Array, unsigned S, typename I>
 struct Tool<Array, fake_number<std::uint32_t,S>, I> {
 	static void run_test1(fake_number<std::uint32_t,S> *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, fake_number<std::uint32_t,S>, I, xs_gen_int >(a, n, m, name);
+		run_test1_b<Array, fake_number<std::uint32_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
 	}
 };
 

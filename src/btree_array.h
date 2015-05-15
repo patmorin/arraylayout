@@ -32,7 +32,7 @@ protected:
 	using base_array<T,I>::a;
 	using base_array<T,I>::n;
 
-	I child(unsigned c, I i) {
+	static I child(unsigned c, I i) {
 		return (B+1)*i + (c+1)*B;
 	}
 
@@ -42,10 +42,9 @@ protected:
 public:
 	template<typename ForwardIterator>
 	btree_array(ForwardIterator a0, I n0);
-
 	~btree_array();
 
-	I search(T x);
+	I search(T x) const;
 
 };
 
@@ -88,7 +87,7 @@ btree_array<B, T,I>::~btree_array() {
 }
 
 template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) btree_array<B, T,I>::search(T x) {
+I __attribute__ ((noinline)) btree_array<B, T,I>::search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i < n) {
@@ -109,6 +108,76 @@ I __attribute__ ((noinline)) btree_array<B, T,I>::search(T x) {
 	}
 	return j;
 }
+
+template<unsigned B, typename T, typename I>
+class btree_sneak_array : public btree_array<B,T,I> {
+protected:
+	using btree_array<B,T,I>::a;
+	using btree_array<B,T,I>::n;
+	using btree_array<B,T,I>::child;
+
+	T* copy_eytz_data(T *b0, T *b, unsigned i);
+	void eytz_block(I i);
+
+	template<unsigned int Q>
+	const T* inner_search(const T *base, const T x) const;
+
+public:
+	template<typename ForwardIterator>
+	btree_sneak_array(ForwardIterator a0, I n0) : btree_array<B,T,I>(a0, n0) {};
+	I search(T x);
+};
+
+template<unsigned int B, typename T, typename I>
+template<unsigned int Q>
+inline const T *btree_sneak_array<B,T,I>::inner_search(const T *base, const T x) const
+{
+        if (Q <= 1) {
+                return base;
+        }
+
+        const unsigned int half = Q / 2;
+        const T *current = &base[half];
+        //const I j = current - a;
+        return inner_search<Q - half>((*current < x) ? current : base, x);
+}
+
+template<unsigned B, typename T, typename I>
+I __attribute__ ((noinline)) btree_sneak_array<B,T,I>::search(T x) {
+	I j = n;
+	I i = 0;
+	const I stop = n-B;
+	while (i <= stop) {
+		__builtin_prefetch(a+child(i, B/2), 0, 0);
+		const T *base = &a[i];
+		const T *pred = inner_search<B>(base, x);
+		unsigned int nth = (*pred < x) + pred - base;
+		{
+			/* nth == B iff x > all values in block. */
+			const T current = base[nth % B];
+			I next = i + nth;
+			j = (current >= x) ? next : j;
+		}
+		i = child(nth, i);
+	}
+	if (__builtin_expect(i < n, 0)) {
+		// last (partial) block
+		const T *base = &a[i];
+		I m = n - i;
+		while (m > 1) {
+			I half = m / 2;
+			const T *current = &base[half];
+
+			base = (*current < x) ? current : base;
+			m -= half;
+		}
+
+		I ret = (*base < x) + base - a;
+		return (ret == n) ? j : ret;
+	}
+	return j;
+}
+
 
 template<unsigned B, typename T, typename I>
 class btree_eytzinger_array : public btree_array<B,T,I> {

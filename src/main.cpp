@@ -142,8 +142,8 @@ T *build_and_fill(I n) {
 template<typename Array, typename T, typename I, typename D>
 void run_test1_b(T *a, I n, I m, const std::string &name) {
         auto seed=232342;
-	//std::mt19937 re(seed);
-	std::minstd_rand re(seed);
+	std::mt19937 re(seed);
+	//std::minstd_rand re(seed);
 	D ui(0, 2*n+1);
 
 	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
@@ -281,6 +281,7 @@ void run_tests(I n, I m) {
 	Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
 	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
 	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
+	Tool<btree_sneak_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_sneak");
 	Tool<btree_eytzinger_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_eytzinger");
 	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
 	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");

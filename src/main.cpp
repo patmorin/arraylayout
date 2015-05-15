@@ -207,8 +207,6 @@ struct Tool<Array, fake_number<std::uint32_t,S>, I> {
 	}
 };
 
-
-
 // I came close, but could never get this to work
 //template<typename Array, typename T, typename I>
 //struct Tool<Array, T, I,
@@ -271,20 +269,25 @@ void run_tests(I n, I m) {
 	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
-	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger");
-	Tool<branchfree_eytzinger_array<T,I,true>,T,I>::run_test1(a, n, m,
-			"bf_eytzinger_pf");
-	Tool<branchfree_eytzinger_array<T,I,false>,T,I>::run_test1(a, n, m,
-			"bf_eytzinger_nopf");
-	Tool<eytzingerpfa_array<T,I>,T,I>::run_test1(a, n, m, "eytzingerpfa");
+
+	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
+	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
+	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
+	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
+	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
+
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 	Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
 	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
 	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
-	Tool<btree_sneak_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_sneak");
-	Tool<btree_eytzinger_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_eytzinger");
-	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
-	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
+
+	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
+	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
+
+	//	Tool<btree_sneak_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_sneak");
+//	Tool<btree_eytzinger_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_eytzinger");
+//	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
+//	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
 	delete[] a;
 }
 

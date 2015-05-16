@@ -27,7 +27,7 @@ protected:
 
 	// We always prefetch multiplier*i + offset
 	static const I multiplier = 64/sizeof(T);
-	static const I offset = multiplier + multiplier/2;
+	static const I offset = multiplier + multiplier/2 - 1;
 
 	template<typename ForwardIterator>
 	ForwardIterator copy_data(ForwardIterator a0, I i);

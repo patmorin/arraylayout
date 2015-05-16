@@ -72,7 +72,7 @@ public:
 template<unsigned B, typename T, typename I, bool aligned=false>
 class btree_array_bf : public btree_array<B,T,I,aligned> {
 protected:
-	using btree_array<B,T,I>::branchfree_search;
+	using btree_array<B,T,I,aligned>::branchfree_search;
 public:
 	template<typename ForwardIterator>
 	btree_array_bf(ForwardIterator a0, I n0)
@@ -83,7 +83,7 @@ public:
 template<unsigned B, typename T, typename I, bool aligned=false>
 class btree_array_bfp : public btree_array<B,T,I,aligned> {
 protected:
-	using btree_array<B,T,I>::branchfree_prefetch_search;
+	using btree_array<B,T,I,aligned>::branchfree_prefetch_search;
 public:
 	template<typename ForwardIterator>
 	btree_array_bfp(ForwardIterator a0, I n0)

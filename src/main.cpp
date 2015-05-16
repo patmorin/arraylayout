@@ -267,7 +267,11 @@ template<typename T, typename I>
 void run_tests(I n, I m) {
 	T *a = build_and_fill<T,I>(n);
 	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
-	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "binary");
+
+	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "sorted");
+	Tool<sorted_array_bf<T,I>,T,I>::run_test1(a, n, m, "sorted_bf");
+	Tool<sorted_array_bfp<T,I>,T,I>::run_test1(a, n, m, "sorted_bfp");
+
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
 
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
@@ -283,11 +287,18 @@ void run_tests(I n, I m) {
 
 	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
 	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
+	Tool<btree_array_bfp<B/2,T,I>,T,I>::run_test1(a, n, m, "btree8_bfp");
+	Tool<btree_array_bfp<B/4,T,I>,T,I>::run_test1(a, n, m, "btree4_bfp");
 
-	//	Tool<btree_sneak_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_sneak");
-//	Tool<btree_eytzinger_array<B,T,I>,T,I>::run_test1(a, n, m, "btree_eytzinger");
-//	Tool<btree_arraypf<4,T,I>,T,I>::run_test1(a, n, m, "btreepf");
-//	Tool<bfbtree_array<B,T,I>,T,I>::run_test1(a, n, m, "bfbtree");
+	Tool<btree_array<2*B,T,I,true>,T,I>::run_test1(a, n, m, "btree32_a");
+	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
+	Tool<btree_array<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_a");
+
+	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");
+	Tool<btree_array_bfp<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bfp_a");
+	Tool<btree_array_bfp<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_bfp_a");
+	Tool<btree_array_bfp<B/4,T,I,true>,T,I>::run_test1(a, n, m, "btree4_bfp_a");
+
 	delete[] a;
 }
 

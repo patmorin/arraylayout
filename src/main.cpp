@@ -9,6 +9,8 @@
 #include <random>
 #include <cstdint>
 #include <cstring>
+#include <vector>
+#include <thread>
 
 #include "veb_array.h"
 #include "eytzinger_array.h"
@@ -136,12 +138,50 @@ T *build_and_fill(I n) {
 	return a;
 }
 
+std::uint64_t dummy;
+
+template<typename Array, typename T, typename I, typename D>
+void kicker(Array& aa, int k, I n, I m) {
+	auto seed=232342+k;
+	std::mt19937 re(seed);
+	D ui(0, 2*n+1);
+	T sum = 0;
+	for (I i = 0; i < m; i++) {
+		T x = ui(re);
+		I j = aa.search(x);
+		sum += (j < n) ? (int)aa.get_data(j) : -1;
+	}
+	dummy += sum;
+}
+
+template<typename Array, typename T, typename I, typename D>
+void run_test1_b(T *a, I n, I m, const std::string &name) {
+	std::vector<std::thread> threads;
+
+	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
+			<< " " << n << " " << m << " ";
+	std::cout.flush();
+	auto start = std::chrono::high_resolution_clock::now();
+	Array aa(a, n);
+	auto stop =  std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> elapsed = stop - start;
+	std::cout << elapsed.count() << " ";
+	std::cout.flush();
+	start = std::chrono::high_resolution_clock::now();
+	for (int k = 0; k < 4; k++)
+		threads.push_back(std::thread(kicker<Array,T,I,D>, aa, k, n, m));
+	for (auto &th : threads) th.join();
+	stop = std::chrono::high_resolution_clock::now();
+	elapsed = stop - start;
+	std::cout << elapsed.count() << " mt" << std::endl;
+}
+
 
 // Run tests that perform m searches on one array of size n
 // Note: D is one of uniform_int_distribution or uniform_real_distribution
 template<typename Array, typename T, typename I, typename D>
-void run_test1_b(T *a, I n, I m, const std::string &name) {
-        auto seed=232342;
+void run_test1_c(T *a, I n, I m, const std::string &name) {
+	auto seed=232342;
 	std::mt19937 re(seed);
 	//std::minstd_rand re(seed);
 	D ui(0, 2*n+1);

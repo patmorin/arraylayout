@@ -169,7 +169,7 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	std::cout.flush();
 	start = std::chrono::high_resolution_clock::now();
 	for (int k = 0; k < 4; k++)
-		threads.push_back(std::thread(kicker<Array,T,I,D>, aa, k, n, m));
+		threads.push_back(std::thread(kicker<Array,T,I,D>, std::ref(aa), k, n, m));
 	for (auto &th : threads) th.join();
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;

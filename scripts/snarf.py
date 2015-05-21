@@ -8,7 +8,7 @@ colours = ['#1FAC7E', '#6D5AD8', '#FD692A', '#F9498D', '#965153',
 
 styles = ['-', '--', ':']
 
-markers = [ "o", "v", "s", "d", "p", "*" ]
+markers = [ "o", "s", "p", "*" ]
 
 
 # Have this return true if you want alg to appear in the plot
@@ -61,22 +61,24 @@ if __name__ == "__main__":
     # Plot everything.
     plt.ioff()
     plt.xscale('log')
-    col = 0
+    idx = 0
     for alg in algs:
         plt.plot([d[0] for d in data[alg]],
                  [d[1] for d in data[alg]],
                  label = alg, linewidth = 1.5, 
-                 color = colours[col % len(colours)], 
-                 linestyle = styles[col % len(styles)],
-                 marker = markers[col % len(markers)])
-        col += 1
+                 color = colours[idx % len(colours)], 
+                 linestyle = styles[idx % len(styles)],
+                 marker = markers[idx % len(markers)],
+                 markersize = 4.0)
+        idx += 1
 
     # Plot of the winners
     for n in ns:
        if best[n][0] in algs:
            idx = algs.index(best[n][0])
            plt.plot([n], [mx+.5], color = colours[idx % len(colours)],
-                    marker = markers[idx % len(markers)])
+                    marker = markers[idx % len(markers)],
+                    markersize = 8.0)
 
     plt.legend()
     plt.show()

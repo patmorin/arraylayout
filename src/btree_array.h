@@ -141,8 +141,7 @@ template<unsigned B, typename T, typename I, bool aligned>
 I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchy_search(T x) const {
 	I j = n;
 	I i = 0;
-	const I stop = n-B;
-	while (i <= stop) {
+	while (i + B <= n) {
 		I t = branchy_inner_search<B>(a, i, x);
 		j = t < i+B ? t : j;
 		i = child((unsigned)(t-i), i);
@@ -172,8 +171,7 @@ template<bool prefetch>
 I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchfree_search_x(T x) const {
 	I j = n;
 	I i = 0;
-	const I stop = n-B;
-	while (i <= stop) {
+	while (i + B <= n) {
 		if (prefetch) __builtin_prefetch(a+child(i, B/2), 0, 0);
 		const T *base = &a[i];
 		const T *pred = branchfree_inner_search<B>(base, x);

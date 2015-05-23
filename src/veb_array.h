@@ -25,7 +25,7 @@ protected:
 
 	I h;     // the height of the tree
 
-	static const unsigned MAX_H = 32;
+	static const unsigned MAX_H = 40;
 
 	typedef unsigned char h_type;
 	struct dumdum {

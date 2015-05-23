@@ -154,6 +154,12 @@ void kicker(Array& aa, int k, I n, I m) {
 	dummy += sum;
 }
 
+void dumdummy() {
+
+
+}
+
+
 template<typename Array, typename T, typename I, typename D>
 void run_test1_b(T *a, I n, I m, const std::string &name) {
 	std::vector<std::thread> threads;
@@ -170,6 +176,7 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
 	start = std::chrono::high_resolution_clock::now();
 	for (int k = 0; k < 4; k++)
 		threads.push_back(std::thread(kicker<Array,T,I,D>, std::ref(aa), k, n, m));
+		//threads.push_back(std::thread(dumdummy));
 	for (auto &th : threads) th.join();
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;

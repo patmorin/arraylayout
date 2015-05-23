@@ -2,7 +2,7 @@ import os
 import itertools
 
 if __name__ == "__main__":
-    base = 1.259
+    base = 1.258925412
     dtypes = [("uint32", 4)]
     itypes = ["uint64"]
     n = base;

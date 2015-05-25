@@ -2,7 +2,7 @@
 Experiments with memory layouts for binary search
 
 If  you're curious, you can following this project's progress in
-[my notebook|http://nbviewer.ipython.org/github/patmorin/arraylayout/blob/master/src/arraylayouts.ipynb].
+[my notebook](http://nbviewer.ipython.org/github/patmorin/arraylayout/blob/master/src/arraylayouts.ipynb).
 
 ## About
 This project is about trying different memory layouts for searching in an array, with a focus on improving performance for the most common-case: When the input fits entirely in RAM. The layouts we try are:

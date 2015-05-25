@@ -1,3 +1,6 @@
+If  you're curious, you can following this project's progress in
+[my notebook|http://nbviewer.ipython.org/github/patmorin/arraylayout/blob/master/src/arraylayouts.ipynb].
+
 These tests are designed to be run on a Linux system.  First check that
 you have at least 2GB of free memory by running free -h:
 

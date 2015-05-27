@@ -930,11 +930,11 @@ _ZNK3fbs15eytzinger_arrayIjmLb1EE18_branchfree_searchILb0EEEmj:
 	movl	(%r10,%rdx,4), %ecx # load r10 + 4*rdx into ecx [r10 = a, rdx = i]. 
 	leaq	(%rdx,%rdx), %rdi   # rdi = 2*i
 	leaq	1(%rdi), %r8        # r8 = 2*i + 1 (r8 = left)
-	addq	$2, %rdi     # rdi is now 2i+3? (rdi = right)
+	addq	$2, %rdi            # rdi = 2*i + 2
 	cmpl	%esi, %ecx   # (esi = x) <= (ecx = current)
-	cmovae	%rdx, %rax   # now rdx is equal to i
-	movq	%rdi, %rdx   # copy i into rdi
-	cmovae	%r8, %rdx    # set j = i
+	cmovae	%rdx, %rax   # j = i if x <= current
+	movq	%rdi, %rdx   # rdx = 2*i + 2
+	cmovae	%r8, %rdx    # rdx = 2*i + 1 if x <= current
 	cmpq	%rdx, %r9    # compare i (rdx) and n (r9)
 	ja	.L130
 	rep ret

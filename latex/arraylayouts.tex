@@ -293,14 +293,47 @@ The Intel 4790K has 8MB of L3 cache, which can store $C/W=125$K cache lines.
 
 \subsection{A theoretical model}
 
-From our findings, we can design a theoretical model of computation of a machine that has the following characteristics:
+From our findings, we can design a theoretical model of computation of
+a machine that has an (infinite but slow) external memory and a finite
+(but fast) internal memory.  This model has the following parameters:
 
 \begin{enumerate}
-\item Block size, $B$.
-\item Cache size, $C \gg B$.
-\item Latency, $L$.
-\item Transfer rate, $T$.
+
+  \item Block size, $B$. The external memory is partitioned into equal
+    blocks of size $B$. When a word is loaded from external memory,
+    the entire block is loaded into the fast internal memory.
+
+  \item Cache size, $C \gg B$.  This is the size of the internal
+    memory. Before any computation can be done on data from external
+    memory, it must be loaded into the fast internal memory.
+
+  \item Latency, $L$. This is the minimum time that must elapse from the
+    time the processor requests an external memory address until the block
+    containing that address is loaded into internal memory.  The processor
+    can make such requests in a non-blocking asynchronous manner.
+
+  \item Transfer rate, $T$.  This is the maximum number of blocks that
+    can be moved from external to internal memory per time unit.
+    Blocks are moved from external to internal memory in the order they
+    are requested and as fast as the transfer rate and latency allow.
+
 \end{enumerate}
+
+For example, with transfer rate $T=3$ and latency $L=1$, if the processor
+requests three distinct blocks in succession, then each block will arrive
+after a delay of $L=1$.  If the processor requests 5 distinct blocks,
+then the first three blocks will arrive after a delay of $L=1$. These
+first three requests saturate the tranfer rate for the first time unit, so
+the fourth and fifth block will only arrive after a delay of $L+1/3=4/3$
+and $L+2/3=5/3$, respectively.
+
+In this model, the running time of a single search using a b-tree that
+stores $B$ keys per node is $L\lceil\log_(B+1)(n+1)\rceil$, since a
+b-tree search consists of $\lceil\log_(B+1)(n+1)\rceil$ rounds, each of
+which starts with loading a block (at a cost of $L$) and a binary search
+within that block (at zero cost).
+
+The cost of a single search in an Eytzinger array in this model is at most
 
 
 \end{document}

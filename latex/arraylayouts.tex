@@ -293,6 +293,10 @@ The Intel 4790K has 8MB of L3 cache, which can store $C/W=125$K cache lines.
 
 \subsection{A theoretical model}
 
+This model is bullshit, in the sense that it doesn't explain why Eytzinger
+is so much faster than b-tree layouts.  Ultimately, I think it's really just about constants in the code.
+
+
 From our findings, we can design a theoretical model of computation of
 a machine that has an (infinite but slow) external memory and a finite
 (but fast) internal memory.  This model has the following parameters:
@@ -310,30 +314,52 @@ a machine that has an (infinite but slow) external memory and a finite
   \item Latency, $L$. This is the minimum time that must elapse from the
     time the processor requests an external memory address until the block
     containing that address is loaded into internal memory.  The processor
-    can make such requests in a non-blocking asynchronous manner.
+    can make such requests in a non-blocking asynchronous manner, so that
+    it can issue several requests in succession even before the first one
+    completes.
 
-  \item Transfer rate, $T$.  This is the maximum number of blocks that
-    can be moved from external to internal memory per time unit.
-    Blocks are moved from external to internal memory in the order they
-    are requested and as fast as the transfer rate and latency allow.
+    An algorithm that reads $t$ memory blocks one after the other (and
+    not requesting the $(i+1)$th block before the $i$th block is read
+    will have a running time of $tL$.
+
+  \item Transfer rate, $T \ge 1/L$.  This is the maximum number of
+    blocks that can be moved from external to internal memory per time
+    unit.  Blocks are moved from external to internal memory in the order
+    they are requested and as fast as the transfer rate and latency allow.
+
+    An algorithm that immediately requests $t$ memory blocks and then
+    completes once these $t$ blocks are available will have a running
+    time of $\max\{L,t/T\}$.  During the first $L$ time units no data
+    arrives. At the end of $L$ time units, the first $TL$ blocks arrive
+    and then the remaining $t-TL$ blocks arrive as quickly as possible,
+    in $(t-TL)/T=t/T -L$ time units.
 
 \end{enumerate}
 
 For example, with transfer rate $T=3$ and latency $L=1$, if the processor
-requests three distinct blocks in succession, then each block will arrive
-after a delay of $L=1$.  If the processor requests 5 distinct blocks,
-then the first three blocks will arrive after a delay of $L=1$. These
-first three requests saturate the tranfer rate for the first time unit, so
+requests three distinct blocks, then each block will arrive after a
+delay of $L=1$.  If the processor requests 5 distinct blocks, then
+the first three blocks will arrive after a delay of $L=1$. These first
+three requests saturate the tranfer rate for the first time unit, so
 the fourth and fifth block will only arrive after a delay of $L+1/3=4/3$
 and $L+2/3=5/3$, respectively.
 
 In this model, the running time of a single search using a b-tree that
-stores $B$ keys per node is $L\lceil\log_(B+1)(n+1)\rceil$, since a
-b-tree search consists of $\lceil\log_(B+1)(n+1)\rceil$ rounds, each of
-which starts with loading a block (at a cost of $L$) and a binary search
-within that block (at zero cost).
+stores $B$ keys per node is $L\lceil\log_{B+1}(n+1)\rceil$, since a
+b-tree search consists of $\lceil\log_{B+1}(n+1)\rceil$ rounds. Each
+round starts by loading a block and the next round does not begin until
+that block has been read into internal memory and searched.
 
-The cost of a single search in an Eytzinger array in this model is at most
+Note that, if $T$ is greater than or equal to $2$, then there is an
+immediate way to speedup b-tree search. At the same time a block is
+requested, one can request $k=\lfloor (T-1)L\rfloor$ randomly-chosen
+children of that block.  The block itself, and these children, will
+arrive in main memory at the same time.  
+
+The cost of a single search in an Eytzinger array with explicit
+prefetching is calculated as follows:  The first $\log B$ steps in the
+search access elements in the first block, so these begin after a delay
+of $L$. These steps issue $\log B$ prefetch operations
 
 
 \end{document}

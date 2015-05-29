@@ -1,0 +1,297 @@
+\documentclass{patmorin}
+\listfiles
+\usepackage{amsthm,amsmath,graphicx,wrapfig}
+\usepackage{pat}
+%\usepackage{coffee4}
+\usepackage[letterpaper]{hyperref}
+\usepackage[dvipsnames]{color}
+\usepackage{listings}
+\definecolor{linkblue}{named}{Blue}
+\hypersetup{colorlinks=true, linkcolor=linkblue,  anchorcolor=linkblue,
+citecolor=linkblue, filecolor=linkblue, menucolor=linkblue, pagecolor=linkblue,
+urlcolor=linkblue} \setlength{\parskip}{1ex}
+
+\newcommand{\lstlabel}[1]{\label{lst:#1}}
+\newcommand{\lstref}[1]{Listing~\ref{lst:#1}}
+
+\usepackage{minted}
+\usepackage{mdframed}
+\surroundwithmdframed{minted}
+
+\title{\MakeUppercase{Array Layouts for Comparison-Based Searching}}
+\author{Pat Morin and Paul-Virak Khuong}
+
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+
+\begin{abstract}
+  This experimental work studies the best order in which to store $n$
+  data items in an array, $A$, of length $n$ so that one can, for any
+  query value, $x$, quickly find the smallest value in $A$ that is greater
+  than or equal to $x$. In particular, we consider the important case
+  where there are many such queries to the same array, $A$.  In addition
+  to the obvious sorted-order we consider the Eytzinger (BFS) layout
+  normally used for heaps, an implicit B-tree layout that generalizes
+  the Eytzinger layout, and the van Emde Boas layout commonly used in
+  the cache-oblivious algorithms literature.
+
+  After extensive testing and tuning on a wide variety of modern hardware,
+  we arrive at the conclusion that, for small values of $n$, sorted
+  order, combined with a good implementation of binary search is best.
+  For larger values of $n$, we arrive at the surprising conclusion that
+  the Eytzinger layout is the fastest when executing a single sequence
+  of queries.  The latter conclusion was unexpected and constradicts
+  earlier experimental work by Brodal, Fagerberg, and Jakob (SODA~2003),
+  who concluded that both the B-tree and van Emde Boas layouts were faster
+  than the Eytzinger layout for large values of $n$.  The reason for this
+  discrepancy is that, since 2003, processors have changed qualitatively.
+\end{abstract}
+
+\end{titlepage}
+
+\section{Introduction}
+
+A sorted array combined with binary search represents \emph{the} classic
+data structure/query algorithm pair: theoretically optimal, fast in
+practice, and discoverable by school children playing guessing games.
+Although sorted arrays are \emph{static}---they don't support efficient
+insertion or deletion---they still have many practical applications
+involving bulk-processing of data, and even the most na\"{\i}ve
+implementations execute searches several times faster than the most
+popular dynamic data structures.\footnote{For example, Barba and
+Morin \cite{bmXX} found that a naive implementation of binary search
+in a sorted array was approximately three times faster than searching
+using C++'s \texttt{stl::set} class.}
+
+Note, however, that sorted order is just one possible order that can
+be used to store data in an array. Other layouts are also possible
+and---combined with the right query algorithm---may allow for faster
+queries.  Other array layouts may be able to take advantage of (or be
+hurt less by) modern processor features such as caches, instruction
+pipelining, conditional moves, speculative execution, and prefetching.
+
+In this paper we consider four different memory layouts and accompanying search algorithms:
+
+\begin{enumerate}
+\item \texttt{Sorted}:  This is the usual sorted layout, in which the data is stored in sorted order and searching is done using binary search.
+
+\item \texttt{Eytzinger}: In this layout, the data is viewed as being
+stored in a complete binary search tree.  The root of this tree is stored
+at $A[0]$, and the left and right children of the node stored at $A[i]$
+are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
+
+\item \texttt{Btree}: In this layout, the data is viewed as being stored
+in a complate $(b+1)$-ary tree, so that each node stores $b$ values.
+The parameter $b$ is chosen so that $b$ values fit neatly into a
+single cache line. The nodes of this tree are then mapped to array
+locations using a generalization of the Eytzinger mapping:  For $j\in
+\{0,\ldots,b\}$, the $j$th child of the node that starts at position $i$
+is stored beginning at position $i(b+1)+(j+1)b$.
+
+\item \texttt{vEB}: In this, the \emph{van Emde Boas} layout, the data
+is viewed as being stored in a complete binary tree whose height is
+$h=\lceil\log (n+1)\rceil -1$. This tree is layed out recursively:  If $h=0$,
+then the single node of the tree is stored in $A[0]$.  Otherwise, the tree is split into a top-part of height $\lfloor h/2\rfloor$, which is recursively layed out starting at $A[0]$.  Attached to the leaves of this top tree are $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which are recursively layed out, in left-to-right order, starting at array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
+\end{enumerate}
+
+
+\subsection{Related Work}
+
+Brodal, Fagerberg, and Jakob.
+
+
+These guys look at array layouts of multidimensional arrays within programming languages:
+
+\url{https://engineering.purdue.edu/~mithuna/pubs/ics99.pdf}
+
+
+\subsection{Summary of Results}
+
+Our findings, with respect to a single process executing repeated random
+searches on a single array, $A$, are summarized as follows:
+
+\begin{enumerate}
+  \item For small values of $n$ (smaller than the L1 cache), branch-free
+    implementations of search algorithms are considerably faster, by nearly
+    a factor of two.
+  
+  \item For small values of $n$ (smaller than the L3 cache), a good
+    branch-free implementation of binary search is unbeaten by any other
+    strategy.  A branch-free implementation of the Eytzinger layout is a
+    close second.
+  
+  \item For large values of $n$ (larger than the L3 cache), the branch-free
+    implementation of binary search is among the worst of all algorithms,
+    followed closely by the branch-free implementations of the Eytzinger
+    algorithms.
+  
+  \item For large values of $n$ (larger than the L3 cache), the branchy
+    implementations of search algorithms usually perform better than the
+    branch-free implementations.  Branch prediction, even though it is
+    incorrect and leads to a pipeline flush 50\% of the time triggers
+    the memory subsystem to load a cache line that is correct 50\%
+    of the time.  
+
+  \item For large values of $n$, the fastest method is the Eytzinger layout
+   combined with a branch-free search that uses explicit prefetching.
+\end{enumerate}
+
+\section{Processor Architecture Considerations}
+
+In this section, we briefly review, at a very high level, the elements of
+modern processor architecture that affect our findings.  For concreteness,
+we will use numbers from a recent high-end desktop processor, the Intel
+4790K \cite{S} with 4 8GB DDR3-1866 memory modules.
+
+\subsection{CPU}
+
+At the highest level, a computer system consists of a processor (CPU)
+connected to a random access memory (RAM). On the Intel 4790K, the CPU
+runs at frequency of 4GHz, or $4\times10^9$ cycles per second.  This CPU
+can execute roughly $4\times 10^{9}$ instructions per second.\footnote{This is only a very rough approximation of the truth; different instructions have different latencies and throughput \cite{granlund.instruction}.}
+%https://gmplib.org/~tege/x86-timing.pdf 
+
+
+\subsection{RAM, Latency, and Transfer Rate}
+
+The RAM, on ths system runs at 1866MHz, or roughly $1.866\times10^9$
+cycles per second.
+
+Transfer rate: This RAM module can transfer 8 bytes per cycle from RAM
+to the CPU, for a (theoretical) peak transfer rate of 
+$8\times 1.866\times10^9\approx 15$GB/s.
+
+First-Word Latency: This RAM module has a \emph{first-word latency} of
+approximately 10ns: From the time a processor issues a memory request
+to that memory is available is approximately $10^{-8}$ seconds.
+
+Observe that, if the CPU repeatedly reads 4 byte quantities from RAM,
+then it receives $10^8$ of these per second, for a transfer rate of
+$4\times 10^8=0.4$GB/s.  Note how far this is below this peak transfer
+rate of 15GB/s.
+
+In a similar vein, if the CPU is executing instructions that require
+the contents of memory locations in RAM, and a subsequent instruction
+can not begin before the previous instruction completes, then the CPU
+will not execute more than $10^8$ instructions per second; it will waste
+approximately 39/40 cycles waiting on data from RAM.
+
+Cache-Line (8th-Word) Latency:  When the CPU reads a RAM address, the
+RAM moves a 64 byte cache line into the CPU. From the time CPU issues
+the access to the time the last word of the cache-line is available is
+approximately 13.4ns.  If the processor repeatedly reads cache lines
+from RAM, this results in a transfer rate of $64 / (13.4\times10^{-9})
+\approx 4.8$GB/s.  Observe that this is still less than a third of the
+RAM's peak transfer rate.
+
+To actually achieve a transfer rate close to the theoretical peak transfer
+rate, the CPU must issue memory read requests before previous requests
+have finished.  This will be important and is ultimately the reason that
+the Eytzinger layout outperforms other layouts.
+
+\subsection{Caches}
+
+Since reading from RAM is a relatively slow operation, processors use
+several levels of caches between the processor and the RAM.
+
+The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache
+(per core), and an 8MB L3 cache (shared among 4 cores).  
+
+\subsection{Translation Lookaside Buffer}
+
+\subsection{Pipelining}
+
+Executing an instruction on a processor takes several clock cycles, during
+which the instruction is (1)~fetched, (2)~decoded, an (3)~effective
+address is read (if necessary), and finally the instruction is
+(4)~executed.  Since the entire process takes several cycles, this
+arranged in a pipeline so that, for example, one instruction is being
+executed while the next instruction is reading a memory address, while
+the next instruction is being decoded, while the next instruction is
+being fetched.
+
+This all works well provided 
+Where pipelining breaks down
+
+\section{The Layouts}
+
+\subsection{Sorted}
+
+\subsubsection{Na\"{\i}ve Binary Search}
+
+The source code for na\"{\i}ve binary search is shown in
+\lstref{nbs}. This code implements binary search the way it is taught
+in introductory computer science courses.
+
+\begin{listing}
+\begin{minted}{c++}
+template<typename T, typename I>
+I sorted_array<T,I>::branchy_search(T x) const {
+    I lo = 0;
+    I hi = n;
+    while (lo < hi) {
+        I m = (lo + hi) / 2;
+        if (x < a[m]) {
+            hi = m;
+        } else if (x > a[m]) {
+            lo = m+1;
+        } else {
+            return m;
+        }
+    }
+    return hi;
+}
+\end{minted}
+\caption{Source code for na\"{\i}ve binary search.}
+\lstlabel{nbs}
+\end{listing}
+
+
+$C$ is the cache size (measured in data items) and $W$ is the cache-line width (measured in data items).  Caching affects classic binary search in two ways.
+
+If $n> C/W$ is much larger than $C$ then, after a large number of
+accesses, we expect to find the most frequently accessed values in the
+cache.  These are the values at the top of the (implicit) binary search
+tree implemented by binary search.  Since $n>C/W$, each of these values
+will occupy their own cache line, so the cache only has room for $C/W$
+of these.
+
+Furthermore, once binary search has reduced the search range down
+to a size less than or equal to $W$, the subarray that remains to be
+searched will occupy at most one or two cache lines. Thus, on average,
+we expect binary search to incur roughly $\log n -\log(C/W) - \log W + 1 =
+\log n - \log C + 1$ cache misses. 
+
+The Intel 4790K has 8MB of L3 cache, which can store $C/W=125$K cache lines.
+
+
+
+\subsubsection{Branch-Free Binary Search}
+
+\subsection{Eytzinger}
+
+\subsubsection{Na\"{\i}ve Code}
+
+\subsubsection{Branch-Free Code}
+
+\subsubsection{Branch-Free Code with Explicit Prefetching}
+
+\subsection{BTree}
+
+
+
+
+
+\section{Lessons Learned}
+
+\subsection{Predictable memory accesses can be better than blocked
+            memory accesses}
+
+\subsection{For big data, branchy code can be the best prefetcher}
+
+
+\end{document}
+
+

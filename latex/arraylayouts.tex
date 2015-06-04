@@ -5,7 +5,6 @@
 %\usepackage{coffee4}
 \usepackage[letterpaper]{hyperref}
 \usepackage[dvipsnames]{color}
-\usepackage{listings}
 \definecolor{linkblue}{named}{Blue}
 \hypersetup{colorlinks=true, linkcolor=linkblue,  anchorcolor=linkblue,
 citecolor=linkblue, filecolor=linkblue, menucolor=linkblue, pagecolor=linkblue,
@@ -13,7 +12,9 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 
 \newcommand{\lstlabel}[1]{\label{lst:#1}}
 \newcommand{\lstref}[1]{Listing~\ref{lst:#1}}
+\newcommand{\Lstref}[1]{\lstref{#1}}
 
+\usepackage{listings}
 \usepackage{minted}
 \usepackage{mdframed}
 \surroundwithmdframed{minted}
@@ -60,10 +61,10 @@ Although sorted arrays are \emph{static}---they don't support efficient
 insertion or deletion---they still have many practical applications
 involving bulk-processing of data, and even the most na\"{\i}ve
 implementations execute searches several times faster than the most
-popular dynamic data structures.\footnote{For example, Barba and
-Morin \cite{bmXX} found that a naive implementation of binary search
-in a sorted array was approximately three times faster than searching
-using C++'s \texttt{stl::set} class.}
+popular dynamic data structures.\footnote{For example, Barba and Morin
+\cite{bmXX} found that a naive implementation of binary search in a
+sorted array was approximately three times faster than searching using
+C++'s \texttt{stl::set} class.}
 
 Note, however, that sorted order is just one possible order that can
 be used to store data in an array. Other layouts are also possible
@@ -72,7 +73,8 @@ queries.  Other array layouts may be able to take advantage of (or be
 hurt less by) modern processor features such as caches, instruction
 pipelining, conditional moves, speculative execution, and prefetching.
 
-In this paper we consider four different memory layouts and accompanying search algorithms:
+In this paper we consider four different memory layouts and accompanying
+search algorithms:
 
 \begin{enumerate}
 \item \texttt{Sorted}:  This is the usual sorted layout, in which the data is stored in sorted order and searching is done using binary search.
@@ -151,7 +153,8 @@ At the highest level, a computer system consists of a processor (CPU)
 connected to a random access memory (RAM). On the Intel 4790K, the CPU
 runs at frequency of 4GHz, or $4\times10^9$ cycles per second.  This CPU
 can execute roughly $4\times 10^{9}$ instructions per second.\footnote{This is only a very rough approximation of the truth; different instructions have different latencies and throughput \cite{granlund.instruction}.}
-%https://gmplib.org/~tege/x86-timing.pdf 
+
+\url{https://gmplib.org/~tege/x86-timing.pdf}
 
 
 \subsection{RAM, Latency, and Transfer Rate}
@@ -188,7 +191,7 @@ RAM's peak transfer rate.
 
 To actually achieve a transfer rate close to the theoretical peak transfer
 rate, the CPU must issue memory read requests before previous requests
-have finished.  This will be important and is ultimately the reason that
+have finished. This will be important and is ultimately the reason that
 the Eytzinger layout outperforms other layouts.
 
 \subsection{Caches}
@@ -197,11 +200,39 @@ Since reading from RAM is a relatively slow operation, processors use
 several levels of caches between the processor and the RAM.
 
 The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache
-(per core), and an 8MB L3 cache (shared among 4 cores).  
+(per core), and an 8MB L3 cache (shared among 4 cores).  Each of these
+cache levels is successive slower than the previous level, with L1 being
+the fast and L3 being the slowest; but still much faster than RAM.
+
+\subsection{The Prefetcher}
+
+To help achieve peak memory throughput and avoid having the processor
+stall while waiting on RAM, the CPU includes a prefetcher that analyzes
+memory access patterns in an attempt to predict future memory accesses.
+For instance, in simple code such as the following:
+
+\begin{minted}{c++}
+    long sum = 0;
+    for (int i = 0; i < n; i++) 
+        sum += a[i];
+\end{minted}
+
+The prefetcher is likely to detect that memory allocated to array
+\mintinline{c++}{a} is being accessed sequentially.  The prefetcher will
+then load blocks of \mintinline{c++}{a} into the cache hierarchy even
+before they are accessed.  By the time the code actually needs the value
+of \mintinline{c++}{a[i]} it will already be available in L1/L2/L3 cache.
+
+Prefetchers on current hardware can detect simple access patterns
+like the sequential pattern above.  More generally, they can often
+detect arithmetic progressions of the form $a,a+k,a+2k,a+3k,\ldots$
+and even interleaved arithmetic progressions such as $a, b, a+k, b+r,
+a+2k,b+2r,a+3k,b+3r,\ldots$.  However, current technology does not go
+much beyond this.
 
 \subsection{Translation Lookaside Buffer}
 
-\subsection{Pipelining}
+\subsection{Pipelining, Branch-Prediction, and Predicated Instructions}
 
 Executing an instruction on a processor takes several clock cycles, during
 which the instruction is (1)~fetched, (2)~decoded, an (3)~effective
@@ -212,8 +243,53 @@ executed while the next instruction is reading a memory address, while
 the next instruction is being decoded, while the next instruction is
 being fetched.
 
-This all works well provided 
-Where pipelining breaks down
+This all works well provided that the CPU knows which instruction to
+fetch.  Where this breaks down is in code that contains \emph{conditional
+jump} instructions. These instructions will possibly change the flow of
+execution based on the result of some previous comparison.  In such cases,
+the CPU does not know in advance whether the following instruction will
+be the one immediately after the conditional jump or will be the target
+of the conditional jump. The CPU has two options: 
+\begin{enumerate}
+\item Wait until the condition that determines the output
+ of the jump has been tested. In this case, the insruction pipeline is
+ not being filled from the time the conditional jump instruction enters
+ the pipleline until the the time the jump condition is tested.
+
+\item Predict whether the jump will occur or not and begin loading
+the instructions from the jump target, or immediately after the jump,
+respectively.  In this case, if the prediction is correct, then no time
+is wasted. If the prediction is incorrect, then once the jump condition
+is finally verified, all instructions placed in the pipeline after the
+conditional jump instruction have to be flushed.
+\end{enumerate}
+
+Most modern processors implement the second option and implement
+some form of \emph{branch predictor} to obtain accurate predictions.
+Branch predictors work well when the condition is highly predictable so
+that, e.g., the conditional jump is almost never or almost always taken.
+
+Most modern processors use some form of two-level adaptive predictor
+\cite{yeh.patt.two-level} that can even handle second-order statistics,
+such as conditional jumps that implement loops with a fixed number of
+iterations. In this case, they can detect conditions such as ``this
+conditional jump is taken $k$ times consecutively and then not taken
+once.''  In standard benchmarks, representative of typical work-loads,
+branch-predictor success rates above 90\% and even above 95\% are not
+uncommon \cite{X}.
+
+Another useful tool used to avoid branch misprediction (and branches
+altogether) is the conditional move \mintinline{nasm}{cmov} family
+of instructions.  Introduced into Intel architectures in 1995 with
+the Pentium Pro line, these are instructions that move the contents of
+one register to another (or to memory), but only if some condition is
+satisfied. They do not change the flow of execution and therefore do
+not interfere with the processor pipeline.
+
+Conditional moves are a special case of \emph{predicated
+instructions}---instructions that are only executed if some predicate
+is true.  The Intel IA-64 and ARM instruction sets include extensive
+predicated instruction sets.
 
 \section{The Layouts}
 
@@ -222,11 +298,11 @@ Where pipelining breaks down
 \subsubsection{Na\"{\i}ve Binary Search}
 
 The source code for na\"{\i}ve binary search is shown in
-\lstref{nbs}. This code implements binary search the way it is taught
-in introductory computer science courses.
+\lstref{nbs}. This code implements binary search the way it is typically
+taught in introductory computer science courses.
 
 \begin{listing}
-\begin{minted}{c++}
+\begin{minted}[linenos]{c++}
 template<typename T, typename I>
 I sorted_array<T,I>::branchy_search(T x) const {
     I lo = 0;
@@ -248,8 +324,9 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \lstlabel{nbs}
 \end{listing}
 
-
-$C$ is the cache size (measured in data items) and $W$ is the cache-line width (measured in data items).  Caching affects classic binary search in two ways.
+Let $C$ be the cache size (measured in data items) and $W$ is the
+cache-line width (measured in data items).  Caching affects classic
+binary search in two ways.
 
 If $n> C/W$ is much larger than $C$ then, after a large number of
 accesses, we expect to find the most frequently accessed values in the
@@ -258,17 +335,146 @@ tree implemented by binary search.  Since $n>C/W$, each of these values
 will occupy their own cache line, so the cache only has room for $C/W$
 of these.
 
-Furthermore, once binary search has reduced the search range down
-to a size less than or equal to $W$, the subarray that remains to be
-searched will occupy at most one or two cache lines. Thus, on average,
-we expect binary search to incur roughly $\log n -\log(C/W) - \log W + 1 =
-\log n - \log C + 1$ cache misses. 
+Furthermore, once binary search has reduced the search range down to a
+size less than or equal to $W$, the subarray that remains to be searched
+will occupy at most one or two cache lines. Thus, on average, we expect
+binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
+\log C + 1$ cache misses.
 
-The Intel 4790K has 8MB of L3 cache, which can store $C/W=125$K cache lines.
+Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
+cache lines are 64 bytes wide.  With 4-byte data this gives the values
+$W=16$ and $C=2048K=2^{21}$.  
 
+Therefore, once $n$ exceeds $2^{21}$, we expect a sharp increase in
+search time, with each additional level of binary search incurring
+another L3 cache miss and access to RAM.  When plotted with the
+$n$-axis on a logarithmic scale, this shows up as an increase in slope
+at approximately $n=2^{21}$.
+
+\figref{binary-search-one} shows the running time of $2\times 10^6$
+searches for values of $n$ ranging from 1 to $2\times 10^9$.  As the
+analysis above predicts, there is indeed a sharp increase in slope that
+occurs at around $n=2^{21}$. 
+
+If we consider only values of $n$ up to $2^{21}$, shown in
+\figref{binary-search-two}, we see an additional change in slope at
+$n=2^{16}$.  This is the same effect, but at the L2/L3 cache level; the
+4790K has a 256KB L2 cache capable of storing $64K=2^{16}$ data items.
+Each additional level of binary search beyond that point incurs an
+additional L2 cache miss and access to L3 cache.
 
 
 \subsubsection{Branch-Free Binary Search}
+
+Someone with experience in micro-optimizing code will see that, for
+modern desktop processors, the code in \lstref{nbs} can be improved
+substantially.  There are two problems with this code:
+
+\begin{enumerate}
+
+\item Inside the code is a three-way if statement whose execution path
+is highly unpredictable. Each of the first two branches has a close to
+$50\%$ chance of being executed.  The branch-predictor of a pipelined
+processor is forced to guess which of these branches will occur and load
+the instructions from this branch into the pipleline.  When it guesses
+wrong (approximately 50\% of the time), the entire pipeline must be
+flushed and the instructions for the other branch loaded.
+
+\item The number of iterations of the outer loop is hard to predict. The
+loop may terminate early (because \mintinline{c++}{x} was found). Even when
+searching for a value \mintinline{c++}{x} that is not present, unless $n$ has
+form $2^k-1$, the exact number of iterations is different for different
+values of $x$.  This implies that the branch predictor will frequently
+mispredict termination or non-termination of the loop, incurring the
+cost of another pipeline flush.
+
+\end{enumerate}
+
+\Lstref{bfbs} shows an alternative implementation of binary search
+that attempts to alleviate both problems described above.  In this
+implementation, there is no early termination and, for a given array
+length \mintinline{c++}{n}, the number of iterations is fixed (because the
+value of \mintinline{c++}{n} always decreases by \mintinline{c++}{half}
+during each iteration of the loop).  Therefore, when this method is
+called repeatedly on the same array, a good branch-predictor will very
+quickly learn the number of iterations of the \mintinline{c++}{while}
+loop, and it will generate no further branch mispredictions.
+
+\begin{listing}
+\begin{minted}[linenos]{c++}
+template<typename T, typename I>
+I sorted_array<T,I>::_branchfree_search(T x) const {
+    const T *base = a;
+    I n = this->n;
+    while (n > 1) {
+        const I half = n / 2;
+        base = (base[half] < x) ? &base[half] : base;
+        n -= half;
+    }
+    return (*base < x) + base - a;
+}
+\end{minted}
+\caption{Source code for branch-free binary search.}
+\lstlabel{bfbs}
+\end{listing}
+
+In the interior of the \mintinline{c++}{while} loop, there is only
+one piece of conditional code, which occurs in Line~7.  (For readers
+unfamiliar with C's choice operator, this code is equivalent
+to \mintinline{c++}{if (base[half] < x) base = &base[half]}.)
+This line either reassigns the value of \mintinline{c++}{base} (if
+\mintinline{c++}{base[half] < x}) or leaves it unchanged.  The compiler
+implements this using a \emph{conditional move} (\mintinline{nasm}{cmov})
+instruction so that there is no branching within the while loop.
+
+The use of conditional move instructions to replace branching is
+often a topic of heated debate (see, e.g., \cite{X}).  Conditional move
+instructions tend to use more clock cycles than traditional instructions
+and, in many cases, branch predictors can achieve prediction accuracies
+exceeding 95\%, which makes it faster to use a conditional jump.  In this
+particular instance, however, the branch predictor will be unable to make
+predictions with accuracy exceeding 50\%, making a conditional move the
+best choice.  The resulting assembly code, shown in \lstref{bfbs-asm} is
+very lean.  The body of the \mintinline{c++}{while} loop is implemented
+by Lines~8--15 with the conditional move at Line~12.
+
+
+\begin{listing}
+\begin{minted}[linenos]{nasm}
+  .cfi_startproc
+  movq    8(%rdi), %rdx       # move n into rdx
+  movq    (%rdi), %r8         # move a into r8
+  cmpq    $1, %rdx            # compare n and 1
+  movq    %r8, %rax           # move base into rax
+  jbe    .L2                  # quit if n <= 1
+.L3:
+  movq    %rdx, %rcx          # put n into rcx
+  shrq    %rcx                # rcx = half = n/2
+  leaq    (%rax,%rcx,4), %rdi # load &base[half] into rdi
+  cmpl    %esi, (%rdi)        # compare x and base[half]
+  cmovb   %rdi, %rax          # set base = &base[half] if x > base[half]
+  subq    %rcx, %rdx          # n = n - half
+  cmpq    $1, %rdx            # compare n and 1
+  ja    .L3                   # keep going if n > 1
+.L2:
+  cmpl    %esi, (%rax)        # compare x to *base
+  sbbq    %rdx, %rdx          # set dx to 00..00 or 11...11
+  andl    $4, %edx            # set dx to 0 or 4 
+  addq    %rdx, %rax          # add dx to base
+  subq    %r8, %rax           # compute base - a (* 4)
+  sarq    $2, %rax            # (divide by 4)
+  ret
+  .cfi_endproc
+\end{minted}
+\caption{Compiler-generated assembly code for branch-free binary search.}
+\lstlabel{bfbs-asm}
+\end{listing}
+
+\Figref{bf-vs-branchy-bs-one} compares the branch-free implementation of binary search for array sizes $n$ ranging from 1 to $2^{16}$.  As we expect, the branch-free code is much faster. Indeed, after accounting for the overhead of the testing harness, algorithm 
+
+
+
+
 
 \subsection{Eytzinger}
 
@@ -281,15 +487,14 @@ The Intel 4790K has 8MB of L3 cache, which can store $C/W=125$K cache lines.
 \subsection{BTree}
 
 
-
-
-
 \section{Lessons Learned}
 
 \subsection{Predictable memory accesses can be better than blocked
             memory accesses}
 
 \subsection{For big data, branchy code can be the best prefetcher}
+
+In here, discuss the Sun Rock's hardware scout and, more generally, the technique of Runahead: \url{http://users.ece.cmu.edu/~omutlu/pub/mutlu_hpca03.pdf}.
 
 \subsection{A theoretical model}
 

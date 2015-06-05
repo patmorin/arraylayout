@@ -500,30 +500,38 @@ slowly and for $n>2^{21}$ it narrows more quickly.  By time time $n$
 exceeds $2^{22}$, the branch-free code is slower and the gap between
 the two continues to widen from this point onward.
 
-The reason for this change in behavious (which was far from obvious at
+The reason for this change in behaviour (which was far from obvious at
 the outset) is the interplay between branch prediction and the memory
-subsystem.  In the original code, the branch-predictor makes a guess
-at which branch will be taken. Approximately half the time it guess
-correctly, and approximately half the time it guess incorrectly. An
+subsystem.  In the original code, the branch-predictor makes a guess at
+which branch will be taken and is correct approximately half the time. An
 incorrrect guess causes a costly pipeline flush.  However, a correct
-guess results in the memory subsystem beginning the process of loading
-sooner than it would otherwise.
+guess results in the memory subsystem starting to load the array location
+needed during the next iteration of the \mintinline{c++}{while} loop.
 
 For small $n<2^{16}$, the entire array fits into L2 cache, and the costs
 of pipeline flushes exceed any savings obtained by correct guesses.
-Howevever, for larger $n$, each correct guess by the branch-predictor
-begins an early loading of an L2 (in the range $2^{16}<n<2^{21}$) or
-an L3 (for $n>2^{21}$) cache miss.  The costs of these cache misses
-are greater than the costs of the pipeline flushes, so eventually,
-the branch-free code loses out.
+However, for larger $n$, each correct guess by the branch-predictor
+triggers an L2 (in the range $2^{16}<n<2^{21}$) or an L3 (for $n>2^{21}$)
+cache miss sooner than it would otherwise.  The costs of these cache
+misses are greater than the costs of the pipeline flushes, so eventually,
+the branch-free code loses out to the branchy code.
 
-We confirmed this discovery several different ways. Assembly-level
-profiling showed that, for large $n$, the branch-free code spends the vast
-majority of it's time loading from memory (Line~11, of \lstref{bfbs-asm}).
-This is because the register containing the memory address to load
-(\mintinline{nasm}{rdi}) is the target of a conditional move (Line~12).
-This conditional move has not completed because it is still waiting on
-the results of the previous comparison, so the CPU stalls at this point.
+Since this was not our explanation, and since it was not obvious from
+the beginning, we confirmed this discovery several different ways.
+
+\begin{enumerate}
+\item Assembly-level profiling showed that, for large $n$, the
+branch-free code spends the vast majority of it's time loading from
+memory (Line~11, of \lstref{bfbs-asm}).  This is because the register,
+\mintinline{nasm}{rdi},  containing the memory address to load is the
+target of a conditional move (Line~12).  This conditional move has not
+completed because it is still waiting on the results of the previous
+comparison, so the CPU stalls at this point.
+
+\item We implemented a version of the branch-free 
+
+\item Performance counters?
+\end{enumerate}
 
 
 \subsection{Eytzinger}

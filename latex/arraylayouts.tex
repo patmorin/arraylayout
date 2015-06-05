@@ -201,7 +201,7 @@ several levels of caches between the processor and the RAM.
 
 The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache
 (per core), and an 8MB L3 cache (shared among 4 cores).  Each of these
-cache levels is successive slower than the previous level, with L1 being
+cache levels is successively slower than the previous level, with L1 being
 the fast and L3 being the slowest; but still much faster than RAM.
 
 \subsection{The Prefetcher}
@@ -231,6 +231,24 @@ a+2k,b+2r,a+3k,b+3r,\ldots$.  However, current technology does not go
 much beyond this.
 
 \subsection{Translation Lookaside Buffer}
+
+As part of modern virtual memory systems, the processor has a
+\emph{translation lookaside buffer (TLB)} that maps virtual memory
+addresses (visible to processes) to physical memory addresses (addresses
+of physical RAM).  Since a TLB is used for every memory access, it is very
+fast, and not very large.  TLBs organizes memory into fixed-size pages.
+A process that uses multiple pages of memory will sometimes access a
+page that is not in the TLB. This is costly, and triggers the processor
+to walk the \emph{page table} until it finds the appropriate page and
+then it loads the entry for this page into the TLB.
+
+The Intel 4790K has three data TLBs: The first contains 4 entries for
+1GB pages, the second contains 32 entries for 2MB pages, and the third
+contains 64 entries for 4KB pages.  In our experiments---which were done
+on a dedicated system running few other processes---TLB misses were not
+a significant factor until the array size exceeded 4GB.
+
+
 
 \subsection{Pipelining, Branch-Prediction, and Predicated Instructions}
 
@@ -470,10 +488,42 @@ by Lines~8--15 with the conditional move at Line~12.
 \lstlabel{bfbs-asm}
 \end{listing}
 
-\Figref{bf-vs-branchy-bs-one} compares the branch-free implementation of binary search for array sizes $n$ ranging from 1 to $2^{16}$.  As we expect, the branch-free code is much faster. Indeed, after accounting for the overhead of the testing harness, algorithm 
+\Figref{bf-vs-branchy-bs-one} compares the branch-free implementation
+of binary search for array sizes $n$ ranging from 1 to $2^{16}$.  As we
+expect, the branch-free code is much faster. Indeed, after accounting
+for the overhead of the testing harness, the branch-free search is
+approximately twice as fast for $n=2^{16}$.
 
+However, for larger values of $n$ (shown in \figref{bf-vs-branchy-bs-two})
+the situation changes.  For $n>2^{16}$, the gap begins to narrow until
+slowly and for $n>2^{21}$ it narrows more quickly.  By time time $n$
+exceeds $2^{22}$, the branch-free code is slower and the gap between
+the two continues to widen from this point onward.
 
+The reason for this change in behavious (which was far from obvious at
+the outset) is the interplay between branch prediction and the memory
+subsystem.  In the original code, the branch-predictor makes a guess
+at which branch will be taken. Approximately half the time it guess
+correctly, and approximately half the time it guess incorrectly. An
+incorrrect guess causes a costly pipeline flush.  However, a correct
+guess results in the memory subsystem beginning the process of loading
+sooner than it would otherwise.
 
+For small $n<2^{16}$, the entire array fits into L2 cache, and the costs
+of pipeline flushes exceed any savings obtained by correct guesses.
+Howevever, for larger $n$, each correct guess by the branch-predictor
+begins an early loading of an L2 (in the range $2^{16}<n<2^{21}$) or
+an L3 (for $n>2^{21}$) cache miss.  The costs of these cache misses
+are greater than the costs of the pipeline flushes, so eventually,
+the branch-free code loses out.
+
+We confirmed this discovery several different ways. Assembly-level
+profiling showed that, for large $n$, the branch-free code spends the vast
+majority of it's time loading from memory (Line~11, of \lstref{bfbs-asm}).
+This is because the register containing the memory address to load
+(\mintinline{nasm}{rdi}) is the target of a conditional move (Line~12).
+This conditional move has not completed because it is still waiting on
+the results of the previous comparison, so the CPU stalls at this point.
 
 
 \subsection{Eytzinger}

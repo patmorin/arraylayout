@@ -43,10 +43,10 @@ public:
 
 	~eytzinger_array();
 
-	I branchy_search(T x) const ;
+	I _branchy_search(T x) const ;
 	I branchfree_search(T x) const { return _branchfree_search<false>(x); };
 	I branchfree_prefetch_search(T x) const { return _branchfree_search<true>(x); };
-	I search(T x) const { return branchy_search(x); };
+	I search(T x) const { return _branchy_search(x); };
 };
 
 // An Eytzinger array with branch-free searches
@@ -124,7 +124,7 @@ eytzinger_array<T,I,aligned>::~eytzinger_array() {
 
 // Branchy code with no prefetching
 template<typename T, typename I, bool aligned>
-I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::branchy_search(T x) const {
+I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i < n) {

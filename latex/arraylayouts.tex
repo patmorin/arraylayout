@@ -516,25 +516,87 @@ cache miss sooner than it would otherwise.  The costs of these cache
 misses are greater than the costs of the pipeline flushes, so eventually,
 the branch-free code loses out to the branchy code.
 
-Since this was not our explanation, and since it was not obvious from
-the beginning, we confirmed this discovery several different ways.
+Since this was not our initial explanation, and since it was not obvious from
+the beginning, we found several pieces of evidence to support or disprove this hypothesis.
 
 \begin{enumerate}
 \item Assembly-level profiling showed that, for large $n$, the
-branch-free code spends the vast majority of it's time loading from
-memory (Line~11, of \lstref{bfbs-asm}).  This is because the register,
-\mintinline{nasm}{rdi},  containing the memory address to load is the
-target of a conditional move (Line~12).  This conditional move has not
-completed because it is still waiting on the results of the previous
-comparison, so the CPU stalls at this point.
+  branch-free code spends the vast majority of it's time loading from
+  memory (Line~11, of \lstref{bfbs-asm}).  This is because the register,
+  \mintinline{nasm}{rdi},  containing the memory address to load is the
+  target of a conditional move (Line~12).  This conditional move has not
+  completed because it is still waiting on the results of the previous
+  comparison, so the CPU stalls at this point.
 
-\item We implemented a version of the branch-free 
+\item Another possible explanation for our results was that the hardware
+   prefetcher was, for some reason, better able to handle the branchy
+   code than the branch-free code.  This seemed unlikely, since the
+   memory access patterns for both version are quite simiilar, and both
+   probably too complicated for a prefetcher to predict. Nevertheless,
+   we ruled out this possibility by disabling the hardware prefetcher
+   using the \mintinline{console}{wrmsr} command.\footnote{TOD: Add details of
+   how to do this.}  The running-times of the code was unchanged by this.
 
-\item Performance counters?
+\item We implemented a version of the branch-free code that adds explicit
+   prefetching. At the top of the while loop, it
+   prefetches array locations \mintinline{c++}{a[half/2]}
+   and \mintinline{c++}{a[half+half/2]} using \texttt{gcc}'s
+   \mintinline{c++}{__builtin_prefetch()} builtin, which translates into
+   the x86 \mintinline{nasm}{prefetch0} instruction.  The performance of
+   the resulting code, shown in \figref{sorted-all} is consistent with
+   our hypothesis.  The code is nearly as fast as the branch-free code
+   for small values of $n$, but tracks the performance of the branchy
+   code for larger values of $n$.
+
+\item We ran our code on Atom 330 processor that we had available.  This
+   low-power processor does not do any form or speculative
+   execution, including branch-prediction.  The result, which are
+   shown in \figref{sorted-atom} are consistent with our hypothesis.
+   The branch-free code is faster than the branchy code across the full
+   range of values for $n$. The branch-free code with explicit prefetching
+   matches the performance of the branch-free code for small $n$, and
+   then outperforms it for larger $n$.
 \end{enumerate}
 
+From our study of binary search, we conclude the following lesson about the (very important) case where one is searching in a sorted array:
+
+\begin{lesson}
+  For searching in a sorted array, the fastest method uses branch-free
+  code with explicit prefetching.
+\end{lesson}
+
+TODO: Discuss the problem with array sizes that are (nearly) powers of two.
 
 \subsection{Eytzinger}
+
+\subsubsection{The Na\"{\i}ve Eytzinger Code}
+
+The na\"{\i}ve implemntation of search in an Eytzinger array is nearly
+as simple as that of binary search.
+
+\begin{listing}
+\begin{minted}[linenos]{c++}
+template<typename T, typename I, bool aligned>
+I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		if (x < a[i]) {
+			j = i;
+			i = 2*i + 1;
+		} else if (x > a[i]) {
+			i = 2*i + 2;
+		} else {
+			return i;
+		}
+	}
+	return j;
+}
+
+\end{minted}
+\end{listing}
+
+
 
 \subsubsection{Na\"{\i}ve Code}
 
@@ -624,6 +686,11 @@ prefetching is calculated as follows:  The first $\log B$ steps in the
 search access elements in the first block, so these begin after a delay
 of $L$. These steps issue $\log B$ prefetch operations
 
+\section{Conclusion}
+
+Future Work: Look more closely still at the important special case of searching
+in a sorted array. We only used a simple prefetching strategy. Mix this
+in with a solution to the powers of two problem.
 
 \end{document}
 

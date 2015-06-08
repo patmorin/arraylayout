@@ -33,6 +33,7 @@ public:
 	I branchy_search(T x) const;
 	I branchfree_search(T x) const { return _branchfree_search<false>(x); };
 	I branchfree_prefetch_search(T x) const { return _branchfree_search<true>(x); };
+	I stl_search(T x) const;
 	I search(T x) const { return branchy_search(x); };
 };
 
@@ -44,6 +45,16 @@ public:
 	sorted_array_bf(ForwardIterator a0, I n0) : sorted_array<T,I>(a0, n0) { };
 
 	I search(T x) const { return branchfree_search(x); };
+};
+
+template<typename T, typename I>
+class sorted_array_stl : public sorted_array<T,I> {
+	using sorted_array<T,I>::stl_search;
+public:
+	template<typename ForwardIterator>
+	sorted_array_stl(ForwardIterator a0, I n0) : sorted_array<T,I>(a0, n0) { };
+
+	I search(T x) const { return stl_search(x); };
 };
 
 template<typename T, typename I>
@@ -100,13 +111,18 @@ I __attribute__ ((noinline)) sorted_array<T,I>::_branchfree_search(T x) const {
 			__builtin_prefetch(base + half/2, 0, 0);
 			__builtin_prefetch(base + half + half/2, 0, 0);
 		}
-		const T *ptr = &base[half];
-		const T current = *ptr;
-		base = (current < x) ? ptr : base;
+		base = (base[half] < x) ? base+half : base;
 		n -= half;
 	}
 	return (*base < x) + base - a;
 }
+
+template<typename T, typename I>
+I sorted_array<T,I>::stl_search(T x) const {
+	I i = std::lower_bound(a, a+n, x) - a;
+    return (i < n && a[i] < x) + i;
+}
+
 
 } // namespace fbs
 

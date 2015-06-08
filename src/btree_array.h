@@ -13,6 +13,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <limits>
+#include <cassert>
 
 #include <type_traits>
 #include "base_array.h"

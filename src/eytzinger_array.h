@@ -148,11 +148,8 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T 
 	I i = 0;
 	while (i < n) {
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
-		const T current = a[i];
-		I left = 2*i + 1;
-		I right = 2*i + 2;
-		j = (x <= current) ? i : j;
-		i = (x <= current) ? left : right;
+		j = (x <= a[i]) ? i : j;
+		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
 	return j;
 }

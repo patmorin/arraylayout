@@ -20,7 +20,7 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 \surroundwithmdframed{minted}
 
 \title{\MakeUppercase{Array Layouts for Comparison-Based Searching}}
-\author{Pat Morin and Paul-Virak Khuong}
+\author{Paul-Virak Khuong and Pat Morin}
 
 
 \begin{document}
@@ -59,43 +59,55 @@ data structure/query algorithm pair: theoretically optimal, fast in
 practice, and discoverable by school children playing guessing games.
 Although sorted arrays are \emph{static}---they don't support efficient
 insertion or deletion---they still have many practical applications
-involving bulk-processing of data, and even the most na\"{\i}ve
-implementations execute searches several times faster than the most
+involving bulk-processing of data, and even na\"{\i}ve implementations
+of binary search execute searches several times faster than the most
 popular dynamic data structures.\footnote{For example, Barba and Morin
 \cite{bmXX} found that a naive implementation of binary search in a
 sorted array was approximately three times faster than searching using
 C++'s \texttt{stl::set} class.}
 
-Note, however, that sorted order is just one possible order that can
-be used to store data in an array. Other layouts are also possible
-and---combined with the right query algorithm---may allow for faster
-queries.  Other array layouts may be able to take advantage of (or be
-hurt less by) modern processor features such as caches, instruction
-pipelining, conditional moves, speculative execution, and prefetching.
+However, that sorted order is just one possible order that can be used to
+store data in an array. Other layouts are also possible and---combined
+with the right query algorithm---may allow for faster queries.
+Other array layouts may be able to take advantage of (or be hurt less
+by) modern processor features such as caches, instruction pipelining,
+conditional moves, speculative execution, and prefetching.
 
-In this paper we consider four different memory layouts and accompanying
-search algorithms:
+In this experimental paper we consider four different memory layouts and
+accompanying search algorithms.  All of these memory layouts store $n$
+data items in a single array of length $n$, and their accompanying search
+algorithm can find (say) the index of the largest value in the array that
+is greater than or equal to $x$ for any value $x$.\footnote{In case $x$
+is greater than any value in the array, the search algorithm returns
+the index $n$.}
 
 \begin{enumerate}
-\item \texttt{Sorted}:  This is the usual sorted layout, in which the data is stored in sorted order and searching is done using binary search.
+  \item \texttt{Sorted}:  This is the usual sorted layout, in which
+  the data is stored in sorted order and searching is done using binary
+  search.
 
-\item \texttt{Eytzinger}: In this layout, the data is viewed as being
-stored in a complete binary search tree.  The root of this tree is stored
-at $A[0]$, and the left and right children of the node stored at $A[i]$
-are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
+  \item \texttt{Eytzinger}: In this layout, the data is viewed as being
+  stored in a complete binary search tree.  The root of this tree is
+  stored at $A[0]$, and the left and right children of the node stored
+  at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
-\item \texttt{Btree}: In this layout, the data is viewed as being stored
-in a complate $(b+1)$-ary tree, so that each node stores $b$ values.
-The parameter $b$ is chosen so that $b$ values fit neatly into a
-single cache line. The nodes of this tree are then mapped to array
-locations using a generalization of the Eytzinger mapping:  For $j\in
-\{0,\ldots,b\}$, the $j$th child of the node that starts at position $i$
-is stored beginning at position $i(b+1)+(j+1)b$.
+  \item \texttt{Btree}: In this layout, the data is viewed as being stored
+  in a complete $(b+1)$-ary tree, so that each node stores $b$ values.
+  The parameter $b$ is chosen so that $b$ values fit neatly into a single
+  cache line and the nodes of this tree mapped to array locations using
+  a generalization of the Eytzinger mapping:  For $j\in \{0,\ldots,b\}$,
+  the $j$th child of the node that starts at position $i$ is stored
+  beginning at position $i(b+1)+(j+1)b$.
 
-\item \texttt{vEB}: In this, the \emph{van Emde Boas} layout, the data
-is viewed as being stored in a complete binary tree whose height is
-$h=\lceil\log (n+1)\rceil -1$. This tree is layed out recursively:  If $h=0$,
-then the single node of the tree is stored in $A[0]$.  Otherwise, the tree is split into a top-part of height $\lfloor h/2\rfloor$, which is recursively layed out starting at $A[0]$.  Attached to the leaves of this top tree are $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which are recursively layed out, in left-to-right order, starting at array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
+  \item \texttt{vEB}: In this, the \emph{van Emde Boas} layout, the data
+  is viewed as being stored in a complete binary tree whose height is
+  $h=\lceil\log (n+1)\rceil -1$. This tree is layed out recursively:  If
+  $h=0$, then the single node of the tree is stored in $A[0]$.  Otherwise,
+  the tree is split into a top-part of height $\lfloor h/2\rfloor$,
+  which is recursively layed out starting at $A[0]$.  Attached to the
+  leaves of this top tree are $2^{1+\lfloor{h/2\rfloor}}$ subtrees,
+  which are recursively layed out, in left-to-right order, starting at
+  array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
 \end{enumerate}
 
 
@@ -150,9 +162,12 @@ we will use numbers from a recent high-end desktop processor, the Intel
 \subsection{CPU}
 
 At the highest level, a computer system consists of a processor (CPU)
-connected to a random access memory (RAM). On the Intel 4790K, the CPU
-runs at frequency of 4GHz, or $4\times10^9$ cycles per second.  This CPU
-can execute roughly $4\times 10^{9}$ instructions per second.\footnote{This is only a very rough approximation of the truth; different instructions have different latencies and throughput \cite{granlund.instruction}.}
+connected to a random access memory (RAM). On the Intel 4790K, the
+CPU runs at frequency of 4GHz, or $4\times10^9$ cycles per second.
+This CPU can execute roughly $4\times 10^{9}$ instructions per
+second.\footnote{This is only a very rough approximation of the
+truth; different instructions have different latencies and throughput
+\cite{granlund.instruction}.}
 
 \url{https://gmplib.org/~tege/x86-timing.pdf}
 
@@ -269,17 +284,17 @@ the CPU does not know in advance whether the following instruction will
 be the one immediately after the conditional jump or will be the target
 of the conditional jump. The CPU has two options: 
 \begin{enumerate}
-\item Wait until the condition that determines the output
- of the jump has been tested. In this case, the insruction pipeline is
- not being filled from the time the conditional jump instruction enters
- the pipleline until the the time the jump condition is tested.
+  \item Wait until the condition that determines the output
+   of the jump has been tested. In this case, the insruction pipeline
+   is not being filled from the time the conditional jump instruction
+   enters the pipleline until the the time the jump condition is tested.
 
-\item Predict whether the jump will occur or not and begin loading
-the instructions from the jump target, or immediately after the jump,
-respectively.  In this case, if the prediction is correct, then no time
-is wasted. If the prediction is incorrect, then once the jump condition
-is finally verified, all instructions placed in the pipeline after the
-conditional jump instruction have to be flushed.
+  \item Predict whether the jump will occur or not and begin loading
+  the instructions from the jump target, or immediately after the jump,
+  respectively.  In this case, if the prediction is correct, then no
+  time is wasted. If the prediction is incorrect, then once the jump
+  condition is finally verified, all instructions placed in the pipeline
+  after the conditional jump instruction have to be flushed.
 \end{enumerate}
 
 Most modern processors implement the second option and implement
@@ -306,12 +321,33 @@ not interfere with the processor pipeline.
 
 Conditional moves are a special case of \emph{predicated
 instructions}---instructions that are only executed if some predicate
-is true.  The Intel IA-64 and ARM instruction sets include extensive
+is true.  The Intel IA-64 and ARM CPU architectures include extensive
 predicated instruction sets.
 
 \section{The Layouts}
 
+In this section, we provide an in-depth discussion the implementation
+and performance of the four array layouts we tested.
+
 \subsection{Sorted}
+
+Searching a sorted array is an especially important special case. Every
+major programming language and environment provides a sorting routine,
+so a sorted array is usually just a function call away. Many language
+also provide a matching binary search implementation.  In C++,
+sorting is done with \mintinline{c++}{std::sort()} and binary
+search is implemented in \mintinline{c++}{std::lower_bound()} and
+\mintinline{c++}{std::upper_bound()}. 
+
+The chromium browser code-base, for example, calls these
+implementations of binary search from 135 different locations
+in a wide variety of contexts, including cookie handling, GUI
+layout, graphics and text rendering, video handling, and certificate
+management.\footnote{\url{https://goo.gl/zpSdXo}}  This is the code-base
+on which Google Chrome, which now boasts over 1 billion users \cite{X}, is
+based. Improvements to \mintinline{c++}{std::lower_bound()}
+and \mintinline{c++}{std::upper_bound()} could improve the user experience
+of hundreds of millions of users.
 
 \subsubsection{Na\"{\i}ve Binary Search}
 
@@ -361,25 +397,43 @@ binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
 
 Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
 cache lines are 64 bytes wide.  With 4-byte data this gives the values
-$W=16$ and $C=2048K=2^{21}$.  
+$W=16$ and $C=2048K=2^{21}$.
+Therefore, once $n$ exceeds $2^{21}$, we expect a sharp increase in search
+time, with each additional level of binary search incurring another
+L3 cache miss and access to RAM.  When plotted with the $n$-axis on a
+logarithmic scale, this shows up as an increase in slope at approximately
+$n=2^{21}$.
 
-Therefore, once $n$ exceeds $2^{21}$, we expect a sharp increase in
-search time, with each additional level of binary search incurring
-another L3 cache miss and access to RAM.  When plotted with the
-$n$-axis on a logarithmic scale, this shows up as an increase in slope
-at approximately $n=2^{21}$.
+\figref{sorted-i} shows the running time of $2\times 10^6$ searches
+for values of $n$ ranging from 1 to $2^{27}$. As the preceding analysis
+predicts, there is indeed a sharp increase in slope that occurs at around
+$n=2^{21}$.  To give our results a grounding in reality, this graph
+also shows the running-time of the \mintinline{c++}{stl::lower_bound()}
+implementation---The C++ Standard Template Library implementation
+of binary search.  Our na\"{\i}ve implementation and the
+\mintinline{c++}{stl::lower_bound()} implementation perform nearly
+identically.
 
-\figref{binary-search-one} shows the running time of $2\times 10^6$
-searches for values of $n$ ranging from 1 to $2\times 10^9$.  As the
-analysis above predicts, there is indeed a sharp increase in slope that
-occurs at around $n=2^{21}$. 
+
+\begin{figure}
+   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-i}}
+   \caption{The running time of na\"{\i}ve binary search and \mintinline{c++}{stl::lower_bound()}.}
+   \figlabel{sorted-i}
+\end{figure}
 
 If we consider only values of $n$ up to $2^{21}$, shown in
-\figref{binary-search-two}, we see an additional change in slope at
+\figref{sorted-ii}, we see an additional change in slope at
 $n=2^{16}$.  This is the same effect, but at the L2/L3 cache level; the
 4790K has a 256KB L2 cache capable of storing $64K=2^{16}$ data items.
 Each additional level of binary search beyond that point incurs an
 additional L2 cache miss and access to L3 cache.
+
+\begin{figure}
+   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-ii}}
+   \caption{The running time of na\"{\i}ve binary search when all data
+    fits into L3 cache.}
+   \figlabel{sorted-ii}
+\end{figure}
 
 
 \subsubsection{Branch-Free Binary Search}
@@ -394,8 +448,8 @@ substantially.  There are two problems with this code:
 is highly unpredictable. Each of the first two branches has a close to
 $50\%$ chance of being executed.  The branch-predictor of a pipelined
 processor is forced to guess which of these branches will occur and load
-the instructions from this branch into the pipleline.  When it guesses
-wrong (approximately 50\% of the time), the entire pipeline must be
+the instructions from this branch into the pipelline.  When it guesses
+incorrectly (approximately 50\% of the time), the entire pipeline must be
 flushed and the instructions for the other branch loaded.
 
 \item The number of iterations of the outer loop is hard to predict. The
@@ -488,25 +542,41 @@ by Lines~8--15 with the conditional move at Line~12.
 \lstlabel{bfbs-asm}
 \end{listing}
 
-\Figref{bf-vs-branchy-bs-one} compares the branch-free implementation
-of binary search for array sizes $n$ ranging from 1 to $2^{16}$.  As we
-expect, the branch-free code is much faster. Indeed, after accounting
-for the overhead of the testing harness, the branch-free search is
-approximately twice as fast for $n=2^{16}$.
+\Figref{sorted-iii} compares the performance of the na\"{\i}ve and
+branch-free implementations of binary search for array sizes $n$
+ranging from 1 to $2^{16}$.  As expected, the branch-free code is much
+faster. Indeed, after accounting for the overhead of the testing harness,
+the branch-free search is approximately twice as fast for $n=2^{16}$.
 
-However, for larger values of $n$ (shown in \figref{bf-vs-branchy-bs-two})
-the situation changes.  For $n>2^{16}$, the gap begins to narrow until
-slowly and for $n>2^{21}$ it narrows more quickly.  By time time $n$
+\begin{figure}
+   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-iii}}
+   \caption{The running times of na\"{\i}ve binary search versus
+    branch-free binary search when all data
+    fits into L3 cache.}
+   \figlabel{sorted-iii}
+\end{figure}
+
+However, for larger values of $n$ (shown in \figref{sorted-iv}) the
+situation changes.  For $n>2^{16}$, the gap begins to narrow until
+slowly and for $n>2^{21}$ it narrows more quickly.  By the time time $n$
 exceeds $2^{22}$, the branch-free code is slower and the gap between
 the two continues to widen from this point onward.
 
-The reason for this change in behaviour (which was far from obvious at
-the outset) is the interplay between branch prediction and the memory
-subsystem.  In the original code, the branch-predictor makes a guess at
-which branch will be taken and is correct approximately half the time. An
-incorrrect guess causes a costly pipeline flush.  However, a correct
-guess results in the memory subsystem starting to load the array location
-needed during the next iteration of the \mintinline{c++}{while} loop.
+\begin{figure}
+   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-iv}}
+   \caption{The running times of na\"{\i}ve binary search versus
+    branch-free binary search for large values of $n$.}
+   \figlabel{sorted-iv}
+\end{figure}
+
+The reason for this change in relative performance was not immediately
+obvious to us.  After some experimentation, we discovered it comes
+from the interplay between branch prediction and the memory subsystem.
+In the na\"{\i}ve code, the branch-predictor makes a guess at which branch
+will be taken and is correct approximately half the time. An incorrrect
+guess causes a costly pipeline flush.  However, a correct guess results
+in the memory subsystem starting to load the array location needed during
+the next iteration of the \mintinline{c++}{while} loop.
 
 For small $n<2^{16}$, the entire array fits into L2 cache, and the costs
 of pipeline flushes exceed any savings obtained by correct guesses.
@@ -514,14 +584,15 @@ However, for larger $n$, each correct guess by the branch-predictor
 triggers an L2 (in the range $2^{16}<n<2^{21}$) or an L3 (for $n>2^{21}$)
 cache miss sooner than it would otherwise.  The costs of these cache
 misses are greater than the costs of the pipeline flushes, so eventually,
-the branch-free code loses out to the branchy code.
+the branch-free code loses out to the na\"{\i}ve code.
 
-Since this was not our initial explanation, and since it was not obvious from
-the beginning, we found several pieces of evidence to support or disprove this hypothesis.
+Since this was not our initial explanation, and since it was not obvious
+from the beginning, we gathered several pieces of evidence to support
+or disprove this hypothesis.
 
 \begin{enumerate}
 \item Assembly-level profiling showed that, for large $n$, the
-  branch-free code spends the vast majority of it's time loading from
+  branch-free code spends the vast majority of its time loading from
   memory (Line~11, of \lstref{bfbs-asm}).  This is because the register,
   \mintinline{nasm}{rdi},  containing the memory address to load is the
   target of a conditional move (Line~12).  This conditional move has not
@@ -529,13 +600,14 @@ the beginning, we found several pieces of evidence to support or disprove this h
   comparison, so the CPU stalls at this point.
 
 \item Another possible explanation for our results was that the hardware
-   prefetcher was, for some reason, better able to handle the branchy
-   code than the branch-free code.  This seemed unlikely, since the
-   memory access patterns for both version are quite simiilar, and both
-   probably too complicated for a prefetcher to predict. Nevertheless,
-   we ruled out this possibility by disabling the hardware prefetcher
-   using the \mintinline{console}{wrmsr} command.\footnote{TOD: Add details of
-   how to do this.}  The running-times of the code was unchanged by this.
+   prefetcher was, for some reason, better able to handle the na\"{\i}ve
+   code than the branch-free code.  This seemed unlikely, since the memory
+   access patterns for both version are quite similar, and probably too
+   complicated for a hardware prefetcher to predict. Nevertheless, we
+   ruled out this possibility by disabling the hardware prefetcher and
+   running the tests again.\footnote{TODO: Add details of how to do this.
+   We used the \mintinline{console}{wrmsr} command.}  The running-times
+   of the code were unchanged by disabling prefetching.
 
 \item We implemented a version of the branch-free code that adds explicit
    prefetching. At the top of the while loop, it
@@ -543,10 +615,17 @@ the beginning, we found several pieces of evidence to support or disprove this h
    and \mintinline{c++}{a[half+half/2]} using \texttt{gcc}'s
    \mintinline{c++}{__builtin_prefetch()} builtin, which translates into
    the x86 \mintinline{nasm}{prefetch0} instruction.  The performance of
-   the resulting code, shown in \figref{sorted-all} is consistent with
-   our hypothesis.  The code is nearly as fast as the branch-free code
-   for small values of $n$, but tracks the performance of the branchy
-   code for larger values of $n$.
+   the resulting code, shown in \figref{sorted-v} is consistent with our
+   hypothesis.  The code is nearly as fast as the branch-free code for
+   small values of $n$, but tracks (and even improves) the performance
+   of the na\"{\i}ve code for larger values of $n$.
+
+\begin{figure}
+   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-v}}
+   \caption{Branch-free binary search with explicit prefetching is competitive
+    for small values of $n$ and a clear winner for large values of $n$.}
+   \figlabel{sorted-v}
+\end{figure}
 
 \item We ran our code on Atom 330 processor that we had available.  This
    low-power processor does not do any form or speculative
@@ -558,12 +637,22 @@ the beginning, we found several pieces of evidence to support or disprove this h
    then outperforms it for larger $n$.
 \end{enumerate}
 
-From our study of binary search, we conclude the following lesson about the (very important) case where one is searching in a sorted array:
+From our study of binary search, we conclude the following lesson about
+the (very important) case where one is searching in a sorted array:
 
 \begin{lesson}
   For searching in a sorted array, the fastest method uses branch-free
-  code with explicit prefetching.
+  code with explicit prefetching.  This is true both on modern pipelined
+  processors that use branch prediction and on traditional sequential
+  processors.
 \end{lesson}
+
+We finish our discussion of binary search by pointing out one lesser-known
+caveat:  If $n$ is large and very close to a power of 2, then all three
+variants of binary search discussed here will have poor cache utilization.
+This is caused by cache-line aliasing and is hinted at by Brodal \etal\
+\cite{X} and discussed in detail by the first author \cite{X}.
+
 
 TODO: Discuss the problem with array sizes that are (nearly) powers of two.
 

@@ -272,6 +272,8 @@ void run_tests(I n, I m) {
 	Tool<sorted_array_bf<T,I>,T,I>::run_test1(a, n, m, "sorted_bf");
 	Tool<sorted_array_bfp<T,I>,T,I>::run_test1(a, n, m, "sorted_bfp");
 
+	Tool<sorted_array_stl<T,I>,T,I>::run_test1(a, n, m, "sorted_stl");
+
 	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
 
 	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");

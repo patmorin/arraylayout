@@ -131,5 +131,5 @@ if __name__ == "__main__":
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**27, 'figs/sorted-v')
 
     lines = open('data/scray-sorted-g++.dat').read().splitlines()
-    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**27, 'figs/sorted-atom')
+    make_plot(lines, ['sorted', 'sorted_bf'], 2**27, 'figs/sorted-atom')
 

@@ -118,7 +118,7 @@ I __attribute__ ((noinline)) sorted_array<T,I>::_branchfree_search(T x) const {
 }
 
 template<typename T, typename I>
-I sorted_array<T,I>::stl_search(T x) const {
+I __attribute__ ((noinline)) sorted_array<T,I>::stl_search(T x) const {
 	I i = std::lower_bound(a, a+n, x) - a;
     return (i < n && a[i] < x) + i;
 }

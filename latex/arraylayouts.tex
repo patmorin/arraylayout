@@ -397,12 +397,11 @@ binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
 
 Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
 cache lines are 64 bytes wide.  With 4-byte data this gives the values
-$W=16$ and $C=2048K=2^{21}$.
-Therefore, once $n$ exceeds $2^{21}$, we expect a sharp increase in search
-time, with each additional level of binary search incurring another
-L3 cache miss and access to RAM.  When plotted with the $n$-axis on a
-logarithmic scale, this shows up as an increase in slope at approximately
-$n=2^{21}$.
+$W=16$ and $C=2048K=2^{21}$.  Therefore, once $n$ exceeds $2^{21}$, we
+expect a sharp increase in search time, with each additional level of
+binary search incurring another L3 cache miss and access to RAM.  When we
+plot search time on a vertical axis versus $n$ on a logarithmic horizontal
+axis, this shows up as an increase in slope at approximately $n=2^{21}$.
 
 \figref{sorted-i} shows the running time of $2\times 10^6$ searches
 for values of $n$ ranging from 1 to $2^{27}$. As the preceding analysis
@@ -631,18 +630,17 @@ or disprove this hypothesis.
    low-power processor does not do any form or speculative
    execution, including branch-prediction.  The results, which are
    shown in \figref{sorted-atom} are consistent with our hypothesis.
-   The branch-free code is faster than the branchy code across the full
-   range of values for $n$. The branch-free code with explicit prefetching
-   matches the performance of the branch-free code for small $n$, and
-   then outperforms it for larger $n$.
+   The branch-free code is faster than the na\"{\i}ve code across the full
+   range of values for $n$. 
 \end{enumerate}
 
 \begin{figure}
    \centering{\includegraphics[width=.8\textwidth]{figs/sorted-atom}}
-   \caption{Binary search running-times on the Atom 330.}
+   \caption{Binary search running-times on the Atom 330. The Atom 330
+   has a 512KB L3 cache that can store $2^{17}$ 4-byte integers and does
+   not perform speculative execution of any kind.}
    \figlabel{sorted-atom}
 \end{figure}
-
 
 From our study of binary search, we conclude the following lesson about
 the (very important) case where one is searching in a sorted array:
@@ -657,12 +655,12 @@ the (very important) case where one is searching in a sorted array:
 We finish our discussion of binary search by pointing out one lesser-known
 caveat:  If $n$ is large and very close to a power of 2, then all three
 variants of binary search discussed here will have poor cache utilization.
-This is caused by cache-line aliasing and is hinted at by Brodal \etal\
-\cite{X} and discussed in detail by the first author \cite{X}.
+This is caused by cache-line aliasing between the elements at the top
+levels of the binary search.  This problem is hinted at by Brodal \etal\
+\cite{X} and discussed in detail by the first author \cite{X}, who also
+suggests workarounds.
 
 \subsection{Eytzinger}
-
-\subsubsection{The Na\"{\i}ve Eytzinger Code}
 
 The na\"{\i}ve implemntation of search in an Eytzinger array is nearly
 as simple as that of binary search; the only additional complication is
@@ -673,8 +671,7 @@ of the smallest value greater than \mintinline{c++}{x}.
 \begin{minted}[linenos]{c++}
 template<typename T, typename I, bool aligned>
 I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
-	I j = n;
-	I i = 0;
+	I i = 0, j = n;
 	while (i < n) {
 		if (x < a[i]) {
 			j = i;
@@ -688,11 +685,30 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 	return j;
 }
 \end{minted}
+\caption{A na\"{\i}ve implementation of search in an 
 \end{listing}
 
-A branch-free implementation of search in an Eytzinger array is also quite simple:
+A branch-free implementation of search in an Eytzinger array is also
+quite simple:
 
+\begin{listing}
+\begin{minted}[linenos]{c++}
+template<typename T, typename I, bool aligned>
+I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
+    I i = 0, j = n;
+    while (i < n) {
+        j = (x <= a[i]) ? i : j;
+        i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+    }
+    return j;
+}
+\end{minted}
+\end{listing}
 
+In theory, 
+A cache aware analysis of search in an Eytzinger
+
+The performance of the na\"{\i}ve and branch-free versions of search in an Eytzinger array is shown in \figref{X}.
 
 
 \subsubsection{Branch-Free Code with Explicit Prefetching}

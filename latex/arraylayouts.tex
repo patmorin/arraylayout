@@ -416,7 +416,7 @@ identically.
 
 
 \begin{figure}
-   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-i}}
+   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-i}}
    \caption{The running time of na\"{\i}ve binary search and \mintinline{c++}{stl::lower_bound()}.}
    \figlabel{sorted-i}
 \end{figure}
@@ -429,7 +429,7 @@ Each additional level of binary search beyond that point incurs an
 additional L2 cache miss and access to L3 cache.
 
 \begin{figure}
-   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-ii}}
+   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-ii}}
    \caption{The running time of na\"{\i}ve binary search when all data
     fits into L3 cache.}
    \figlabel{sorted-ii}
@@ -549,7 +549,7 @@ faster. Indeed, after accounting for the overhead of the testing harness,
 the branch-free search is approximately twice as fast for $n=2^{16}$.
 
 \begin{figure}
-   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-iii}}
+   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-iii}}
    \caption{The running times of na\"{\i}ve binary search versus
     branch-free binary search when all data
     fits into L3 cache.}
@@ -563,7 +563,7 @@ exceeds $2^{22}$, the branch-free code is slower and the gap between
 the two continues to widen from this point onward.
 
 \begin{figure}
-   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-iv}}
+   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-iv}}
    \caption{The running times of na\"{\i}ve binary search versus
     branch-free binary search for large values of $n$.}
    \figlabel{sorted-iv}
@@ -621,7 +621,7 @@ or disprove this hypothesis.
    of the na\"{\i}ve code for larger values of $n$.
 
 \begin{figure}
-   \centering{\includegraphics[width=.98\textwidth]{figs/sorted-v}}
+   \centering{\fbox{\includegraphics[width=.8\textwidth]{figs/sorted-v}}}
    \caption{Branch-free binary search with explicit prefetching is competitive
     for small values of $n$ and a clear winner for large values of $n$.}
    \figlabel{sorted-v}
@@ -629,13 +629,20 @@ or disprove this hypothesis.
 
 \item We ran our code on Atom 330 processor that we had available.  This
    low-power processor does not do any form or speculative
-   execution, including branch-prediction.  The result, which are
+   execution, including branch-prediction.  The results, which are
    shown in \figref{sorted-atom} are consistent with our hypothesis.
    The branch-free code is faster than the branchy code across the full
    range of values for $n$. The branch-free code with explicit prefetching
    matches the performance of the branch-free code for small $n$, and
    then outperforms it for larger $n$.
 \end{enumerate}
+
+\begin{figure}
+   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-atom}}
+   \caption{Binary search running-times on the Atom 330.}
+   \figlabel{sorted-atom}
+\end{figure}
+
 
 From our study of binary search, we conclude the following lesson about
 the (very important) case where one is searching in a sorted array:
@@ -660,7 +667,7 @@ TODO: Discuss the problem with array sizes that are (nearly) powers of two.
 
 \subsubsection{The Na\"{\i}ve Eytzinger Code}
 
-The na\"{\i}ve implemntation of search in an Eytzinger array is nearly
+The na\"{\i}ve implementation of search in an Eytzinger array is nearly
 as simple as that of binary search.
 
 \begin{listing}

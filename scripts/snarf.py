@@ -112,7 +112,7 @@ def make_plot(lines, algs, xmax, filename=None):
     if filename:
         filename += ".pdf"
         print "Writing {}".format(filename)
-        plt.savefig(filename, format='pdf')
+        plt.savefig(filename, format='pdf', bbox_inches='tight')
     else:
         plt.show()
     plt.close()
@@ -129,4 +129,7 @@ if __name__ == "__main__":
     make_plot(lines, ['sorted', 'sorted_bf'], 2**27, 'figs/sorted-iv')
 
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**27, 'figs/sorted-v')
+
+    lines = open('data/scray-sorted-g++.dat').read().splitlines()
+    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**27, 'figs/sorted-atom')
 

@@ -660,15 +660,14 @@ variants of binary search discussed here will have poor cache utilization.
 This is caused by cache-line aliasing and is hinted at by Brodal \etal\
 \cite{X} and discussed in detail by the first author \cite{X}.
 
-
-TODO: Discuss the problem with array sizes that are (nearly) powers of two.
-
 \subsection{Eytzinger}
 
 \subsubsection{The Na\"{\i}ve Eytzinger Code}
 
-The na\"{\i}ve implementation of search in an Eytzinger array is nearly
-as simple as that of binary search.
+The na\"{\i}ve implemntation of search in an Eytzinger array is nearly
+as simple as that of binary search; the only additional complication is
+the use of a variable, \mintinline{c++}{j} to keep track of the index
+of the smallest value greater than \mintinline{c++}{x}.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -688,15 +687,13 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 	}
 	return j;
 }
-
 \end{minted}
 \end{listing}
 
+A branch-free implementation of search in an Eytzinger array is also quite simple:
 
 
-\subsubsection{Na\"{\i}ve Code}
 
-\subsubsection{Branch-Free Code}
 
 \subsubsection{Branch-Free Code with Explicit Prefetching}
 

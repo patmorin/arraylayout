@@ -12,7 +12,7 @@ if __name__ == "__main__":
     open(datafile, "w").close() # clobber the data file
     for ((dt, size), it) in itertools.product(dtypes, itypes):
         while n*size < 2**31:
-            cmd = './main {} {} {} {} >> {}'.format(dt, it, int(n), m, datafile)
+            cmd = 'numactl -C 6 ./main {} {} {} {} >> {}'.format(dt, it, int(n), m, datafile)
             print cmd
             os.system(cmd)
             n *= base

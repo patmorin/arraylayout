@@ -87,7 +87,8 @@ the index $n$.}
   search.
 
   \item \texttt{Eytzinger}: In this layout, the data is viewed as being
-  stored in a complete binary search tree.  The root of this tree is
+  stored in a complete binary search tree and the values of the nodes in
+  this virtual tree are placed in the array in the order they would be encountered in a left-to-right breadth-first traversal.  The root of this tree is
   stored at $A[0]$, and the left and right children of the node stored
   at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
@@ -276,15 +277,21 @@ executed while the next instruction is reading a memory address, while
 the next instruction is being decoded, while the next instruction is
 being fetched.
 
-This all works well provided that the CPU knows which instruction to
-fetch.  Where this breaks down is in code that contains \emph{conditional
-jump} instructions. These instructions will possibly change the flow of
-execution based on the result of some previous comparison.  In such cases,
-the CPU does not know in advance whether the following instruction will
-be the one immediately after the conditional jump or will be the target
-of the conditional jump. The CPU has two options: 
+The Nehalem processor architecture, on which the Intel 4790K is based has
+20--24 stage processor pipeline. If an instruction does not stall for any
+other reason, there is still at least a 20--24 cycle latency between the
+time an istruction is fetched and until the time it completes execution.
+
+Processor pipelining works well provided that the CPU knows which
+instruction to fetch.  Where this breaks down is in code that contains
+\emph{conditional jump} instructions. These instructions will possibly
+change the flow of execution based on the result of some previous
+comparison.  In such cases, the CPU does not know in advance whether the
+following instruction will be the one immediately after the conditional
+jump or will be the target of the conditional jump. The CPU has two
+options:
 \begin{enumerate}
-  \item Wait until the condition that determines the output
+  \item Wait until the condition that determines the target
    of the jump has been tested. In this case, the insruction pipeline
    is not being filled from the time the conditional jump instruction
    enters the pipleline until the the time the jump condition is tested.
@@ -297,10 +304,11 @@ of the conditional jump. The CPU has two options:
   after the conditional jump instruction have to be flushed.
 \end{enumerate}
 
-Most modern processors implement the second option and implement
-some form of \emph{branch predictor} to obtain accurate predictions.
-Branch predictors work well when the condition is highly predictable so
-that, e.g., the conditional jump is almost never or almost always taken.
+Most modern processors, including the Intel 4790K, implement the second
+option and implement some form of \emph{branch predictor} to perform
+accurate predictions.  Branch predictors work well when the condition is
+highly predictable so that, e.g., the conditional jump condition is almost
+always true or almost always false.
 
 Most modern processors use some form of two-level adaptive predictor
 \cite{yeh.patt.two-level} that can even handle second-order statistics,
@@ -326,7 +334,7 @@ predicated instruction sets.
 
 \section{The Layouts}
 
-In this section, we provide an in-depth discussion the implementation
+In this section, we provide an in-depth discussion of the implementations
 and performance of the four array layouts we tested.
 
 \subsection{Sorted}
@@ -662,10 +670,21 @@ suggests workarounds.
 
 \subsection{Eytzinger}
 
-The na\"{\i}ve implemntation of search in an Eytzinger array is nearly
+Recall that, in the Eytzinger layout, the data is viewed as being
+stored in a complete binary search tree and the values of the nodes in
+this virtual tree are placed in the array in the order they would be
+encountered in a left-to-right breadth-first traversal.  A nice property
+of this layout is that it is easy to follow a root-to-leaf path in the
+virtual tree: The value of the root of the virtual tree is stored at
+$A[0]$, and the values of left and right children of the node whose values
+is stored at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
+
+The na\"{\i}ve implementation of search in an Eytzinger array is nearly
 as simple as that of binary search; the only additional complication is
 the use of a variable, \mintinline{c++}{j} to keep track of the index
-of the smallest value greater than \mintinline{c++}{x}.
+of the smallest value encountered greater than \mintinline{c++}{x}.
+In case \mintinline{c++}{x} is not found, the index \mintinline{c++}{j}
+will be returned instead.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -685,11 +704,12 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 	return j;
 }
 \end{minted}
-\caption{A na\"{\i}ve implementation of search in an 
+\caption{A na\"{\i}ve implementation of search in an Eytzinger array.}
 \end{listing}
 
 A branch-free implementation of search in an Eytzinger array is also
-quite simple:
+quite simple. Unfortunately, the branch-free version is unable to avoid
+variations in the number of iterations of the while loop, since this depends on the depth of the leaf that is reached when searching for \mintinline{c++}{x}.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -703,15 +723,82 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
     return j;
 }
 \end{minted}
+\caption{Branch-free implementation of search in an Eytzinger array.}
 \end{listing}
 
-In theory, 
-A cache aware analysis of search in an Eytzinger
+With respect to caching, the performance of searches in an Eytzinger
+array should be comparable to that of binary searching in a sorted array.
+When performing repeated random searches, the top levels of the virtual
+tree are accessed most frequently, with a node at depth $i$ being accessed
+with probability roughly $1/2^i$.  Since nodes of the virtual tree are
+mapped into the array in breadth-first order, the top levels appear
+consecutively at the beginning of the array. Thus, we expect the cache
+to store, roughly, the first $C$ elements of the array, which correspond
+to the top $\log C$ levels of the virtual tree.  As the search proceeds
+through the top $\log C$ levels, it hits cached values, but after $\log C$
+levels, each subsequence comparison causes a cache miss.  This results in
+a total of roughly $\log n-\log C$ cache misses, just as in binary search.
 
-The performance of the na\"{\i}ve and branch-free versions of search in an Eytzinger array is shown in \figref{X}.
+The performance of the na\"{\i}ve and branch-free versions of search in
+an Eytzinger array on our test system is shown in \figref{eytzinger-i}.
+Branch-free Eytzinger search very closely matches the performance of
+branch-free binary search. As expected, there is an increasing in slope
+at $n=2^{21}$ since the cache on our test machine can store $C=2^{21}$
+4-byte values.
+
+However, the performance of the na\"{\i}ve Eytzinger implementation is
+much better than expected for large values of $n$. Indeed, it is much
+faster than the na\"{\i}ve implementation of binary search, and even
+faster our fastest implementation of binary search: branch-free binary
+search with prefetching.
+
+\begin{figure}
+   \centering{\includegraphics[width=.8\textwidth]{figs/eytzinger-i}}
+   \caption{The performance of na\"{\i}ve and branch-free Eytzinger search.}
+   \figlabel{eytzinger-i}
+\end{figure}
+
+\subsubsection{Why Eytzinger is so Fast}
+
+Like na\"{\i}ve binary search, the na\"{\i}ve implementation of search in
+Eytzinger array is so much faster than expected because of the interaction
+between branch-prediction and the memory subsystem.  However, in the
+case of the Eytzinger layout, this interaction is much more efficient.
+
+To understand why the na\"{\i}ve Eytzinger search algorithm is so
+fast, recall that, in the Eytzinger layout, the nodes are layed out
+in breadth-first search order,  so the two children of a node occupy
+consecutive array locations $2i$ and $2i+1$. More generally, for a
+virtual node, $u$, that is assigned index $i$, the $2^\ell$ descendants at
+distance $\ell$ of $u$ are consecutive and occupy array indices $2^\ell
+i + 2^{\ell}-1,\ldots,2^{\ell} i + 2^{\ell+1}-1$.
+
+In our working example of 4-byte data with 64-byte cache lines,
+the sixteen great-great grandchildren of the virtual node stored at
+position $i$ are stored at array locations $16i+15,\ldots,16i+30$.
+Assuming that $A[0]$ is the first element of a cache line, this means
+that, of those 16 descendants, 15 are contained in a single cache line
+(the ones stored at array indices $16i+16,\ldots,16i+30$.)
+
+With the Intel 4790K's 20--24 instruction pipleline, instructions
+in the pipeline can be several iterations ahead in the execution of
+the while loop, which only requires 5--6 instructions per iteration.
+The probability that the branch-predictor correctly guesses the execution
+path of four consecutive stages is only about 1/16, and a flush of (some
+of) the pipeline is likely.  However, even if the branch predictor does
+not guess the correct execution path, it most likely (with probability
+15/16) guess an execution path that loads the correct cache line.
+
+Knowing this, there are two optimizations we can make:
+\begin{enumerate}
+  \item We can add an explicit prefetch instruction to the branch-free code
+    so that it loads the correct cache line.
+  \item We can align the array so that \mintinline{c++}{a[0]} is the second element of a cache line.  In this way, all 16 great-great grandchildren of a node will always be stored in a single cache line.
+\end{enumerate}
+
+The results of implementing both of these optimizations are shown in \figref{eytzinger-ii}.
 
 
-\subsubsection{Branch-Free Code with Explicit Prefetching}
 
 \subsection{BTree}
 

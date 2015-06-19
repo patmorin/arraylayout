@@ -32,11 +32,20 @@ def make_plot(lines, algs, xmax, filename=None):
     # Snarf the data into a giant nested dictionary.
     
 
-    mapper = dict([("sorted", ("-", "o", colours[0], "naive binary search")),
-                   ("sorted_stl", ("-", "p", colours[1], r'stl::lower\_bound')),
-                   ("sorted_bf", ("-", "s", colours[2], "branch-free binary search")),
-                   ("fake", ("-", " ", colours[4], "test-harness overhead")),
-                   ("sorted_bfp", ("-", "*", colours[3], "branch-free binary search (with prefetching)")),
+    mapper = dict([("sorted", ("-", "o", colours[0], 
+                    r'na\"{\i}ve binary search')),
+                   ("sorted_stl", ("-", "p", colours[1], 
+                    r'stl::lower\_bound')),
+                   ("sorted_bf", ("-", "s", colours[2], 
+                    "branch-free binary search")),
+                   ("sorted_bfp", ("-", "*", colours[3], 
+                    "branch-free binary search with prefetching")),
+                   ("fake", ("-", " ", colours[4], 
+                    "test-harness overhead")),
+                   ("eytzinger_branchy", ("-", "p", colours[5], 
+                     r'na\"{\i}ve Eytzinger')),
+                   ("eytzinger_bf", ("-", "s", colours[6], 
+                     r'branch-free Eytzinger')),
                   ])
 
 
@@ -97,8 +106,8 @@ def make_plot(lines, algs, xmax, filename=None):
                  color=clr,
                  linestyle=ls,
                  marker=mrk,
-                 linewidth=1, 
-                 markersize=2.5)
+                 linewidth=2, 
+                 markersize=3.5)
 
     # Plot of the winners
     """for n in ns:
@@ -132,4 +141,10 @@ if __name__ == "__main__":
 
     lines = open('data/scray-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted', 'sorted_bf'], 2**27, 'figs/sorted-atom')
+
+    lines = open('data/lauteschwein-combined-g++.dat').read().splitlines()
+    make_plot(lines, ['sorted_bf', 'eytzinger_branchy', 'eytzinger_bf'], 2**27, 'figs/eytzinger-i')
+
+    lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
+    make_plot(lines, ['sorted_bf', 'eytzinger_branchy', 'eytzinger_bf'], 2**27, 'figs/eytzinger-i')
 

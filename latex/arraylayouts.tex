@@ -423,7 +423,7 @@ identically.
 
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-i}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-i}}
    \caption{The running time of na\"{\i}ve binary search and \mintinline{c++}{stl::lower_bound()}.}
    \figlabel{sorted-i}
 \end{figure}
@@ -436,7 +436,7 @@ Each additional level of binary search beyond that point incurs an
 additional L2 cache miss and access to L3 cache.
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-ii}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-ii}}
    \caption{The running time of na\"{\i}ve binary search when all data
     fits into L3 cache.}
    \figlabel{sorted-ii}
@@ -556,7 +556,7 @@ faster. Indeed, after accounting for the overhead of the testing harness,
 the branch-free search is approximately twice as fast for $n=2^{16}$.
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-iii}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iii}}
    \caption{The running times of na\"{\i}ve binary search versus
     branch-free binary search when all data
     fits into L3 cache.}
@@ -564,25 +564,25 @@ the branch-free search is approximately twice as fast for $n=2^{16}$.
 \end{figure}
 
 However, for larger values of $n$ (shown in \figref{sorted-iv}) the
-situation changes.  For $n>2^{16}$, the gap begins to narrow until
-slowly and for $n>2^{21}$ it narrows more quickly.  By the time time $n$
-exceeds $2^{22}$, the branch-free code is slower and the gap between
-the two continues to widen from this point onward.
+situation changes.  For $n>2^{16}$, the gap begins to narrow slowly
+until $n>2^{21}$, at which point it narrows more quickly.  By the time
+time $n$ exceeds $2^{22}$, the branch-free code is slower and the gap
+between the two continues to widen from this point onward.
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-iv}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iv}}
    \caption{The running times of na\"{\i}ve binary search versus
     branch-free binary search for large values of $n$.}
    \figlabel{sorted-iv}
 \end{figure}
 
 The reason for this change in relative performance was not immediately
-obvious to us.  After some experimentation, we discovered it comes
-from the interplay between branch prediction and the memory subsystem.
-In the na\"{\i}ve code, the branch-predictor makes a guess at which branch
-will be taken and is correct approximately half the time. An incorrrect
-guess causes a costly pipeline flush.  However, a correct guess results
-in the memory subsystem starting to load the array location needed during
+obvious to us.  After some experimentation, we discovered it comes from
+the interplay between branch prediction and the memory subsystem.  In the
+na\"{\i}ve code, the branch-predictor makes a guess at which branch will
+be taken and is correct approximately half the time. An incorrrect guess
+causes a costly pipeline flush.  However, a correct guess results in
+the memory subsystem starting to load the array location needed during
 the next iteration of the \mintinline{c++}{while} loop.
 
 For small $n<2^{16}$, the entire array fits into L2 cache, and the costs
@@ -628,24 +628,26 @@ or disprove this hypothesis.
    of the na\"{\i}ve code for larger values of $n$.
 
 \begin{figure}
-   \centering{\fbox{\includegraphics[width=.8\textwidth]{figs/sorted-v}}}
+   \centering{\fbox{\includegraphics[width=.6\textwidth]{figs/sorted-v}}}
    \caption{Branch-free binary search with explicit prefetching is competitive
     for small values of $n$ and a clear winner for large values of $n$.}
    \figlabel{sorted-v}
 \end{figure}
 
 \item We ran our code on Atom 330 processor that we had available.  This
-   low-power processor does not do any form or speculative
-   execution, including branch-prediction.  The results, which are
-   shown in \figref{sorted-atom} are consistent with our hypothesis.
-   The branch-free code is faster than the na\"{\i}ve code across the full
-   range of values for $n$. 
+   low-power processor does not do any form or speculative execution,
+   including branch-prediction. The results, which are shown in
+   \figref{sorted-atom} are consistent with our hypothesis.  The
+   branch-free code is faster than the na\"{\i}ve code across the full
+   range of values for $n$.  This is because branches in the na\"i{\i}ve
+   code result in pipeline stalls and do not help the memory subsystem
+   predict future memory accesses.
 \end{enumerate}
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/sorted-atom}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-atom}}
    \caption{Binary search running-times on the Atom 330. The Atom 330
-   has a 512KB L3 cache that can store $2^{17}$ 4-byte integers and does
+   has a 512KB L2 cache that can store $2^{17}$ 4-byte integers and does
    not perform speculative execution of any kind.}
    \figlabel{sorted-atom}
 \end{figure}
@@ -665,8 +667,8 @@ caveat:  If $n$ is large and very close to a power of 2, then all three
 variants of binary search discussed here will have poor cache utilization.
 This is caused by cache-line aliasing between the elements at the top
 levels of the binary search.  This problem is hinted at by Brodal \etal\
-\cite{X} and discussed in detail by the first author \cite{X}, who also
-suggests workarounds.
+\cite[Section~XX]{X} and discussed in detail by the first author \cite{X},
+who also suggests workarounds.
 
 \subsection{Eytzinger}
 
@@ -708,8 +710,10 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 \end{listing}
 
 A branch-free implementation of search in an Eytzinger array is also
-quite simple. Unfortunately, the branch-free version is unable to avoid
-variations in the number of iterations of the while loop, since this depends on the depth of the leaf that is reached when searching for \mintinline{c++}{x}.
+quite simple. Unfortunately, unlike branch-free binary search, the
+branch-free Eytzinger search is unable to avoid variations in the number
+of iterations of the while loop, since this depends on the depth of the
+leaf that is reached when searching for \mintinline{c++}{x}.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -742,9 +746,9 @@ a total of roughly $\log n-\log C$ cache misses, just as in binary search.
 The performance of the na\"{\i}ve and branch-free versions of search in
 an Eytzinger array on our test system is shown in \figref{eytzinger-i}.
 Branch-free Eytzinger search very closely matches the performance of
-branch-free binary search. As expected, there is an increasing in slope
-at $n=2^{21}$ since the cache on our test machine can store $C=2^{21}$
-4-byte values.
+branch-free binary search. As expected, there is an increase in slope at
+$n=2^{16}$ and $n=2^{21}$ since these are the number of 4-byte integers
+that can be stored int the L2 and L3 caches, respectively.
 
 However, the performance of the na\"{\i}ve Eytzinger implementation is
 much better than expected for large values of $n$. Indeed, it is much
@@ -753,7 +757,7 @@ faster our fastest implementation of binary search: branch-free binary
 search with prefetching.
 
 \begin{figure}
-   \centering{\includegraphics[width=.8\textwidth]{figs/eytzinger-i}}
+   \centering{\includegraphics[width=.6\textwidth]{figs/eytzinger-i}}
    \caption{The performance of na\"{\i}ve and branch-free Eytzinger search.}
    \figlabel{eytzinger-i}
 \end{figure}
@@ -770,7 +774,7 @@ fast, recall that, in the Eytzinger layout, the nodes are layed out
 in breadth-first search order,  so the two children of a node occupy
 consecutive array locations $2i$ and $2i+1$. More generally, for a
 virtual node, $u$, that is assigned index $i$, the $2^\ell$ descendants at
-distance $\ell$ of $u$ are consecutive and occupy array indices $2^\ell
+distance $\ell$ from $u$ are consecutive and occupy array indices $2^\ell
 i + 2^{\ell}-1,\ldots,2^{\ell} i + 2^{\ell+1}-1$.
 
 In our working example of 4-byte data with 64-byte cache lines,
@@ -787,20 +791,95 @@ The probability that the branch-predictor correctly guesses the execution
 path of four consecutive stages is only about 1/16, and a flush of (some
 of) the pipeline is likely.  However, even if the branch predictor does
 not guess the correct execution path, it most likely (with probability
-15/16) guess an execution path that loads the correct cache line.
+15/16) guesses an execution path that loads the correct cache line.
 
 Knowing this, there are two optimizations we can make:
 \begin{enumerate}
   \item We can add an explicit prefetch instruction to the branch-free code
     so that it loads the correct cache line.
-  \item We can align the array so that \mintinline{c++}{a[0]} is the second element of a cache line.  In this way, all 16 great-great grandchildren of a node will always be stored in a single cache line.
+  \item We can align the array so that \mintinline{c++}{a[0]} is the
+    second element of a cache line.  In this way, all 16 great-great
+    grandchildren of a node will always be stored in a single cache line.
 \end{enumerate}
 
-The results of implementing both of these optimizations are shown in \figref{eytzinger-ii}.
+The results of implementing both of these optimizations are shown in
+\figref{eytzinger-ii}.  With these optimizations, the change in slope
+at the L2 cache limit disappears; four iterations of the search loop
+is enough time to prefetch data from the L3 cache.  Once the L3 cache
+limit is reached, the behaviour becomes similar to the na\"{\i}ve
+implementation, but remains noticeably faster, since the branch-free
+code does not cause pipeline flushes and always prefetches the correct
+cache line 4 levels in advance.
 
-
+\begin{figure}
+   \centering{\includegraphics[width=.6\textwidth]{figs/eytzinger-ii}}
+   \caption{The performance of branch-free Eytzinger with prefetching.}
+   \figlabel{eytzinger-ii}
+\end{figure}
 
 \subsection{BTree}
+
+The code for search in a $(B+1)$-tree layout consists of several
+iterations of binary search, each on a subarray (block) of length
+$B$. Very occasionally, the BTree search completes with one binary search
+on a block of size less than $B$. The block size, $B$, is chosen to fit
+neatly into one cache line. On our test machines, cache lines are 64
+bytes wide, so we chose $B=16$ for 4-byte data. Preliminary testing with
+other block sizes showed that this theoretically optimal choice for $B$
+is also optimal in practice.
+
+\Figref{btree-i} shows the results for na\"{\i}ve and branch-free
+implementations of $17$-trees alongside our best implementations of binary
+search and Eytzinger search.  Both implementations of 17-trees use C++
+template programming to unroll the inner binary search.  There is very
+little difference between the two implementations of 17-trees and both
+perform worse than the Eytzinger search across the entire spectrum of
+values of $n$. Unsurprisingly, 17-trees outperform binary search once
+the size of the data exceeds the size of the L3 cache.
+
+\begin{figure}
+   \centering{\includegraphics[width=.6\textwidth]{figs/btree-i}}
+   \caption{The performance of 17-trees.}
+   \figlabel{btree-i}
+\end{figure}
+
+17-trees, which are theoretically the most promising, unfortunately lose
+out simply because the constants they incur are too large.  One reason
+for this is that their inner binary search is inherently inefficient. The
+search has 17 possible outcomes, and therefore requires $\lceil\log_2
+17\rceil=5$ comparisons in some cases (and in all cases for the branch
+free code).  This could be fixed by using 16-trees instead, but then the
+number of keys stored in a block would be 15, which does not align with
+cache lines.  We tested 16-trees and found them to be slower than 17-trees
+for all values of $n$.\footnote{A third alternative is to store 15 keys
+in blocks size 16, but this would be outside the model we consider,
+in which all data resides in a single array of length $n$.}
+
+In summary, $(B+1)$-trees must make a choice between being efficient in
+terms of the number of comparisons or being efficient in terms of the
+the number of cache misses.  In external memory applications where cache
+misses are orders of magnitude slower than comparisons, this is an easy
+choice. For internal memory, unfortunately, there is no good choice:
+both are slower than a fast Eytzinger implementation.
+
+
+In external memory applications---for which B-trees were originally designed---it is clear
+
+
+Their inner binary search is inefficient.
+
+
+The performance
+We implemented several variations of BTree search:
+
+several variations of BTree searches:
+
+Some also tried:  BTree with Eytzinger layouts.
+
+\subsection{Van Emde Boas}
+
+
+\subsection{Blocked Eytzinger Arrays}
 
 
 \section{Lessons Learned}
@@ -812,75 +891,9 @@ The results of implementing both of these optimizations are shown in \figref{eyt
 
 In here, discuss the Sun Rock's hardware scout and, more generally, the technique of Runahead: \url{http://users.ece.cmu.edu/~omutlu/pub/mutlu_hpca03.pdf}.
 
-\subsection{A theoretical model}
+\section{Limitations}
 
-This model is bullshit, in the sense that it doesn't explain why Eytzinger
-is so much faster than b-tree layouts.  Ultimately, I think it's really just about constants in the code.
-
-
-From our findings, we can design a theoretical model of computation of
-a machine that has an (infinite but slow) external memory and a finite
-(but fast) internal memory.  This model has the following parameters:
-
-\begin{enumerate}
-
-  \item Block size, $B$. The external memory is partitioned into equal
-    blocks of size $B$. When a word is loaded from external memory,
-    the entire block is loaded into the fast internal memory.
-
-  \item Cache size, $C \gg B$.  This is the size of the internal
-    memory. Before any computation can be done on data from external
-    memory, it must be loaded into the fast internal memory.
-
-  \item Latency, $L$. This is the minimum time that must elapse from the
-    time the processor requests an external memory address until the block
-    containing that address is loaded into internal memory.  The processor
-    can make such requests in a non-blocking asynchronous manner, so that
-    it can issue several requests in succession even before the first one
-    completes.
-
-    An algorithm that reads $t$ memory blocks one after the other (and
-    not requesting the $(i+1)$th block before the $i$th block is read
-    will have a running time of $tL$.
-
-  \item Transfer rate, $T \ge 1/L$.  This is the maximum number of
-    blocks that can be moved from external to internal memory per time
-    unit.  Blocks are moved from external to internal memory in the order
-    they are requested and as fast as the transfer rate and latency allow.
-
-    An algorithm that immediately requests $t$ memory blocks and then
-    completes once these $t$ blocks are available will have a running
-    time of $\max\{L,t/T\}$.  During the first $L$ time units no data
-    arrives. At the end of $L$ time units, the first $TL$ blocks arrive
-    and then the remaining $t-TL$ blocks arrive as quickly as possible,
-    in $(t-TL)/T=t/T -L$ time units.
-
-\end{enumerate}
-
-For example, with transfer rate $T=3$ and latency $L=1$, if the processor
-requests three distinct blocks, then each block will arrive after a
-delay of $L=1$.  If the processor requests 5 distinct blocks, then
-the first three blocks will arrive after a delay of $L=1$. These first
-three requests saturate the tranfer rate for the first time unit, so
-the fourth and fifth block will only arrive after a delay of $L+1/3=4/3$
-and $L+2/3=5/3$, respectively.
-
-In this model, the running time of a single search using a b-tree that
-stores $B$ keys per node is $L\lceil\log_{B+1}(n+1)\rceil$, since a
-b-tree search consists of $\lceil\log_{B+1}(n+1)\rceil$ rounds. Each
-round starts by loading a block and the next round does not begin until
-that block has been read into internal memory and searched.
-
-Note that, if $T$ is greater than or equal to $2$, then there is an
-immediate way to speedup b-tree search. At the same time a block is
-requested, one can request $k=\lfloor (T-1)L\rfloor$ randomly-chosen
-children of that block.  The block itself, and these children, will
-arrive in main memory at the same time.  
-
-The cost of a single search in an Eytzinger array with explicit
-prefetching is calculated as follows:  The first $\log B$ steps in the
-search access elements in the first block, so these begin after a delay
-of $L$. These steps issue $\log B$ prefetch operations
+With parallel searches, we run out of bandwidth.
 
 \section{Conclusion}
 

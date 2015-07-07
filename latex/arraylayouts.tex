@@ -792,6 +792,9 @@ path of four consecutive stages is only about 1/16, and a flush of (some
 of) the pipeline is likely.  However, even if the branch predictor does
 not guess the correct execution path, it most likely (with probability
 15/16) guesses an execution path that loads the correct cache line.
+Even though the instruction will likely never be executed, its presence
+in the pipeline causes the memory subystem to begin loading the cache
+line that will eventually be needed.
 
 Knowing this, there are two optimizations we can make:
 \begin{enumerate}

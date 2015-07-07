@@ -46,6 +46,10 @@ def make_plot(lines, algs, xmax, filename=None):
                      r'na\"{\i}ve Eytzinger')),
                    ("eytzinger_bf", ("-", "s", colours[6], 
                      r'branch-free Eytzinger')),
+                   ("btree16_a", ("-", "p", colours[0], 
+                     r'naive 16-tree')),
+                   ("btree16_bfa", ("-", "s", colours[1], 
+                     r'branch-free 16-tree')),
                   ])
 
 
@@ -147,4 +151,7 @@ if __name__ == "__main__":
 
     lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
     make_plot(lines, ['sorted_bf', 'eytzinger_branchy', 'eytzinger_bf'], 2**27, 'figs/eytzinger-i')
+
+    lines = open('data/lauteschwein-btree-g++.dat').read().splitlines()
+    make_plot(lines, ['btree16_a', 'btree16_bfa'], 2**27, 'figs/btree-i')
 

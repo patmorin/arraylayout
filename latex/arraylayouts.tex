@@ -14,6 +14,8 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 \newcommand{\lstref}[1]{Listing~\ref{lst:#1}}
 \newcommand{\Lstref}[1]{\lstref{#1}}
 
+\newcommand{\naive}{na\"{\i}ve}
+
 \usepackage{listings}
 \usepackage{minted}
 \usepackage{mdframed}
@@ -28,22 +30,22 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 \maketitle
 
 \begin{abstract}
-  This experimental work studies the best order in which to store $n$
-  data items in an array, $A$, of length $n$ so that one can, for any
-  query value, $x$, quickly find the smallest value in $A$ that is greater
+  We attempt to determine the best order in which to store $n$ ordered
+  data items in an array, $A$, of length $n$ so that we can, for any query
+  value, $x$, quickly find the smallest value in $A$ that is greater
   than or equal to $x$. In particular, we consider the important case
-  where there are many such queries to the same array, $A$.  In addition
-  to the obvious sorted-order we consider the Eytzinger (BFS) layout
-  normally used for heaps, an implicit B-tree layout that generalizes
-  the Eytzinger layout, and the van Emde Boas layout commonly used in
-  the cache-oblivious algorithms literature.
+  where there are many such queries to the same array, $A$, which resides
+  entirely in RAM.  In addition to the obvious sorted-order we consider
+  the Eytzinger (BFS) layout normally used for heaps, an implicit B-tree
+  layout that generalizes the Eytzinger layout, and the van Emde Boas
+  layout commonly used in the cache-oblivious algorithms literature.
 
   After extensive testing and tuning on a wide variety of modern hardware,
   we arrive at the conclusion that, for small values of $n$, sorted
   order, combined with a good implementation of binary search is best.
   For larger values of $n$, we arrive at the surprising conclusion that
   the Eytzinger layout is the fastest when executing a single sequence
-  of queries.  The latter conclusion was unexpected and constradicts
+  of queries.  The latter conclusion is unexpected and goes counter to
   earlier experimental work by Brodal, Fagerberg, and Jakob (SODA~2003),
   who concluded that both the B-tree and van Emde Boas layouts were faster
   than the Eytzinger layout for large values of $n$.  The reason for this
@@ -59,14 +61,16 @@ data structure/query algorithm pair: theoretically optimal, fast in
 practice, and discoverable by school children playing guessing games.
 Although sorted arrays are \emph{static}---they don't support efficient
 insertion or deletion---they still have many practical applications
-involving bulk-processing of data, and even na\"{\i}ve implementations
-of binary search execute searches several times faster than the most
-popular dynamic data structures.\footnote{For example, Barba and Morin
-\cite{bmXX} found that a naive implementation of binary search in a
-sorted array was approximately three times faster than searching using
-C++'s \texttt{stl::set} class.}
+involving bulk or batch processing of data.  They are useful in this
+context because even \naive\ implementations of binary search execute
+searches several times faster than the search algorithms of most
+popular dynamic data structures such as red-black trees.\footnote{For
+example, Barba and Morin \cite{bmXX} found that a naive implementation
+of binary search in a sorted array was approximately three times faster
+than searching using C++'s \texttt{stl::set} class (implemented as a
+red-black tree).}
 
-However, that sorted order is just one possible order that can be used to
+However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
 with the right query algorithm---may allow for faster queries.
 Other array layouts may be able to take advantage of (or be hurt less
@@ -77,9 +81,10 @@ In this experimental paper we consider four different memory layouts and
 accompanying search algorithms.  All of these memory layouts store $n$
 data items in a single array of length $n$, and their accompanying search
 algorithm can find (say) the index of the largest value in the array that
-is greater than or equal to $x$ for any value $x$.\footnote{In case $x$
-is greater than any value in the array, the search algorithm returns
-the index $n$.}
+is greater than or equal to $x$ for any value $x$. In case $x$ is greater
+than any value in the array, the search algorithm returns the index $n$.
+
+We consider the following four layouts:
 
 \begin{enumerate}
   \item \texttt{Sorted}:  This is the usual sorted layout, in which
@@ -87,30 +92,37 @@ the index $n$.}
   search.
 
   \item \texttt{Eytzinger}: In this layout, the data is viewed as being
-  stored in a complete binary search tree and the values of the nodes in
-  this virtual tree are placed in the array in the order they would be encountered in a left-to-right breadth-first traversal.  The root of this tree is
-  stored at $A[0]$, and the left and right children of the node stored
-  at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
+  stored in a complete binary search tree and the values of the nodes
+  in this virtual tree are placed in the array in the order they would
+  be encountered in a left-to-right breadth-first traversal.  The search
+  algorithm simulates a search in this implicit binary search tree.
+
+%  The root of this tree is
+%  stored at $A[0]$, and the left and right children of the node stored
+%  at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
   \item \texttt{Btree}: In this layout, the data is viewed as being stored
-  in a complete $(b+1)$-ary tree, so that each node stores $b$ values.
-  The parameter $b$ is chosen so that $b$ values fit neatly into a single
-  cache line and the nodes of this tree mapped to array locations using
-  a generalization of the Eytzinger mapping:  For $j\in \{0,\ldots,b\}$,
-  the $j$th child of the node that starts at position $i$ is stored
-  beginning at position $i(b+1)+(j+1)b$.
+  in a complete $(B+1)$-ary tree, so that each node stores $B$ values.
+  The parameter $B$ is chosen so that $B$ values fit neatly into a single
+  cache line and the nodes of this tree are mapped to array locations in
+  the order they are encountered in a breadth-first search.
 
-  \item \texttt{vEB}: In this, the \emph{van Emde Boas} layout, the data
-  is viewed as being stored in a complete binary tree whose height is
-  $h=\lceil\log (n+1)\rceil -1$. This tree is layed out recursively:  If
-  $h=0$, then the single node of the tree is stored in $A[0]$.  Otherwise,
-  the tree is split into a top-part of height $\lfloor h/2\rfloor$,
-  which is recursively layed out starting at $A[0]$.  Attached to the
-  leaves of this top tree are $2^{1+\lfloor{h/2\rfloor}}$ subtrees,
-  which are recursively layed out, in left-to-right order, starting at
+%  using
+%  a generalization of the Eytzinger mapping:  For $j\in \{0,\ldots,b\}$,
+%  the $j$th child of the node that starts at position $i$ is stored
+%  beginning at position $i(b+1)+(j+1)b$.
+
+  \item \texttt{vEB}: In this, the \emph{van Emde Boas} layout,
+  the data is viewed as being stored in a complete binary tree
+  whose height is $h=\lceil\log (n+1)\rceil -1$. This tree is layed
+  out recursively:  If $h=0$, then the single node of the tree is
+  stored in $A[0]$.  Otherwise, the tree is split into a top-part
+  of height $\lfloor h/2\rfloor$, which is recursively layed in
+  $A[0,\ldots,2^{1+\lfloor{h/2\rfloor}}-2]$.  Attached to the leaves of
+  this top tree are up to $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which
+  are each recursively layed out, in left-to-right order, starting at
   array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
 \end{enumerate}
-
 
 \subsection{Related Work}
 
@@ -124,7 +136,7 @@ These guys look at array layouts of multidimensional arrays within programming l
 
 \subsection{Summary of Results}
 
-Our findings, with respect to a single process executing repeated random
+Our findings, with respect to a single process/thread executing repeated random
 searches on a single array, $A$, are summarized as follows:
 
 \begin{enumerate}
@@ -142,7 +154,7 @@ searches on a single array, $A$, are summarized as follows:
     followed closely by the branch-free implementations of the Eytzinger
     algorithms.
   
-  \item For large values of $n$ (larger than the L3 cache), the branchy
+  \item For large values of $n$ (larger than the L3 cache), the \naive\
     implementations of search algorithms usually perform better than the
     branch-free implementations.  Branch prediction, even though it is
     incorrect and leads to a pipeline flush 50\% of the time triggers
@@ -152,6 +164,11 @@ searches on a single array, $A$, are summarized as follows:
   \item For large values of $n$, the fastest method is the Eytzinger layout
    combined with a branch-free search that uses explicit prefetching.
 \end{enumerate}
+
+It is important to note that our conclusions are limited in scope. In
+particular, the preceding conclusions do not hold when multiple threads
+are searching simultaneously.  In such cases, the B-tree layout eventually
+wins out over the other layouts.
 
 \section{Processor Architecture Considerations}
 
@@ -359,7 +376,7 @@ of hundreds of millions of users.
 
 \subsubsection{Na\"{\i}ve Binary Search}
 
-The source code for na\"{\i}ve binary search is shown in
+The source code for \naive\ binary search is shown in
 \lstref{nbs}. This code implements binary search the way it is typically
 taught in introductory computer science courses.
 
@@ -382,7 +399,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
     return hi;
 }
 \end{minted}
-\caption{Source code for na\"{\i}ve binary search.}
+\caption{Source code for \naive\ binary search.}
 \lstlabel{nbs}
 \end{listing}
 
@@ -417,14 +434,14 @@ predicts, there is indeed a sharp increase in slope that occurs at around
 $n=2^{21}$.  To give our results a grounding in reality, this graph
 also shows the running-time of the \mintinline{c++}{stl::lower_bound()}
 implementation---The C++ Standard Template Library implementation
-of binary search.  Our na\"{\i}ve implementation and the
+of binary search.  Our \naive\ implementation and the
 \mintinline{c++}{stl::lower_bound()} implementation perform nearly
 identically.
 
 
 \begin{figure}
    \centering{\includegraphics[width=.6\textwidth]{figs/sorted-i}}
-   \caption{The running time of na\"{\i}ve binary search and \mintinline{c++}{stl::lower_bound()}.}
+   \caption{The running time of \naive\ binary search and \mintinline{c++}{stl::lower_bound()}.}
    \figlabel{sorted-i}
 \end{figure}
 
@@ -437,7 +454,7 @@ additional L2 cache miss and access to L3 cache.
 
 \begin{figure}
    \centering{\includegraphics[width=.6\textwidth]{figs/sorted-ii}}
-   \caption{The running time of na\"{\i}ve binary search when all data
+   \caption{The running time of \naive\ binary search when all data
     fits into L3 cache.}
    \figlabel{sorted-ii}
 \end{figure}
@@ -549,7 +566,7 @@ by Lines~8--15 with the conditional move at Line~12.
 \lstlabel{bfbs-asm}
 \end{listing}
 
-\Figref{sorted-iii} compares the performance of the na\"{\i}ve and
+\Figref{sorted-iii} compares the performance of the \naive\ and
 branch-free implementations of binary search for array sizes $n$
 ranging from 1 to $2^{16}$.  As expected, the branch-free code is much
 faster. Indeed, after accounting for the overhead of the testing harness,
@@ -557,7 +574,7 @@ the branch-free search is approximately twice as fast for $n=2^{16}$.
 
 \begin{figure}
    \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iii}}
-   \caption{The running times of na\"{\i}ve binary search versus
+   \caption{The running times of \naive\ binary search versus
     branch-free binary search when all data
     fits into L3 cache.}
    \figlabel{sorted-iii}
@@ -571,7 +588,7 @@ between the two continues to widen from this point onward.
 
 \begin{figure}
    \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iv}}
-   \caption{The running times of na\"{\i}ve binary search versus
+   \caption{The running times of \naive\ binary search versus
     branch-free binary search for large values of $n$.}
    \figlabel{sorted-iv}
 \end{figure}
@@ -579,7 +596,7 @@ between the two continues to widen from this point onward.
 The reason for this change in relative performance was not immediately
 obvious to us.  After some experimentation, we discovered it comes from
 the interplay between branch prediction and the memory subsystem.  In the
-na\"{\i}ve code, the branch-predictor makes a guess at which branch will
+\naive\ code, the branch-predictor makes a guess at which branch will
 be taken and is correct approximately half the time. An incorrrect guess
 causes a costly pipeline flush.  However, a correct guess results in
 the memory subsystem starting to load the array location needed during
@@ -591,7 +608,7 @@ However, for larger $n$, each correct guess by the branch-predictor
 triggers an L2 (in the range $2^{16}<n<2^{21}$) or an L3 (for $n>2^{21}$)
 cache miss sooner than it would otherwise.  The costs of these cache
 misses are greater than the costs of the pipeline flushes, so eventually,
-the branch-free code loses out to the na\"{\i}ve code.
+the branch-free code loses out to the \naive\ code.
 
 Since this was not our initial explanation, and since it was not obvious
 from the beginning, we gathered several pieces of evidence to support
@@ -607,7 +624,7 @@ or disprove this hypothesis.
   comparison, so the CPU stalls at this point.
 
 \item Another possible explanation for our results was that the hardware
-   prefetcher was, for some reason, better able to handle the na\"{\i}ve
+   prefetcher was, for some reason, better able to handle the \naive
    code than the branch-free code.  This seemed unlikely, since the memory
    access patterns for both version are quite similar, and probably too
    complicated for a hardware prefetcher to predict. Nevertheless, we
@@ -625,7 +642,7 @@ or disprove this hypothesis.
    the resulting code, shown in \figref{sorted-v} is consistent with our
    hypothesis.  The code is nearly as fast as the branch-free code for
    small values of $n$, but tracks (and even improves) the performance
-   of the na\"{\i}ve code for larger values of $n$.
+   of the \naive\ code for larger values of $n$.
 
 \begin{figure}
    \centering{\fbox{\includegraphics[width=.6\textwidth]{figs/sorted-v}}}
@@ -638,7 +655,7 @@ or disprove this hypothesis.
    low-power processor does not do any form or speculative execution,
    including branch-prediction. The results, which are shown in
    \figref{sorted-atom} are consistent with our hypothesis.  The
-   branch-free code is faster than the na\"{\i}ve code across the full
+   branch-free code is faster than the \naive\ code across the full
    range of values for $n$.  This is because branches in the na\"i{\i}ve
    code result in pipeline stalls and do not help the memory subsystem
    predict future memory accesses.
@@ -681,7 +698,7 @@ virtual tree: The value of the root of the virtual tree is stored at
 $A[0]$, and the values of left and right children of the node whose values
 is stored at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
-The na\"{\i}ve implementation of search in an Eytzinger array is nearly
+The \naive\ implementation of search in an Eytzinger array is nearly
 as simple as that of binary search; the only additional complication is
 the use of a variable, \mintinline{c++}{j} to keep track of the index
 of the smallest value encountered greater than \mintinline{c++}{x}.
@@ -706,7 +723,7 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 	return j;
 }
 \end{minted}
-\caption{A na\"{\i}ve implementation of search in an Eytzinger array.}
+\caption{A \naive\ implementation of search in an Eytzinger array.}
 \end{listing}
 
 A branch-free implementation of search in an Eytzinger array is also
@@ -743,33 +760,33 @@ through the top $\log C$ levels, it hits cached values, but after $\log C$
 levels, each subsequence comparison causes a cache miss.  This results in
 a total of roughly $\log n-\log C$ cache misses, just as in binary search.
 
-The performance of the na\"{\i}ve and branch-free versions of search in
+The performance of the \naive\ and branch-free versions of search in
 an Eytzinger array on our test system is shown in \figref{eytzinger-i}.
 Branch-free Eytzinger search very closely matches the performance of
 branch-free binary search. As expected, there is an increase in slope at
 $n=2^{16}$ and $n=2^{21}$ since these are the number of 4-byte integers
 that can be stored int the L2 and L3 caches, respectively.
 
-However, the performance of the na\"{\i}ve Eytzinger implementation is
+However, the performance of the \naive\ Eytzinger implementation is
 much better than expected for large values of $n$. Indeed, it is much
-faster than the na\"{\i}ve implementation of binary search, and even
+faster than the \naive\ implementation of binary search, and even
 faster our fastest implementation of binary search: branch-free binary
 search with prefetching.
 
 \begin{figure}
    \centering{\includegraphics[width=.6\textwidth]{figs/eytzinger-i}}
-   \caption{The performance of na\"{\i}ve and branch-free Eytzinger search.}
+   \caption{The performance of \naive\ and branch-free Eytzinger search.}
    \figlabel{eytzinger-i}
 \end{figure}
 
 \subsubsection{Why Eytzinger is so Fast}
 
-Like na\"{\i}ve binary search, the na\"{\i}ve implementation of search in
+Like \naive\ binary search, the \naive\ implementation of search in
 Eytzinger array is so much faster than expected because of the interaction
 between branch-prediction and the memory subsystem.  However, in the
 case of the Eytzinger layout, this interaction is much more efficient.
 
-To understand why the na\"{\i}ve Eytzinger search algorithm is so
+To understand why the \naive\ Eytzinger search algorithm is so
 fast, recall that, in the Eytzinger layout, the nodes are layed out
 in breadth-first search order,  so the two children of a node occupy
 consecutive array locations $2i$ and $2i+1$. More generally, for a
@@ -809,7 +826,7 @@ The results of implementing both of these optimizations are shown in
 \figref{eytzinger-ii}.  With these optimizations, the change in slope
 at the L2 cache limit disappears; four iterations of the search loop
 is enough time to prefetch data from the L3 cache.  Once the L3 cache
-limit is reached, the behaviour becomes similar to the na\"{\i}ve
+limit is reached, the behaviour becomes similar to the \naive
 implementation, but remains noticeably faster, since the branch-free
 code does not cause pipeline flushes and always prefetches the correct
 cache line 4 levels in advance.
@@ -831,7 +848,7 @@ bytes wide, so we chose $B=16$ for 4-byte data. Preliminary testing with
 other block sizes showed that this theoretically optimal choice for $B$
 is also optimal in practice.
 
-\Figref{btree-i} shows the results for na\"{\i}ve and branch-free
+\Figref{btree-i} shows the results for \naive\ and branch-free
 implementations of $17$-trees alongside our best implementations of binary
 search and Eytzinger search.  Both implementations of 17-trees use C++
 template programming to unroll the inner binary search.  There is very

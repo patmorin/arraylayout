@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE ipestyle SYSTEM "ipe.dtd">
+<ipestyle name="mycolors">
+<color name="myblue0" value="0.937 0.952 1"/>
+<color name="myblue1" value="0.741 0.843 0.905"/>
+<color name="myblue2" value="0.419 0.682 0.839"/>
+<color name="myblue3" value="0.129 0.443 0.709"/>
+</ipestyle>

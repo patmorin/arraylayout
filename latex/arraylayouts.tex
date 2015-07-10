@@ -103,11 +103,23 @@ by) modern processor features such as caches, instruction pipelining,
 conditional moves, speculative execution, and prefetching.
 
 In this experimental paper we consider four different memory layouts and
-accompanying search algorithms.  All of these memory layouts store $n$
-data items in a single array of length $n$, and their accompanying search
-algorithm can find (say) the index of the largest value in the array that
-is greater than or equal to $x$ for any value $x$. In case $x$ is greater
-than any value in the array, the search algorithm returns the index $n$.
+accompanying search algorithms.  Our study focuses on the following case:
+
+\begin{itemize}
+\item All of the memory layouts we consider store $n$ data items in a
+      single array of length $n$.
+
+\item The search algorithms used for each layout can find (say) the
+      index of the largest value that is greater than or equal to $x$
+      for any value $x$. In case $x$ is greater than any value in the
+      array, the search algorithm returns the index $n$.
+
+\item We focus our study on the case where a single thread on a single
+      processor executes a large number of queries on the same array.
+
+\item We study real (wall-clock) execution time, no CPU time, cache
+      misses, or other proxies for real time.
+\end{itemize}
 
 We consider the following four layouts:
 
@@ -324,10 +336,11 @@ executed while the next instruction is reading a memory address, while
 the next instruction is being decoded, while the next instruction is
 being fetched.
 
-The Nehalem processor architecture, on which the Intel 4790K is based has
-20--24 stage processor pipeline. If an instruction does not stall for any
-other reason, there is still at least a 20--24 cycle latency between the
-time an istruction is fetched and until the time it completes execution.
+The Nehalem processor architecture, on which the Intel 4790K is based
+has a 20--24 stage processor pipeline \cite{X}. If an instruction does
+not stall for any other reason, there is still at least a 20--24 cycle
+latency between the time an istruction is fetched and until the time it
+completes execution.
 
 Processor pipelining works well provided that the CPU knows which
 instruction to fetch.  Where this breaks down is in code that contains
@@ -394,31 +407,39 @@ unexpected behaviours on modern processors.
 
 \subsubsection{Cache-Use Analysis}
 
-Let $C$ be the cache size (measured in data items) and $W$ be the
-cache-line width (measured in data items).  Caching affects binary search
-in two ways.
+Here we analyze the cache use of binary search. In this, and all other analyses, we use the following variables:
 
-If $n> C/W$ is much larger than $C$ then, after a large number of
-accesses, we expect to find the most frequently accessed values in the
-cache.  These are the values at the top of the (implicit) binary search
-tree implemented by binary search.  Since $n>C/W$, each of these values
-will occupy their own cache line, so the cache only has room for $C/W$
-of these.
+\begin{itemize}
+\item $n$ is the number of data items (the length of the array).
+\item $C$ is the cache size, measured in data items.
+\item $W$ is the cache-line width, the number of data items that fit into a single cache line.
+\end{itemize}
 
-Furthermore, once binary search has reduced the search range down to a
+Next we analyze the cache-use of repeated binary searches on the same
+array, which is able to take advantage of the cache in two different ways:
+
+\begin{enumerate}
+\item (Frequently access values)
+After a large number of searches, we expect to find the most frequently
+accessed values in the cache.  These are the values at the top of the
+(implicit) binary search tree implemented by binary search.  If $n>C/W$,
+each of these values will occupy their own cache line, so the cache only
+has room for $C/W$ of these frequently accessed values.
+
+\item (Spatial locality)
+ Once an individual binary search has reduced the search range down to a
 size less than or equal to $W$, the subarray that remains to be searched
 will occupy at most one or two cache lines. Thus, on average, we expect
 binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
 \log C + 1$ cache misses.
+\end{enumerate}
 
-Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
-cache lines are 64 bytes wide.  With 4-byte data this gives the values
-$W=16$ and $C=2048K=2^{21}$.  Therefore, once $n$ exceeds $2^{21}$,
-we expect a sharp increase in search time, with each additional level
-of binary search incurring another L3 cache miss and access to RAM.
-When we plot search time on a vertical axis versus $n$ on a logarithmic
-horizontal axis, this should show up as an increase in slope at
-approximately $n=2^{21}$.  
+On the Intel 4790K, whose L3 cache can store 2048K cached values, we
+expect to see a sharp increase in search times when $n$ exceeds $2^{21}$,
+with each additional level of binary search incurring another L3 cache
+miss and access to RAM.  When we plot search time on a vertical axis
+versus $n$ on a logarithmic horizontal axis, this shows up as an
+increase in slope at approximately $n=2^{21}$.
 
 \subsubsection{Na\"{\i}ve Binary Search}
 
@@ -500,13 +521,13 @@ substantially.  There are two problems with this code:
 
 \begin{enumerate}
 
-\item Inside the code is a three-way if statement whose execution path
-is highly unpredictable. Each of the first two branches has a close to
-$50\%$ chance of being executed.  The branch-predictor of a pipelined
-processor is forced to guess which of these branches will occur and load
-the instructions from this branch into the pipelline.  When it guesses
-incorrectly (approximately 50\% of the time), the entire pipeline must be
-flushed and the instructions for the other branch loaded.
+\item Inside the code is a three-way \mintinline{c++}{if} statement whose
+execution path is highly unpredictable. Each of the first two branches
+has a close to $50\%$ chance of being executed.  The branch-predictor of
+a pipelined processor is forced to guess which of these branches will
+occur and load the instructions from this branch into the pipelline.
+When it guesses incorrectly (approximately 50\% of the time), the entire
+pipeline must be flushed and the instructions for the other branch loaded.
 
 \item The number of iterations of the outer loop is hard to predict. The
 loop may terminate early (because \mintinline{c++}{x} was found). Even when
@@ -686,17 +707,17 @@ or disprove this hypothesis.
    Note that this code actually causes the memory subsystem to do more
    work, and consumes more memory bandwidth since, in general it loads
    two cache lines when only one will be used.  Nevertheless it is faster
-   because the memory bandwidth is more than twice the data size (4 bytes)
+   because the memory bandwidth is more than twice the cache line width
    divided by the memory latency.
 
 \item We ran our code on Atom 330 processor that we had available.  This
-   low-power processor does not do any form or speculative execution,
-   including branch-prediction. The results, which are shown in
-   \figref{sorted-atom} are consistent with our hypothesis.  The
-   branch-free code is faster than the \naive\ code across the full
-   range of values for $n$.  This is because branches in the na\"i{\i}ve
-   code result in pipeline stalls and do not help the memory subsystem
-   predict future memory accesses.
+   low-power processor does not do any form or speculative
+   execution, including branch-prediction. The results, which are
+   shown in \figref{sorted-atom} are consistent with our hypothesis.
+   The branch-free code is faster than the \naive\ code across the full
+   range of values for $n$.  This is because, on the Atom 330, branches
+   in the \naive\ code result in pipeline stalls and do not help the
+   memory subsystem predict future memory accesses.
 \end{enumerate}
 
 \begin{figure}
@@ -751,7 +772,7 @@ top levels appear consecutively at the beginning of the array. Thus,
 we expect the cache to store, roughly, the first $C$ elements of the
 array, which correspond to the top $\log C$ levels of the virtual tree.
 As the search proceeds through the top $\log C$ levels, it hits cached
-values, but after $\log C$ levels, each subsequence comparison causes
+values, but after $\log C$ levels, each subsequent comparison causes
 a cache miss.  This results in a total of roughly $\log n-\log C$ cache
 misses, just as in binary search.
 

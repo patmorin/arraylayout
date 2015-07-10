@@ -1,20 +1,40 @@
 import os
 import sys
 from collections import defaultdict
-import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 
 # Use TeX to render output
-from matplotlib import rc
+#from matplotlib import rc
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
-rc('font',**{'family':'serif','serif':['Palatino']})
-rc('text', usetex=True)
+#rc('font',**{'family':'serif','serif':['Palatino']})
+#rc('text', usetex=True)
 
+mpl.use("pgf")
+pgf_with_pdflatex = {
+	"font.family": "serif",
+    "font.size": 9,
+    "text.usetex" : True,
+    "pgf.rcfonts": False,
+    "pgf.texsystem": "pdflatex",
+    "pgf.preamble": [
+         r"\usepackage[utf8]{inputenc}",
+         r"\usepackage[T1]{fontenc}",
+         r"\usepackage{kpfonts}",
+         ]
+}
+mpl.rcParams.update(pgf_with_pdflatex)
 
-# Some maximally dissimilar colors from iwanthue: http://goo.gl/abF97 .
-colours = [ '#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e',
-            '#e6ab02', '#a6761d', '#666666']
+import matplotlib.pyplot as plt
+
+# Some nice colours from ColorBrewer2
+colours = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c',
+           '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']
+c0 = [colours[i] for i in range(len(colours)) if i % 2 == 0]
+c1 = [colours[i] for i in range(len(colours)) if i % 2 == 1]
+colours = c1 + c0
+
 
 styles = ['-', '--', ':']
 
@@ -35,7 +55,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
     mapper = dict([("sorted", ("-", "o", colours[0], 
                     r'na\"{\i}ve binary search')),
                    ("sorted_stl", ("-", "p", colours[1], 
-                    r'stl::lower\_bound')),
+                    r'\texttt{stl::lower\_bound}')),
                    ("sorted_bf", ("-", "s", colours[2], 
                     "branch-free binary search")),
                    ("sorted_bfp", ("-", "*", colours[3], 
@@ -49,7 +69,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
                    ("eytzinger_bfp_a", ("-", "H", colours[0], 
                      r'aligned branch-free Eytzinger with prefetching')),
                    ("btree16_a", ("-", "o", colours[1], 
-                     r'naive 17-tree')),
+                     r'na\"{\i}ve 17-tree')),
                    ("btree16_bf_a", ("-", "p", colours[2], 
                      r'branch-free 17-tree')),
                   ])
@@ -93,11 +113,12 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
                         best[n] = (alg, search_time)
 
     # Plot everything.
+    plt.figure(figsize=(6.8,3.5))
     plt.ioff()
     plt.xscale('log', basex=2)
     plt.xlabel('$n$')
     plt.ylabel('running time (s)')
-    plt.title(r'running time of $2\times 10^6$ searches on array of length $n$')
+    plt.title(r'running time of $2\times 10^6$ searches $n$ values')
     plt.xlim(1, xmax)
     idx = 0
     for alg in algs:
@@ -116,7 +137,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
                  linestyle=ls,
                  marker=mrk,
                  linewidth=2, 
-                 markersize=3.5)
+                 markersize=2.5)
 
     if caches:
         ylim = plt.ylim()
@@ -168,13 +189,14 @@ if __name__ == "__main__":
 
     # Plots of Eytzinger on the Intel 4790K
     lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
-    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf'], 2**27, 
+    lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf', 'sorted_bfp'], 2**27, 
         'figs/eytzinger-i', caches)
 
-    lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
-    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf', 'eytzinger_bfp_a'], 
+    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf', 'sorted_bfp', 'eytzinger_bfp_a'], 
               2**27, 'figs/eytzinger-ii', caches)
 
-    lines = open('data/lauteschwein-bteytz.dat').read().splitlines()
-    make_plot(lines, ['btree16_a', 'btree16_bf_a', 'eytzinger_bfp_a', 'sorted_bfp'], 2**27, 'figs/btree-i', caches)
+    lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
+    lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    make_plot(lines, ['btree16_a', 'btree16_bf_a', 'sorted_bf', 'eytzinger_bfp_a'], 2**27, 'figs/btree-i', caches)
 

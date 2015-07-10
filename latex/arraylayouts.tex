@@ -10,6 +10,8 @@
 citecolor=linkblue, filecolor=linkblue, menucolor=linkblue, pagecolor=linkblue,
 urlcolor=linkblue} \setlength{\parskip}{1ex}
 
+\usepackage[skip=0pt]{caption}
+
 \newcommand{\lstlabel}[1]{\label{lst:#1}}
 \newcommand{\lstref}[1]{Listing~\ref{lst:#1}}
 \newcommand{\Lstref}[1]{\lstref{#1}}
@@ -28,6 +30,7 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 \begin{document}
 \begin{titlepage}
 \maketitle
+
 
 \begin{abstract}
   We attempt to determine the best order in which to store $n$ ordered
@@ -54,6 +57,11 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 
 \end{titlepage}
 
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+
+\pagenumbering{arabic}
 \section{Introduction}
 
 A sorted array combined with binary search represents \emph{the} classic
@@ -69,6 +77,23 @@ example, Barba and Morin \cite{bmXX} found that a naive implementation
 of binary search in a sorted array was approximately three times faster
 than searching using C++'s \texttt{stl::set} class (implemented as a
 red-black tree).}
+
+Every major programming language and environment provides a sorting
+routine, so a sorted array is usually just a function call away. Many
+language also provide a matching binary search implementation.
+In C++, sorting is done with \mintinline{c++}{std::sort()} and binary
+search is implemented in \mintinline{c++}{std::lower_bound()} and
+\mintinline{c++}{std::upper_bound()}.
+
+The chromium browser code-base, for example, calls these
+implementations of binary search from 135 different locations
+in a wide variety of contexts, including cookie handling, GUI
+layout, graphics and text rendering, video handling, and certificate
+management.\footnote{\url{https://goo.gl/zpSdXo}}  This is the code-base
+on which Google Chrome, which now boasts over 1 billion users \cite{X},
+is based. Improvements to \mintinline{c++}{std::lower_bound()} and
+\mintinline{c++}{std::upper_bound()} could improve the user experience
+of hundreds of millions of users.
 
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
@@ -192,50 +217,56 @@ truth; different instructions have different latencies and throughput
 
 \subsection{RAM, Latency, and Transfer Rate}
 
-The RAM, on ths system runs at 1866MHz, or roughly $1.866\times10^9$
-cycles per second.
+The RAM on this system runs at 1866MHz, or roughly $1.866\times10^9$
+cycles per second.  This RAM module can transfer 8 bytes per cycle
+from RAM to the CPU, for a (theoretical) peak transfer rate of $8\times
+1.866\times10^9\approx 15$GB/s.
 
-Transfer rate: This RAM module can transfer 8 bytes per cycle from RAM
-to the CPU, for a (theoretical) peak transfer rate of 
-$8\times 1.866\times10^9\approx 15$GB/s.
-
-First-Word Latency: This RAM module has a \emph{first-word latency} of
-approximately 10ns: From the time a processor issues a memory request
-to that memory is available is approximately $10^{-8}$ seconds.
+Individual memory transfers, however, incur \emph{latency}.  The
+\emph{(first-word) latency} of this RAM module is approximately 10ns:
+From the time a processor issues a request to read a word of memory
+until that memory is available is approximately $10^{-8}$ seconds.
 
 Observe that, if the CPU repeatedly reads 4 byte quantities from RAM,
 then it receives $10^8$ of these per second, for a transfer rate of
 $4\times 10^8=0.4$GB/s.  Note how far this is below this peak transfer
 rate of 15GB/s.
 
-In a similar vein, if the CPU is executing instructions that require
-the contents of memory locations in RAM, and a subsequent instruction
-can not begin before the previous instruction completes, then the CPU
-will not execute more than $10^8$ instructions per second; it will waste
-approximately 39/40 cycles waiting on data from RAM.
+This discrepancy is important: If the CPU is executing instructions
+that require the contents of memory locations in RAM, and a subsequent
+instruction cannot begin before the previous instruction completes,
+then the CPU will not execute more than $10^8$ instructions per second;
+it will waste approximately 39/40 cycles waiting on data from RAM.
 
-Cache-Line (8th-Word) Latency:  When the CPU reads a RAM address, the
-RAM moves a 64 byte cache line into the CPU. From the time CPU issues
-the access to the time the last word of the cache-line is available is
-approximately 13.4ns.  If the processor repeatedly reads cache lines
-from RAM, this results in a transfer rate of $64 / (13.4\times10^{-9})
-\approx 4.8$GB/s.  Observe that this is still less than a third of the
-RAM's peak transfer rate.
+When the CPU reads a RAM address, the RAM moves a 64 byte cache line
+into the CPU. From the time CPU issues the read request to the time
+the last word of this cache-line is available is approximately 13.4ns.
+This quantity is called the \emph{cache-Line (8th-Word) latency}.
+If the processor repeatedly reads cache lines from RAM, this results in a
+transfer rate of $64 / (13.4\times10^{-9}) \approx 4.8$GB/s.  Observe that
+this is still less than a third of the RAM's peak transfer rate.
 
-To actually achieve a transfer rate close to the theoretical peak transfer
-rate, the CPU must issue memory read requests before previous requests
-have finished. This will be important and is ultimately the reason that
-the Eytzinger layout outperforms other layouts.
+The key point to take from the preceding discussion is the following. In
+order to actually achieve a transfer rate close to the theoretical peak
+transfer rate, the CPU must issue memory read requests before previous
+requests have finished.  This will be important and is ultimately the
+reason that the Eytzinger layout outperforms other layouts; the Eytzinger
+layout uses excess bandwidth to reduce the effects of latency.
 
 \subsection{Caches}
 
 Since reading from RAM is a relatively slow operation, processors use
-several levels of caches between the processor and the RAM.
+several levels of caches between the processor and the RAM.  When the
+CPU reads a memory location, the entire cache line containing that memory
+location is loaded into all levels of the CPU cache.  Subsequent accesses
+to memory locations in that cache line then occur with less latency
+since they can use the data in the CPU caches.
 
-The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache
-(per core), and an 8MB L3 cache (shared among 4 cores).  Each of these
-cache levels is successively slower than the previous level, with L1 being
-the fast and L3 being the slowest; but still much faster than RAM.
+The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache (per
+core), and an 8MB L3 cache (shared among 4 cores).  Each of these cache
+levels is successively slower, in terms of both latency and bandwidth,
+than the previous level, with L1 being the fastest and L3 being the slowest;
+but still much faster than RAM.
 
 \subsection{The Prefetcher}
 
@@ -282,7 +313,6 @@ on a dedicated system running few other processes---TLB misses were not
 a significant factor until the array size exceeded 4GB.
 
 
-
 \subsection{Pipelining, Branch-Prediction, and Predicated Instructions}
 
 Executing an instruction on a processor takes several clock cycles, during
@@ -321,11 +351,11 @@ options:
   after the conditional jump instruction have to be flushed.
 \end{enumerate}
 
-Most modern processors, including the Intel 4790K, implement the second
+Many processors, including the Intel 4790K, implement the second
 option and implement some form of \emph{branch predictor} to perform
-accurate predictions.  Branch predictors work well when the condition is
-highly predictable so that, e.g., the conditional jump condition is almost
-always true or almost always false.
+accurate predictions.  Branch predictors work well when the condition
+is highly predictable so that, e.g., the conditional jump condition is
+almost always taken or almost always not taken.
 
 Most modern processors use some form of two-level adaptive predictor
 \cite{yeh.patt.two-level} that can even handle second-order statistics,
@@ -356,29 +386,55 @@ and performance of the four array layouts we tested.
 
 \subsection{Sorted}
 
-Searching a sorted array is an especially important special case. Every
-major programming language and environment provides a sorting routine,
-so a sorted array is usually just a function call away. Many language
-also provide a matching binary search implementation.  In C++,
-sorting is done with \mintinline{c++}{std::sort()} and binary
-search is implemented in \mintinline{c++}{std::lower_bound()} and
-\mintinline{c++}{std::upper_bound()}. 
+Searching a sorted array is an especially important special case, since it
+is so widely used.  In this subsection we take special care to understand
+the performance of two implementations of binary search on a sorted array.
+Even these two simple implementations of binary search already exhibit some
+unexpected behaviours on modern processors.
 
-The chromium browser code-base, for example, calls these
-implementations of binary search from 135 different locations
-in a wide variety of contexts, including cookie handling, GUI
-layout, graphics and text rendering, video handling, and certificate
-management.\footnote{\url{https://goo.gl/zpSdXo}}  This is the code-base
-on which Google Chrome, which now boasts over 1 billion users \cite{X}, is
-based. Improvements to \mintinline{c++}{std::lower_bound()}
-and \mintinline{c++}{std::upper_bound()} could improve the user experience
-of hundreds of millions of users.
+\subsubsection{Cache-Use Analysis}
+
+Let $C$ be the cache size (measured in data items) and $W$ be the
+cache-line width (measured in data items).  Caching affects binary search
+in two ways.
+
+If $n> C/W$ is much larger than $C$ then, after a large number of
+accesses, we expect to find the most frequently accessed values in the
+cache.  These are the values at the top of the (implicit) binary search
+tree implemented by binary search.  Since $n>C/W$, each of these values
+will occupy their own cache line, so the cache only has room for $C/W$
+of these.
+
+Furthermore, once binary search has reduced the search range down to a
+size less than or equal to $W$, the subarray that remains to be searched
+will occupy at most one or two cache lines. Thus, on average, we expect
+binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
+\log C + 1$ cache misses.
+
+Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
+cache lines are 64 bytes wide.  With 4-byte data this gives the values
+$W=16$ and $C=2048K=2^{21}$.  Therefore, once $n$ exceeds $2^{21}$,
+we expect a sharp increase in search time, with each additional level
+of binary search incurring another L3 cache miss and access to RAM.
+When we plot search time on a vertical axis versus $n$ on a logarithmic
+horizontal axis, this should show up as an increase in slope at
+approximately $n=2^{21}$.  
 
 \subsubsection{Na\"{\i}ve Binary Search}
 
 The source code for \naive\ binary search is shown in
-\lstref{nbs}. This code implements binary search the way it is typically
-taught in introductory computer science courses.
+\lstref{nbs}. This code implements binary search for a
+value \mintinline{c++}{x} the way it is typically taught in
+introductory computer science courses: It maintains a range of indices
+$\{\mintinline{c++}{lo},\ldots,\mintinline{c++}{hi}\}$ and at each stage
+\mintinline{c++}{x} is compared to the value \mintinline{c++}{a[m]} at
+index, \mintinline{c++}{m}, in the middle of the search range. The search
+then either finds \mintinline{c++}{x} at index \mintinline{c++}{m} (if
+$\mintinline{c++}{x}=\mintinline{c++}{a[m]}$) or continues searching on
+one of the ranges $\{\mintinline{c++}{lo},\ldots,\mintinline{c++}{m}\}$
+(if $\mintinline{c++}{x}<\mintinline{c++}{a[m]}$) or
+$\{\mintinline{c++}{m+1},\ldots,\mintinline{c++}{hi}\}$ (if
+$\mintinline{c++}{x}>\mintinline{c++}{a[m]}$).
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -403,30 +459,6 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \lstlabel{nbs}
 \end{listing}
 
-Let $C$ be the cache size (measured in data items) and $W$ is the
-cache-line width (measured in data items).  Caching affects classic
-binary search in two ways.
-
-If $n> C/W$ is much larger than $C$ then, after a large number of
-accesses, we expect to find the most frequently accessed values in the
-cache.  These are the values at the top of the (implicit) binary search
-tree implemented by binary search.  Since $n>C/W$, each of these values
-will occupy their own cache line, so the cache only has room for $C/W$
-of these.
-
-Furthermore, once binary search has reduced the search range down to a
-size less than or equal to $W$, the subarray that remains to be searched
-will occupy at most one or two cache lines. Thus, on average, we expect
-binary search to incur roughly $\log n -\log(C/W) - \log W + 1 = \log n -
-\log C + 1$ cache misses.
-
-Our test machine, the Intel 4790K, has 8192KB (8MB) of L3 cache and its
-cache lines are 64 bytes wide.  With 4-byte data this gives the values
-$W=16$ and $C=2048K=2^{21}$.  Therefore, once $n$ exceeds $2^{21}$, we
-expect a sharp increase in search time, with each additional level of
-binary search incurring another L3 cache miss and access to RAM.  When we
-plot search time on a vertical axis versus $n$ on a logarithmic horizontal
-axis, this shows up as an increase in slope at approximately $n=2^{21}$.
 
 \figref{sorted-i} shows the running time of $2\times 10^6$ searches
 for values of $n$ ranging from 1 to $2^{27}$. As the preceding analysis
@@ -440,7 +472,7 @@ identically.
 
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-i}}
+   \centering{\includegraphics{figs/sorted-i}}
    \caption{The running time of \naive\ binary search and \mintinline{c++}{stl::lower_bound()}.}
    \figlabel{sorted-i}
 \end{figure}
@@ -450,10 +482,10 @@ If we consider only values of $n$ up to $2^{21}$, shown in
 $n=2^{16}$.  This is the same effect, but at the L2/L3 cache level; the
 4790K has a 256KB L2 cache capable of storing $64K=2^{16}$ data items.
 Each additional level of binary search beyond that point incurs an
-additional L2 cache miss and access to L3 cache.
+additional L2 cache miss and an access to the L3 cache.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-ii}}
+   \centering{\includegraphics{figs/sorted-ii}}
    \caption{The running time of \naive\ binary search when all data
     fits into L3 cache.}
    \figlabel{sorted-ii}
@@ -479,7 +511,7 @@ flushed and the instructions for the other branch loaded.
 \item The number of iterations of the outer loop is hard to predict. The
 loop may terminate early (because \mintinline{c++}{x} was found). Even when
 searching for a value \mintinline{c++}{x} that is not present, unless $n$ has
-form $2^k-1$, the exact number of iterations is different for different
+the form $2^k-1$, the exact number of iterations is different for different
 values of $x$.  This implies that the branch predictor will frequently
 mispredict termination or non-termination of the loop, incurring the
 cost of another pipeline flush.
@@ -514,14 +546,14 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
 \lstlabel{bfbs}
 \end{listing}
 
-In the interior of the \mintinline{c++}{while} loop, there is only
-one piece of conditional code, which occurs in Line~7.  (For readers
-unfamiliar with C's choice operator, this code is equivalent
-to \mintinline{c++}{if (base[half] < x) base = &base[half]}.)
-This line either reassigns the value of \mintinline{c++}{base} (if
-\mintinline{c++}{base[half] < x}) or leaves it unchanged.  The compiler
-implements this using a \emph{conditional move} (\mintinline{nasm}{cmov})
-instruction so that there is no branching within the while loop.
+In the interior of the \mintinline{c++}{while} loop, there is only one
+piece of conditional code, which occurs in Line~7.  For readers unfamiliar
+with C's choice operator, this code is equivalent to \mintinline{c++}{if
+(base[half] < x) base = &base[half]}, so this line either reassigns
+the value of \mintinline{c++}{base} (if \mintinline{c++}{base[half]
+< x}) or leaves it unchanged.  The compiler implements this using a
+\emph{conditional move} (\mintinline{nasm}{cmov}) instruction so that
+there is no branching within the while loop.
 
 The use of conditional move instructions to replace branching is
 often a topic of heated debate (see, e.g., \cite{X}).  Conditional move
@@ -538,27 +570,27 @@ by Lines~8--15 with the conditional move at Line~12.
 \begin{listing}
 \begin{minted}[linenos]{nasm}
   .cfi_startproc
-  movq    8(%rdi), %rdx       # move n into rdx
-  movq    (%rdi), %r8         # move a into r8
-  cmpq    $1, %rdx            # compare n and 1
-  movq    %r8, %rax           # move base into rax
-  jbe    .L2                  # quit if n <= 1
+  movq    8(%rdi), %rdx       ; move n into rdx
+  movq    (%rdi), %r8         ; move a into r8
+  cmpq    $1, %rdx            ; compare n and 1
+  movq    %r8, %rax           ; move base into rax
+  jbe    .L2                  ; quit if n <= 1
 .L3:
-  movq    %rdx, %rcx          # put n into rcx
-  shrq    %rcx                # rcx = half = n/2
-  leaq    (%rax,%rcx,4), %rdi # load &base[half] into rdi
-  cmpl    %esi, (%rdi)        # compare x and base[half]
-  cmovb   %rdi, %rax          # set base = &base[half] if x > base[half]
-  subq    %rcx, %rdx          # n = n - half
-  cmpq    $1, %rdx            # compare n and 1
-  ja    .L3                   # keep going if n > 1
+  movq    %rdx, %rcx          ; put n into rcx
+  shrq    %rcx                ; rcx = half = n/2
+  leaq    (%rax,%rcx,4), %rdi ; load &base[half] into rdi
+  cmpl    %esi, (%rdi)        ; compare x and base[half]
+  cmovb   %rdi, %rax          ; set base = &base[half] if x > base[half]
+  subq    %rcx, %rdx          ; n = n - half
+  cmpq    $1, %rdx            ; compare n and 1
+  ja    .L3                   ; keep going if n > 1
 .L2:
-  cmpl    %esi, (%rax)        # compare x to *base
-  sbbq    %rdx, %rdx          # set dx to 00..00 or 11...11
-  andl    $4, %edx            # set dx to 0 or 4 
-  addq    %rdx, %rax          # add dx to base
-  subq    %r8, %rax           # compute base - a (* 4)
-  sarq    $2, %rax            # (divide by 4)
+  cmpl    %esi, (%rax)        ; compare x to *base
+  sbbq    %rdx, %rdx          ; set dx to 00..00 or 11...11
+  andl    $4, %edx            ; set dx to 0 or 4 
+  addq    %rdx, %rax          ; add dx to base
+  subq    %r8, %rax           ; compute base - a (* 4)
+  sarq    $2, %rax            ; (divide by 4)
   ret
   .cfi_endproc
 \end{minted}
@@ -569,11 +601,11 @@ by Lines~8--15 with the conditional move at Line~12.
 \Figref{sorted-iii} compares the performance of the \naive\ and
 branch-free implementations of binary search for array sizes $n$
 ranging from 1 to $2^{16}$.  As expected, the branch-free code is much
-faster. Indeed, after accounting for the overhead of the testing harness,
-the branch-free search is approximately twice as fast for $n=2^{16}$.
+faster. After accounting for the overhead of the testing harness, the
+branch-free search is approximately twice as fast for $n=2^{16}$.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iii}}
+   \centering{\includegraphics{figs/sorted-iii}}
    \caption{The running times of \naive\ binary search versus
     branch-free binary search when all data
     fits into L3 cache.}
@@ -587,7 +619,7 @@ time $n$ exceeds $2^{22}$, the branch-free code is slower and the gap
 between the two continues to widen from this point onward.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-iv}}
+   \centering{\includegraphics{figs/sorted-iv}}
    \caption{The running times of \naive\ binary search versus
     branch-free binary search for large values of $n$.}
    \figlabel{sorted-iv}
@@ -621,16 +653,16 @@ or disprove this hypothesis.
   \mintinline{nasm}{rdi},  containing the memory address to load is the
   target of a conditional move (Line~12).  This conditional move has not
   completed because it is still waiting on the results of the previous
-  comparison, so the CPU stalls at this point.
+  comparison, so execution stalls at this point.
 
-\item Another possible explanation for our results was that the hardware
-   prefetcher was, for some reason, better able to handle the \naive
-   code than the branch-free code.  This seemed unlikely, since the memory
+\item Another possible explanation for our results is that the hardware
+   prefetcher is, for some reason, better able to handle the \naive\
+   code than the branch-free code.  This seems unlikely, since the memory
    access patterns for both version are quite similar, and probably too
    complicated for a hardware prefetcher to predict. Nevertheless, we
    ruled out this possibility by disabling the hardware prefetcher and
-   running the tests again.\footnote{TODO: Add details of how to do this.
-   We used the \mintinline{console}{wrmsr} command.}  The running-times
+   running the tests again.\footnote{Prefetching was disabled using
+   the \mintinline{console}{wrmsr} utility with register number 0x1a4 and value 0xf.  This disables all prefetching \cite{https://software.intel.com/en-us/articles/optimizing-application-performance-on-intel-coret-microarchitecture-using-hardware-implemented-prefetchers}.}    The running-times
    of the code were unchanged by disabling prefetching.
 
 \item We implemented a version of the branch-free code that adds explicit
@@ -645,11 +677,17 @@ or disprove this hypothesis.
    of the \naive\ code for larger values of $n$.
 
 \begin{figure}
-   \centering{\fbox{\includegraphics[width=.6\textwidth]{figs/sorted-v}}}
+   \centering{\includegraphics{figs/sorted-v}}
    \caption{Branch-free binary search with explicit prefetching is competitive
     for small values of $n$ and a clear winner for large values of $n$.}
    \figlabel{sorted-v}
 \end{figure}
+
+   Note that this code actually causes the memory subsystem to do more
+   work, and consumes more memory bandwidth since, in general it loads
+   two cache lines when only one will be used.  Nevertheless it is faster
+   because the memory bandwidth is more than twice the data size (4 bytes)
+   divided by the memory latency.
 
 \item We ran our code on Atom 330 processor that we had available.  This
    low-power processor does not do any form or speculative execution,
@@ -662,7 +700,7 @@ or disprove this hypothesis.
 \end{enumerate}
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/sorted-atom}}
+   \centering{\includegraphics{figs/sorted-atom}}
    \caption{Binary search running-times on the Atom 330. The Atom 330
    has a 512KB L2 cache that can store $2^{17}$ 4-byte integers and does
    not perform speculative execution of any kind.}
@@ -695,13 +733,34 @@ this virtual tree are placed in the array in the order they would be
 encountered in a left-to-right breadth-first traversal.  A nice property
 of this layout is that it is easy to follow a root-to-leaf path in the
 virtual tree: The value of the root of the virtual tree is stored at
-$A[0]$, and the values of left and right children of the node whose values
-is stored at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
+index 0, and the values of left and right children of the node stored
+at index $i$ are stored at indices $2i+1$ and $2i+2$, respectively.
+
+
+\subsubsection{Cache-Use Analysis}
+
+With respect to caching, the performance of searches in an Eytzinger
+array should be comparable to that of binary searching in a sorted array,
+but for slightly different reasons.
+
+When performing repeated random searches, the top levels of the (virtual)
+binary tree are accessed most frequently, with a node at depth $i$
+being accessed with probability roughly $1/2^i$.  Since nodes of the
+virtual tree are mapped into the array in breadth-first order, the
+top levels appear consecutively at the beginning of the array. Thus,
+we expect the cache to store, roughly, the first $C$ elements of the
+array, which correspond to the top $\log C$ levels of the virtual tree.
+As the search proceeds through the top $\log C$ levels, it hits cached
+values, but after $\log C$ levels, each subsequence comparison causes
+a cache miss.  This results in a total of roughly $\log n-\log C$ cache
+misses, just as in binary search.
+
+\subsubsection{Na\"{\i}ve Eytzinger Search}
 
 The \naive\ implementation of search in an Eytzinger array is nearly
 as simple as that of binary search; the only additional complication is
 the use of a variable, \mintinline{c++}{j} to keep track of the index
-of the smallest value encountered greater than \mintinline{c++}{x}.
+of the smallest value encountered that is greater than \mintinline{c++}{x}.
 In case \mintinline{c++}{x} is not found, the index \mintinline{c++}{j}
 will be returned instead.
 
@@ -726,6 +785,8 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 \caption{A \naive\ implementation of search in an Eytzinger array.}
 \end{listing}
 
+\subsubsection{Branch-Free Eytzinger Search}
+
 A branch-free implementation of search in an Eytzinger array is also
 quite simple. Unfortunately, unlike branch-free binary search, the
 branch-free Eytzinger search is unable to avoid variations in the number
@@ -747,19 +808,6 @@ I eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
 \caption{Branch-free implementation of search in an Eytzinger array.}
 \end{listing}
 
-With respect to caching, the performance of searches in an Eytzinger
-array should be comparable to that of binary searching in a sorted array.
-When performing repeated random searches, the top levels of the virtual
-tree are accessed most frequently, with a node at depth $i$ being accessed
-with probability roughly $1/2^i$.  Since nodes of the virtual tree are
-mapped into the array in breadth-first order, the top levels appear
-consecutively at the beginning of the array. Thus, we expect the cache
-to store, roughly, the first $C$ elements of the array, which correspond
-to the top $\log C$ levels of the virtual tree.  As the search proceeds
-through the top $\log C$ levels, it hits cached values, but after $\log C$
-levels, each subsequence comparison causes a cache miss.  This results in
-a total of roughly $\log n-\log C$ cache misses, just as in binary search.
-
 The performance of the \naive\ and branch-free versions of search in
 an Eytzinger array on our test system is shown in \figref{eytzinger-i}.
 Branch-free Eytzinger search very closely matches the performance of
@@ -774,7 +822,7 @@ faster our fastest implementation of binary search: branch-free binary
 search with prefetching.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/eytzinger-i}}
+   \centering{\includegraphics{figs/eytzinger-i}}
    \caption{The performance of \naive\ and branch-free Eytzinger search.}
    \figlabel{eytzinger-i}
 \end{figure}
@@ -826,18 +874,26 @@ The results of implementing both of these optimizations are shown in
 \figref{eytzinger-ii}.  With these optimizations, the change in slope
 at the L2 cache limit disappears; four iterations of the search loop
 is enough time to prefetch data from the L3 cache.  Once the L3 cache
-limit is reached, the behaviour becomes similar to the \naive
+limit is reached, the behaviour becomes similar to the \naive\
 implementation, but remains noticeably faster, since the branch-free
 code does not cause pipeline flushes and always prefetches the correct
 cache line 4 levels in advance.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/eytzinger-ii}}
+   \centering{\includegraphics{figs/eytzinger-ii}}
    \caption{The performance of branch-free Eytzinger with prefetching.}
    \figlabel{eytzinger-ii}
 \end{figure}
 
 \subsection{BTree}
+
+Recall that the $(B+1)$-tree layout simulates search on a $(B+1)$-ary
+search tree, in which each node stores $B$ values.  The nodes of this
+$(B+1)$-ary tree are layed out in the order they are encountered in a
+breadth-first search.  Note that the Eytzinger layout is a special case
+of this layout in which $B=1$.  For $j\in\{0,\ldots,B\}$, the $j$-th
+child of the node stored at indices $i,\ldots,i+B-1$ is stored at
+indices $f(i),\ldots,f(i)+B-1$ where $f(i)=i(B+1)+(j+1)B$
 
 The code for search in a $(B+1)$-tree layout consists of several
 iterations of binary search, each on a subarray (block) of length
@@ -848,8 +904,44 @@ bytes wide, so we chose $B=16$ for 4-byte data. Preliminary testing with
 other block sizes showed that this theoretically optimal choice for $B$
 is also optimal in practice.
 
+
+\subsubsection{Cache-Use Analysis}
+
+The height of a $(B+1)$ tree that stores $n$ keys is approximately
+$\log_{(B+1)} n$.  A search in a $(B+1)$-tree visits $\log_{(B+1)} n$
+nodes, each of which is contained in a single cache line, so a search
+requires loading onl$\log_{(B+1)} n$ cache lines.
+
+By the same reasoning as before, we expect that the top $\log_{(B+1)} C$
+levels of the $(B+1)$-tree, which correspond to the first $C$ elements
+of the array, will be stored in the cache.  Thus, the number of cache
+misses that occur when searching in a $(B+1)$-tree is
+\[
+    \log_{(B+1)}n - \log_{(B+1)} C 
+         = \frac{\log n - \log C}{\log (B+1)} \enspace .
+\]
+Observe that this is roughly a factor of $\log(B+1)$ fewer cache misses
+than the $\log n-\log C$ cache misses incurred by binary search or
+Eytzinger search.
+
+In our test setup, with $B=16$, we therefore expect that cache misses
+should be reduced by a factor of $\log 17\approx 4$. When plotted,
+there should still be an increase in slope that occurs at $n=2^{21}$,
+but it should be significantly less pronounced (a factor of 4).
+
+\subsubsection{Na\"{\i}ve and Branch-Free BTree Implementations}
+
 \Figref{btree-i} shows the results for \naive\ and branch-free
-implementations of $17$-trees alongside our best implementations of binary
+implementations of $17$-trees alongside branch-free binary search
+and our fastest implementation of Eytzinger search.  Compared to
+branch-free binary search, the 17-tree implementation behaves as the
+cache-use analysis predicts:  Both algorithms are fast for $n<2^{21}$
+after which both show an increase in slope. At this point, the the slope
+for branch-free binary search is approximately 3.8 times larger than
+that of the 17-tree search.
+
+
+our best implementations of binary
 search and Eytzinger search.  Both implementations of 17-trees use C++
 template programming to unroll the inner binary search.  There is very
 little difference between the two implementations of 17-trees and both
@@ -858,10 +950,16 @@ values of $n$. Unsurprisingly, 17-trees outperform binary search once
 the size of the data exceeds the size of the L3 cache.
 
 \begin{figure}
-   \centering{\includegraphics[width=.6\textwidth]{figs/btree-i}}
+   \centering{\includegraphics{figs/btree-i}}
    \caption{The performance of 17-trees.}
    \figlabel{btree-i}
 \end{figure}
+
+The reason 17-tree layout does not perform better than the Eytzinger
+layout is that it is unable to take advantage of implicit or explicit
+prefetching.  Once the search algorithm leaves the cache (after $\log_{(B+1)} C$ levels), it repeatedly reads a cache line and then does binary search on the elements of that cache line before loading the next cache line.
+
+
 
 17-trees, which are theoretically the most promising, unfortunately lose
 out simply because the constants they incur are too large.  One reason
@@ -874,6 +972,9 @@ cache lines.  We tested 16-trees and found them to be slower than 17-trees
 for all values of $n$.\footnote{A third alternative is to store 15 keys
 in blocks size 16, but this would be outside the model we consider,
 in which all data resides in a single array of length $n$.}
+
+Unlike the Eytzinger layout, the BTree layout is unable to take much
+advantage of implicit or explicit prefetching.  
 
 In summary, $(B+1)$-trees must make a choice between being efficient in
 terms of the number of comparisons or being efficient in terms of the

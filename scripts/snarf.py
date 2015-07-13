@@ -38,7 +38,7 @@ colours = c1 + c0
 
 styles = ['-', '--', ':']
 
-markers = [ "o", "s", "p", "*" ]
+markers = [ "o", "s", "p", "*", "H" ]
 
 
 # Have this return true if you want alg to appear in the plot
@@ -52,27 +52,25 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
     # Snarf the data into a giant nested dictionary.
     
 
-    mapper = dict([("sorted", ("-", "o", colours[0], 
-                    r'na\"{\i}ve binary search')),
-                   ("sorted_stl", ("-", "p", colours[1], 
-                    r'\texttt{stl::lower\_bound}')),
-                   ("sorted_bf", ("-", "s", colours[2], 
-                    "branch-free binary search")),
-                   ("sorted_bfp", ("-", "*", colours[3], 
-                    "branch-free binary search with prefetching")),
-                   ("fake", ("-", " ", colours[4], 
-                    "test-harness overhead")),
-                   ("eytzinger_branchy", ("-", "p", colours[5], 
-                     r'na\"{\i}ve Eytzinger')),
-                   ("eytzinger_bf", ("-", "s", colours[6], 
-                     r'branch-free Eytzinger')),
-                   ("eytzinger_bfp_a", ("-", "H", colours[0], 
-                     r'aligned branch-free Eytzinger with prefetching')),
-                   ("btree16_a", ("-", "o", colours[1], 
-                     r'na\"{\i}ve 17-tree')),
-                   ("btree16_bf_a", ("-", "p", colours[2], 
-                     r'branch-free 17-tree')),
+    mapper = dict([("sorted", ("-", None, None, r'na\"{\i}ve binary search')),
+                   ("sorted_stl", ("-", None, None, r'\texttt{stl::lower\_bound}')),
+                   ("sorted_bf", ("-", None, None, "branch-free binary search")),
+                   ("sorted_bfp", ("-", None, None, "branch-free binary search with prefetching")),
+                   ("fake", ("-", " ", None, "test-harness overhead")),
+                   ("eytzinger_branchy", ("-", None, None, r'na\"{\i}ve Eytzinger')),
+                   ("eytzinger_bf", ("-", None, None, r'branch-free Eytzinger')),
+                   ("eytzinger_bfp_a", ("-", None, None, r'aligned branch-free Eytzinger with prefetching')),
+                   ("btree16_naive_a", ("-", None, None, r'na\"{\i}ve 17-tree')),
+                   ("btree16_a", ("-", None, None, r'unrolled 17-tree')),
+                   ("btree16_bf_a", ("-", None, None, r'unrolled branch-free 17-tree')),
                   ])
+    i = 0
+    for k in mapper:
+        (line, marker, colour, name) = mapper[k]
+        marker = [marker, markers[i%len(markers)]][marker is None]
+        colour = [colour, colours[i%len(colours)]][colour is None]
+        mapper[k] = (line, marker, colour, name)
+        i += 1
 
 
     # Now I like default dicts.
@@ -198,5 +196,7 @@ if __name__ == "__main__":
 
     lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
     lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
-    make_plot(lines, ['btree16_a', 'btree16_bf_a', 'sorted_bf', 'eytzinger_bfp_a'], 2**27, 'figs/btree-i', caches)
+    make_plot(lines, ['btree16_naive_a', 'btree16_a', 'btree16_bf_a', 'sorted_bf', 'eytzinger_bfp_a'], 2**27, 'figs/btree-i', caches)
+
+    make_plot(lines, ['btree16_naive_a', 'btree16_a', 'btree16_bf_a', 'eytzinger_bfp_a'], 2**20, 'figs/btree-ii', caches[:2])
 

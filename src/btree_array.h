@@ -18,10 +18,6 @@
 #include <type_traits>
 #include "base_array.h"
 
-using std::cout;
-using std::endl;
-using std::min;
-
 namespace fbs {
 
 /*
@@ -62,12 +58,24 @@ public:
 	~btree_array();
 
 	template<bool prefetch>
-	I branchfree_search_x(T x) const;
+	I unrolled_branchfree_search(T x) const;
 
-	I branchy_search(T x) const;
-	I branchfree_search(T x) const { return branchfree_search_x<false>(x); };
-	I branchfree_prefetch_search(T x) const { return branchfree_search_x<true>(x); };
-	I search(T x) const { return branchy_search(x);	};
+	I unrolled_branchy_search(T x) const;
+	I branchfree_search(T x) const { return unrolled_branchfree_search<false>(x); };
+	I branchfree_prefetch_search(T x) const { return unrolled_branchfree_search<true>(x); };
+	I naive_search(T x) const;
+	I search(T x) const { return unrolled_branchy_search(x);	};
+};
+
+template<unsigned B, typename T, typename I, bool aligned=false>
+class btree_array_naive : public btree_array<B,T,I,aligned> {
+protected:
+	using btree_array<B,T,I,aligned>::naive_search;
+public:
+	template<typename ForwardIterator>
+	btree_array_naive(ForwardIterator a0, I n0)
+		: btree_array<B,T,I,aligned>(a0, n0) {};
+	I search(T x) const { return naive_search(x);	};
 };
 
 template<unsigned B, typename T, typename I, bool aligned=false>
@@ -137,9 +145,35 @@ btree_array<B,T,I,aligned>::~btree_array() {
 	}
 }
 
-// branchy inner serach
+
+// naive search
 template<unsigned B, typename T, typename I, bool aligned>
-I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchy_search(T x) const {
+I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::naive_search(T x) const {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		I lo = i;
+		I hi = std::min(i+B, n);
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = hi;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
+		}
+		i = child((unsigned)(hi-i), i);
+	}
+	return j;
+}
+
+
+// unrolled branchy inner serach
+template<unsigned B, typename T, typename I, bool aligned>
+I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::unrolled_branchy_search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i + B <= n) {
@@ -169,7 +203,7 @@ I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchy_search(T x) con
 // branch-free search (with or without prefetching)
 template<unsigned B, typename T, typename I, bool aligned>
 template<bool prefetch>
-I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchfree_search_x(T x) const {
+I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::unrolled_branchfree_search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i + B <= n) {
@@ -204,6 +238,17 @@ I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::branchfree_search_x(T x
 }
 
 
+
+
+
+
+//=====================================================================
+// The following was an experiment with implementing a BTree in which
+// the nodes were layed out as Eytzinger arrays. The idea was to
+// mitigate the fact that the fourth-word latency is greater than the
+// first-word latency.  This didn't provide any real benefit, except on
+// the Atom 330 which uses (super-slow) SDRAM.
+//====================================================================
 template<unsigned B, typename T, typename I>
 class btree_eytzinger_array : public btree_array<B,T,I> {
 protected:

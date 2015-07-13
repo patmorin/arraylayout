@@ -281,20 +281,22 @@ void run_tests(I n, I m) {
 	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
 //
-//	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 //	if (sizeof(I) > 4 || n <= 100000000)
 //		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
-//	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
+	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive_a");
+	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
 //	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
 //
-//	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
+	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
 //	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
 //	Tool<btree_array_bfp<B/2,T,I>,T,I>::run_test1(a, n, m, "btree8_bfp");
 //	Tool<btree_array_bfp<B/4,T,I>,T,I>::run_test1(a, n, m, "btree4_bfp");
 //
 //	if (sizeof(I) > 4 || n <= 100000000)
 //		Tool<btree_array<2*B,T,I,true>,T,I>::run_test1(a, n, m, "btree32_a");
-//	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
+	Tool<btree_array_naive<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_naive_a");
+	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
 //	Tool<btree_array<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_a");
 //
 //	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");

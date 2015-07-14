@@ -121,7 +121,8 @@ accompanying search algorithms.  Our study focuses on the following case:
       misses, or other proxies for real time.
 \end{itemize}
 
-We consider the following four layouts:
+We consider the following four layouts (here and throughout, $\log
+n=\log_2 n$ denotes the binary logarithm of $n$):
 
 \begin{enumerate}
   \item \texttt{Sorted}:  This is the usual sorted layout, in which
@@ -980,10 +981,10 @@ misses, which are the same for all three implementations.
 \end{figure}
 
 Compared to branch-free binary search, the 17-tree implementations
-behaves as the cache-use analysis predicts:  Both algorithms are fast for
+behave as the cache-use analysis predicts:  Both algorithms are fast for
 $n<2^{21}$ after which both show an increase in slope. At this point,
 the the slope for branch-free binary search is approximately 3.8 times
-larger than that of the 17-tree search.
+larger than that of the 17-tree search. (The analysis predicts a factor of $\log 17\approx 4.09$.)
 
 However, all three implementations of 17-trees perform worse than our
 best Eytzinger search implementation across the entire spectrum of values
@@ -1032,6 +1033,8 @@ the node at level $i+4$. This effectively hides the L3 cache latency.
    \figlabel{btree-ii}
 \end{figure}
 
+Finally, we remark ont the ``bumpiness'' of the Eytzinger array search in 
+
 %17-trees, which are theoretically the most promising, unfortunately lose
 %out simply because the constants they incur are too large.  
 %Unlike the Eytzinger layout, the BTree layout is unable to take much
@@ -1072,13 +1075,13 @@ determine the indices of the left and right child of each node.  After
 experimenting with several different methods of doing this, we found
 it most efficient to store three precomputed lookup tables whose size
 is equal to the height of the van Emde Boas tree. In addition to these
-lookup tables, one must also store the path, \mintinline{rtl}, from the
+lookup tables, one must also store the path, \mintinline{c++}{rtl}, from the
 root to the current node as well as an an encoding, \mintinline{c++}{p},
 of the path from the root to the current node, where each bit of
 \mintinline{c++}{p} represents a left turn (0) or a right turn (1) in
 this path.  Brodal \etal\ \cite{brodal.fagerberg.ea:cache} reached the
 same conclusion when designing their implementation of the van~Emde~Boas
-layout.
+layout.  The resulting code is shown in \lstref{veb}
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -1104,7 +1107,7 @@ I __attribute__ ((noinline)) veb_array<T,I>::search(T x) {
 }
 \end{minted}
 \caption{Source code for \naive\ binary search.}
-\lstlabel{nbs}
+\lstlabel{veb}
 \end{listing}
 
 

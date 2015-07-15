@@ -52,25 +52,34 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
     # Snarf the data into a giant nested dictionary.
     
 
-    mapper = dict([("sorted", ("-", None, None, r'na\"{\i}ve binary search')),
-                   ("sorted_stl", ("-", None, None, r'\texttt{stl::lower\_bound}')),
-                   ("sorted_bf", ("-", None, None, "branch-free binary search")),
-                   ("sorted_bfp", ("-", None, None, "branch-free binary search with prefetching")),
-                   ("fake", ("-", " ", None, "test-harness overhead")),
-                   ("eytzinger_branchy", ("-", None, None, r'na\"{\i}ve Eytzinger')),
-                   ("eytzinger_bf", ("-", None, None, r'branch-free Eytzinger')),
-                   ("eytzinger_bfp_a", ("-", None, None, r'aligned branch-free Eytzinger with prefetching')),
-                   ("btree16_naive_a", ("-", None, None, r'na\"{\i}ve 17-tree')),
-                   ("btree16_a", ("-", None, None, r'unrolled 17-tree')),
-                   ("btree16_bf_a", ("-", None, None, r'unrolled branch-free 17-tree')),
-                  ])
+    mapper = [("sorted", ("-", None, None, r'branchy binary search')),
+              ("sorted_stl", ("-", None, None, r'\texttt{stl::lower\_bound}')),
+              ("sorted_bf", ("-", None, None, "branch-free binary search")),
+              ("sorted_bfp", ("-", None, None, 
+               "branch-free binary search with prefetching")),
+              ("fake", ("-", " ", None, "test-harness overhead")),
+              ("eytzinger_branchy", ("-", None, None, r'branchy Eytzinger')),
+              ("eytzinger_bf", ("-", None, None, r'branch-free Eytzinger')),
+              ("eytzinger_bfp_a", ("-", None, None, 
+               r'aligned branch-free Eytzinger with prefetching')),
+              ("btree16_naive_a", ("-", None, None, r'na\"{\i}ve 17-tree')),
+              ("btree16_a", ("-", None, None, r'unrolled 17-tree')),
+              ("btree16_bf_a", ("-", None, None, 
+               r'unrolled branch-free 17-tree')),
+              ("veb", ("-", None, None, r'branchy vEB')),
+              ("veb2", ("-", None, None, r'branch-free vEB')),
+              ("veb2e", ("-", None, None,
+               r'branch-free vEB with early termination'))
+             ]
     i = 0
-    for k in mapper:
-        (line, marker, colour, name) = mapper[k]
+    mapper2 = []
+    for (k,v) in mapper:
+        (line, marker, colour, name) = v
         marker = [marker, markers[i%len(markers)]][marker is None]
         colour = [colour, colours[i%len(colours)]][colour is None]
-        mapper[k] = (line, marker, colour, name)
+        mapper2.append((k, (line, marker, colour, name)))
         i += 1
+    mapper = dict(mapper2)
 
 
     # Now I like default dicts.
@@ -151,7 +160,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
                     marker = markers[idx % len(markers)],
                     markersize = 8.0)
     """
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper left', framealpha=0.5)
     if filename:
         filename += ".pdf"
         print "Writing {}".format(filename)
@@ -188,15 +197,26 @@ if __name__ == "__main__":
     # Plots of Eytzinger on the Intel 4790K
     lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
     lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
-    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf', 'sorted_bfp'], 2**27, 
+    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp', 
+                      'eytzinger_branchy', 'eytzinger_bf'], 2**27, 
         'figs/eytzinger-i', caches)
 
-    make_plot(lines, ['eytzinger_branchy', 'eytzinger_bf', 'sorted_bfp', 'eytzinger_bfp_a'], 
-              2**27, 'figs/eytzinger-ii', caches)
+    make_plot(lines, ['sorted_bfp', 'eytzinger_branchy', 'eytzinger_bf', 
+                      'eytzinger_bfp_a'], 2**27, 'figs/eytzinger-ii', caches)
 
     lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
     lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
-    make_plot(lines, ['btree16_naive_a', 'btree16_a', 'btree16_bf_a', 'sorted_bf', 'eytzinger_bfp_a'], 2**27, 'figs/btree-i', caches)
+    make_plot(lines, ['sorted_bf', 'eytzinger_bfp_a', 'btree16_naive_a', 
+                      'btree16_a', 'btree16_bf_a'], 2**27, 'figs/btree-i', 
+              caches)
 
-    make_plot(lines, ['btree16_naive_a', 'btree16_a', 'btree16_bf_a', 'eytzinger_bfp_a'], 2**20, 'figs/btree-ii', caches[:2])
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_naive_a', 'btree16_a', 
+                      'btree16_bf_a'], 2**20, 'figs/btree-ii', caches[:2])
+
+    lines += open('data/lauteschwein-veb-g++.dat').read().splitlines()
+
+    make_plot(lines, ['veb', 'veb2', 'veb2e'], 2**27, 'figs/veb-all', caches)
+
+    make_plot(lines, ['btree16_bf_a', 'eytzinger_bfp_a',
+                      'veb', 'veb2'], 2**27, 'figs/veb-i', caches)
 

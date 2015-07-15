@@ -212,7 +212,7 @@ veb2_array<T,I,e>::veb2_array(ForwardIterator a0, I n0) {
 
 	// find smallest h such that sum_i=0^h 2^h >= n
 	int m = 1;
-	for (h = 0; m < n; h++, m += 1<<h);
+	for (h = 0; m < n; h++, m += 1<<h) {}
 
 	// build our magic sequence
 	{

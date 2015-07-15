@@ -1,6 +1,6 @@
 version=0.0
 CC=g++
-#CC=clang++-3.6
+CC=clang++-3.6
 
 all: main cacher
 

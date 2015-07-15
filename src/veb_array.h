@@ -225,8 +225,7 @@ veb2_array<T,I,e>::veb2_array(ForwardIterator a0, I n0) {
 	sequencer(h, s, h0s, h1_1s, 0);
 
 	// allocate new array and copy data into it
-	int r = posix_memalign((void **)&a, 1UL << 21, sizeof(T) * n);
-	assert(r == 0);
+	a = new T[n];
 	I rtl[MAX_H+1];
 	rtl[0] = 0;
 	copy_data(a0, rtl, 0, 0);
@@ -234,7 +233,7 @@ veb2_array<T,I,e>::veb2_array(ForwardIterator a0, I n0) {
 
 template<typename T, typename I, bool e>
 veb2_array<T,I,e>::~veb2_array() {
-	free(a);
+	delete[] a;
 }
 
 template<typename T, typename I, bool early_termination>

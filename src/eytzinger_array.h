@@ -15,6 +15,8 @@
 #include <memory>
 #include <cassert>
 
+#include <bitset>
+
 #include "base_array.h"
 
 namespace fbs {
@@ -32,9 +34,6 @@ protected:
 	template<typename ForwardIterator>
 	ForwardIterator copy_data(ForwardIterator a0, I i);
 
-	template<bool prefetch>
-	I _branchfree_search(T x) const;
-
 public:
 	eytzinger_array() { };
 
@@ -43,9 +42,20 @@ public:
 
 	~eytzinger_array();
 
+	// FIXME: The next three should be protected
 	I _branchy_search(T x) const ;
-	I branchfree_search(T x) const { return _branchfree_search<false>(x); };
-	I branchfree_prefetch_search(T x) const { return _branchfree_search<true>(x); };
+
+	template<bool prefetch>
+	I _branchfree_search(T x) const ;
+
+	template<bool prefetch>
+	I _branchfree_search2(T x) const ;
+
+
+	I branchfree_search(T x) const { return _branchfree_search2<false>(x); };
+	I branchfree_search2(T x) const { return _branchfree_search2<false>(x); };
+	I branchfree_prefetch_search(T x) const { return _branchfree_search2<true>(x); };
+	I branchfree_prefetch_search2(T x) const { return _branchfree_search2<true>(x); };
 	I search(T x) const { return _branchy_search(x); };
 };
 
@@ -74,6 +84,35 @@ public:
 		: eytzinger_array<T,I,aligned>(a0, n0) {}
 	I search(T x) { return branchfree_prefetch_search(x); };
 };
+
+// An Eytzinger array with branch-free searches and prefetching
+template<typename T, typename I, bool aligned=false>
+class eytzinger_array_bfp2 : public eytzinger_array<T,I,aligned> {
+protected:
+	using eytzinger_array<T,I,aligned>::branchfree_prefetch_search2;
+
+public:
+	template<typename ForwardIterator>
+	eytzinger_array_bfp2(ForwardIterator a0, I n0)
+		: eytzinger_array<T,I,aligned>(a0, n0) {}
+	I search(T x) { return branchfree_prefetch_search2(x); };
+};
+
+
+// An Eytzinger array with branch-free searches and no prefetching
+template<typename T, typename I, bool aligned=false>
+class eytzinger_array_bf2 : public eytzinger_array<T,I,aligned> {
+protected:
+	using eytzinger_array<T,I,aligned>::branchfree_search2;
+
+public:
+	template<typename ForwardIterator>
+	eytzinger_array_bf2(ForwardIterator a0, I n0)
+		: eytzinger_array<T,I,aligned>(a0, n0) {}
+	I search(T x) { return branchfree_search2(x); };
+};
+
+
 
 template<typename T, typename I, bool aligned>
 template<typename ForwardIterator>
@@ -115,8 +154,7 @@ eytzinger_array<T,I,aligned>::eytzinger_array(ForwardIterator a0, I n0) {
 template<typename T, typename I, bool aligned>
 eytzinger_array<T,I,aligned>::~eytzinger_array() {
 	if (aligned) {
-		a--;
-		free(a);
+		free(a-1);
 	} else {
 		delete[] a;
 	}
@@ -140,7 +178,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) 
 	return j;
 }
 
-// Branch-free code without or without prefetching
+// Branch-free code with or without prefetching
 template<typename T, typename I, bool aligned>
 template<bool prefetch>
 I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T x) const {
@@ -153,6 +191,20 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T 
 	}
 	return j;
 }
+
+// Branch-free code with or without prefetching
+template<typename T, typename I, bool aligned>
+template<bool prefetch>
+I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search2(T x) const {
+	I i = 0;
+	while (i < n) {
+		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
+		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+	}
+	I j = (i >> (1+__builtin_ctz(~(i+1))));
+	return (j == 0) ? n : j-1;
+}
+
 
 } // namespace fbs
 

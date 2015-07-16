@@ -195,7 +195,7 @@ if __name__ == "__main__":
               [2**13, 2**17])
 
     # Plots of Eytzinger on the Intel 4790K
-    lines = open('data/lauteschwein-eytzinger-clang.dat').read().splitlines()
+    lines = open('data/lauteschwein-eytzinger-g++.dat').read().splitlines()
     lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp', 
                       'eytzinger_branchy', 'eytzinger_bf'], 2**27, 
@@ -203,6 +203,10 @@ if __name__ == "__main__":
 
     make_plot(lines, ['sorted_bfp', 'eytzinger_branchy', 'eytzinger_bf', 
                       'eytzinger_bfp_a'], 2**27, 'figs/eytzinger-ii', caches)
+
+    make_plot(lines, ['sorted_bf', 'sorted_bfp', 'eytzinger_branchy',  
+                      'eytzinger_bf', 'eytzinger_bfp_a'], 2**16, 
+                      'figs/eytzinger-iii', caches[:1])
 
     lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
     lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()

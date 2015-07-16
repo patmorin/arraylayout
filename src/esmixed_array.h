@@ -95,14 +95,20 @@ esmixed_array<T,I,W>::esmixed_array(ForwardIterator a0, I n0) {
 	assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
 	a++;
 
-	// The size of our Eytzinger tree.
-	m = n/(B+1);
+	// The height of our (complete) Eytzinger tree
+	h = 0;
+	while (((1<<(h+1))-1) + B*(1<<(h+1)) < n) h++;
 
-	for (h = 0; (1 << (h+1))-1 < m; h++);
-	h--;
-	bottom_level = m - ((1 << (h+1))-1);
-//	cout << "m = " << m << ", h = " << h
-//			<< ", bottom_level = " << bottom_level << endl;
+	// The size of our (complete) Eytzinger tree
+	I en = (1<<(h+1))-1;
+
+	// The number of complete blocks attached to the Eytzinger tree
+	I k = 0;
+	while (n-(k+1)*B >= en) k++;
+
+	for (I i = 0; i < k; i++) {
+		atmp[i]
+	}
 
 	// Build the top part using a[B+i(B+1)] for i in 0,...,m-1
 	copy_data_r(a0+B, 0);
@@ -121,33 +127,28 @@ esmixed_array<T,I,W>::esmixed_array(ForwardIterator a0, I n0) {
 
 template<typename T, typename I, unsigned W>
 esmixed_array<T,I,W>::~esmixed_array() {
-	a--;
-	free(a);
+	free(a-1);
 }
 
 // Branch-free code without or without prefetching
 template<typename T, typename I, unsigned W>
 I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
-	// Search the Eytzinger tree
-//	cout << "Searching for " << x << endl;
+	// Search in the (complete) Eytzinger tree
 	I i = 0;
-	I j = n;
-	I p = 0;
-	for (I d = 0; d <= h; d++) {
-		__builtin_prefetch(a+(multiplier*i + offset));
-		const T current = a[i];
-		I left = 2*i + 1;
-		I right = 2*i + 2;
-		p = (p << 1) | (x > current);
-		j = (x <= current) ? i : j;
-		i = (x <= current) ? left : right;
+	while (i < n) {
+		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
+		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	const I ip = i;
-	i = (ip < m) ? i : (i-1)/2;
-	const T current = a[i];
-	p = (ip < m) ? (p << 1) | (x > current) : p;
-	j = (x <= current) ? i : j;
-	p = (ip >= m) ? p + bottom_level : p;
+	I height = __builtin_ctz(~(i+1));
+	I path = (i+1)&((1<<height)-1); // check this
+
+	const I lo = m + p*B;
+
+
+
+
+
+
 
 //	The preceding code is a branch-free implementation of this:
 //	if (i < m) {

@@ -14,7 +14,7 @@
 #include "eytzinger_array.h"
 #include "sorted_array.h"
 #include "btree_array.h"
-#include "esmixed_array.h"
+//#include "esmixed_array.h"
 
 // #include "xorshift.h"
 
@@ -278,14 +278,16 @@ void run_tests(I n, I m) {
 //	Tool<veb2_array<T,I>,T,I>::run_test1(a, n, m, "veb2");
 //	Tool<veb2_array<T,I,true>,T,I>::run_test1(a, n, m, "veb2e");
 
-//	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
-//	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
-//	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
-//	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
+	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
+	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
+	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
+	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
+	Tool<eytzinger_array_bf2<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf2_a");
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
+	Tool<eytzinger_array_bfp2<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp2_a");
 //
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	Tool<esmixed_array<T,I,B>,T,I>::run_test1(a, n, m, "esmixed");
+//	Tool<esmixed_array<T,I,B>,T,I>::run_test1(a, n, m, "esmixed");
 
 //	if (sizeof(I) > 4 || n <= 100000000)
 //		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");

@@ -804,20 +804,20 @@ will be returned instead.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
-template<typename T, typename I, bool aligned>
-I eytzinger_array<T,I,aligned>::branchy_search(T x) const {
-	I i = 0, j = n;
-	while (i < n) {
-		if (x < a[i]) {
-			j = i;
-			i = 2*i + 1;
-		} else if (x > a[i]) {
-			i = 2*i + 2;
-		} else {
-			return i;
-		}
-	}
-	return j;
+template<typename T, typename I>
+I eytzinger_array<T,I>::branchy_search(T x) const {
+    I i = 0, j = n;
+    while (i < n) {
+        if (x < a[i]) {
+            j = i;
+            i = 2*i + 1;
+        } else if (x > a[i]) {
+            i = 2*i + 2;
+        } else {
+            return i;
+        }
+    }
+    return j;
 }
 \end{minted}
 \caption{Branchy implementation of search in an Eytzinger array.}
@@ -825,19 +825,20 @@ I eytzinger_array<T,I,aligned>::branchy_search(T x) const {
 
 \subsubsection{Branch-Free Eytzinger Search}
 
-A branch-free implementation of search in an Eytzinger array is also quite
-simple. Unfortunately, unlike branch-free binary search, the branch-free
-Eytzinger search is unable to avoid variations in the number of iterations
-of the while loop, since this depends on the depth (in the virtual tree)
-of the leaf that is reached when searching for \mintinline{c++}{x}.
-When $n=2^h-1$ for some integer $k$, then all leaves have the same depth
-but, in general, there will be leaves of depths $h$ and depth $h-1$,
-where $h=\lceil\log (n+1)\rceil-1$ is the height of the virtual tree.
+A branch-free implementation of search in an Eytzinger array---shown
+in \figref{eytzinger-ii}---is also quite simple. Unfortunately, unlike
+branch-free binary search, the branch-free Eytzinger search is unable
+to avoid variations in the number of iterations of the while loop,
+since this depends on the depth (in the virtual tree) of the leaf that
+is reached when searching for \mintinline{c++}{x}.  When $n=2^h-1$ for
+some integer $k$, then all leaves have the same depth but, in general,
+there will be leaves of depths $h$ and depth $h-1$, where $h=\lceil\log
+(n+1)\rceil-1$ is the height of the virtual tree.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
-template<typename T, typename I, bool aligned>
-I eytzinger_array<T,I,aligned>::branchfree_search(T x) const {
+template<typename T, typename I>
+I eytzinger_array<T,I>::branchfree_search(T x) const {
     I i = 0, j = n;
     while (i < n) {
         j = (x <= a[i]) ? i : j;
@@ -847,6 +848,32 @@ I eytzinger_array<T,I,aligned>::branchfree_search(T x) const {
 }
 \end{minted}
 \caption{Branch-free implementation of search in an Eytzinger array.}
+\lstlabel{eytzinger-ii}
+\end{listing}
+
+\Lstref{eytzinger-iii} shows another optimized implementation that avoids
+explicitly keeping track of the value \mintinline{c++}{j}.  It uses the
+fact that, after the \mintinline{c++}{while} loop terminates, the value
+of \mintinline{c++}{i + 1} is a one bit followed by the search path
+encoded as a sequence of zeros and ones, denoting left and right turns,
+respectively. The code then extracts the last place the search path turned
+left (a zero bit in i+1), chops off all trailing right turns (one bits)
+and then turns the result back into an array location by subtracting one.
+
+\begin{listing}
+\begin{minted}[linenos]{c++}
+template<typename T, typename I>
+I eytzinger_array<T,I>::branchfree_search(T x) const {
+    I i = 0;
+    while (i < n) {
+        i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+    }
+    I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+    return (j == 0) ? n : j-1;
+}
+\end{minted}
+\caption{Optimized branch-free implementation of search in an Eytzinger array.}
+\lstlabel{eytzinger-iii}
 \end{listing}
 
 The performance of the branchy and branch-free versions of search
@@ -925,6 +952,30 @@ cache line 4 levels in advance.
    \caption{The performance of branch-free Eytzinger with prefetching.}
    \figlabel{eytzinger-ii}
 \end{figure}
+
+\figref{eytzinger-iii} compares Eytzinger search with binary search for
+small values of $n$ ($n\le 2^{16}$).  At this scale
+the branch-free Eytzinger code is very close, but not quite as fast
+as the best binary search implementations.  Something else evident in
+\figref{eytzinger-ii} is a ``bumpiness'' of the Eytzinger running-times
+as a function of $n$.  This bumpiness is caused by branch mispredictions
+during the execution of the while loop.  The search times are especially
+low when $n$ is close to a power of two because in this case nearly all
+searches perform the same number of iterations of the while loop (since
+the underlying tree is a complete binary tree of height $h$ with nearly
+all leaves at same level $h$).  The branch predictor quickly learns
+the value of $h$ then correctly predicts the final iteration.  On the
+other hand, when $n$ is far from a power of 2, the number of iterations
+is either $h$ or $h-1$, each with non-negligible probability, and the
+branch predictor is unable to accurately predict the final iteration of
+the while loop.
+
+\begin{figure}
+   \centering{\includegraphics{figs/eytzinger-iii}}
+   \caption{Eytzinger versus binary search for small values of $n$.}
+   \figlabel{eytzinger-iii}
+\end{figure}
+
 
 
 \begin{lesson}
@@ -1015,7 +1066,7 @@ All three implementations of 17-trees perform worse than our best
 Eytzinger search implementation across the entire spectrum of values
 of $n$.  For small values of $n$, this is due to the fact that Eytzinger
 search is a simpler algorithm with smaller constants.  One reason
-Eytzinger search has smaller constants is the inner binary search of
+Eytzinger search has smaller constants is that the inner binary search of
 17-trees is inherently inefficient. The search has 17 possible outcomes,
 and therefore requires $\lceil\log_2 17\rceil=5$ comparisons in some cases
 (and in all cases for the branch-free code).  This could be fixed by using
@@ -1043,7 +1094,7 @@ of $n$ smaller than the L3 cache size.  One interesting aspect of
 this plot is that the 17-tree plots have a slight increase in slope
 at $n=2^{16}$---at the point in which the data exceeds the L2 cache
 size---while the Eytzinger search algorithm shows almost no change in
-behaviour.  This is because 17-trees essentially synchronously
+behaviour.  This is because 17-trees work synchronously
 with the memory subsystem; each 17-tree node is searched using 4--5
 comparisons and then the memory subsystem begins loading the next node
 (from L3 cache).  The Eytzinger search on the other hand begins loading
@@ -1057,24 +1108,11 @@ the node at level $d+4$. This effectively hides the L3 cache latency.
    \figlabel{btree-ii}
 \end{figure}
 
-Finally, we remark on the ``bumpiness'' of the Eytzinger array search
-times in \figref{btree-ii}.  This bumpiness is caused by branch
-mispredictions during the execution of the while loop.  The search
-times are especially low when $n$ is close to a power of two because
-in this case nearly all searches perform the same number of iterations
-of the while loop (since the underlying tree is a complete binary tree
-of height $h$ with nearly all leaves at same level $h$).  The branch
-predictor quickly learns the value of $h$ then correctly predicts the
-final iteration.  On the other hand, when $n$ is far from a power of 2,
-the number of iterations is either $h$ or $h-1$, each with non-negligible
-probability, and the branch predictor is unable to accurately predict
-the final iteration of the while loop.
-
 \begin{lesson}
   Even though it moves $B$ times more data between levels of the cache
   hierarchy, Eytzinger search with explicit prefetching outperforms
-  B-trees.  It does this by exploiting parallelism in the memory subsystem
-  and between the processor and memory subsystem.
+  B-trees.  It does this by exploiting parallelism within the memory
+  subsystem and between the processor and memory subsystem.
 \end{lesson}
 
 %17-trees, which are theoretically the most promising, unfortunately lose
@@ -1117,7 +1155,7 @@ of the heights of these subtrees is $\lceil\log n\rceil$.
 
 The cache-use analysis of the vEB layout approximates that of B-trees.
 We expect to find the most frequently accessed subtrees in the cache,
-which corresponds, roughly, to the first $\log C$ iterations of the search
+which correspond, roughly, to the first $\log C$ iterations of the search
 algorithm.  Beyond this point, the search passes through a sequence of
 subtrees whose height is in the interval $((1/2)\log W,W]$ and each of
 which is contained in at most two cache lines.  Thus, the number of cache
@@ -1126,41 +1164,46 @@ we use big-Oh notation since the exact leading constant is somewhere
 between $1$ in the best case and $4$ in the worst case.
 
 \subsubsection{VeB Implementations}
-However, to search in a van Emde Boas layout one needs code that
-can determine the indices of the left and right child of each node.
-After experimenting with several different methods of doing this, we found
-it most efficient to store three precomputed lookup tables whose size is
-equal to the height of the van Emde Boas tree. In addition to these lookup
-tables, one must also store the path, \mintinline{c++}{rtl}, from the
-root to the current node as well as an an encoding, \mintinline{c++}{p},
-of the path from the root to the current node, where each bit of
-\mintinline{c++}{p} represents a left turn (0) or a right turn (1) in
-this path.  Brodal \etal\ \cite{brodal.fagerberg.ea:cache} reached the
-same conclusion when designing their implementation of the van~Emde~Boas
-layout.  The most obvious (branchy) code implementing this algorithm is
-shown in \lstref{veb}
+
+To search in a van Emde Boas layout one needs code that can determine
+the indices of the left and right child of each node in the virtual
+binary tree.  Unlike, for example, the Eytzinger layout, this is not at
+all trivial. We experimented with two approaches to navigating the van
+Emde Boas tree: machine bit manipulations and lookup tables.  It very
+quickly became apparent that lookup tables are the faster method.
+
+Our implementations store two or three precomputed lookup tables whose
+size is equal to the height of the van Emde Boas tree. In addition to
+these lookup tables, one must also store the path, \mintinline{c++}{rtl},
+from the root to the current node as well as an an encoding,
+\mintinline{c++}{p}, of the path from the root to the current node, where
+each bit of \mintinline{c++}{p} represents a left turn (0) or a right
+turn (1) in this path.  Brodal \etal\ \cite{brodal.fagerberg.ea:cache}
+reached the same conclusion when designing their implementation of the
+van~Emde~Boas layout.  The most obvious (branchy) code implementing this
+algorithm is shown in \lstref{veb}
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
 template<typename T, typename I>
 I veb_array<T,I>::search(T x) {
-	I rtl[MAX_H+1];
-	I j = n;
-	I i = 0;
-	I p = 0;
-	for (int d = 0; i < n; d++) {
-		rtl[d] = i;
-		if (x < a[i]) {
-			p <<= 1;
-			j = i;
-		} else if (x > a[i]) {
-			p = (p << 1) + 1;
-		} else {
-			return i;
-		}
-		i = rtl[d-s[d].h0] + s[d].m0 + (p&s[d].m0)*(s[d].m1);
-	}
-	return j;
+    I rtl[MAX_H+1];
+    I j = n;
+    I i = 0;
+    I p = 0;
+    for (int d = 0; i < n; d++) {
+        rtl[d] = i;
+        if (x < a[i]) {
+            p <<= 1;
+            j = i;
+        } else if (x > a[i]) {
+            p = (p << 1) + 1;
+        } else {
+            return i;
+        }
+        i = rtl[d-s[d].h0] + s[d].m0 + (p&s[d].m0)*(s[d].m1);
+    }
+    return j;
 }
 \end{minted}
 \caption{Source code for branchy vEB search.}

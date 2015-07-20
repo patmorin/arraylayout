@@ -163,11 +163,9 @@ eytzinger_array<T,I,aligned>::~eytzinger_array() {
 // Branchy code with no prefetching
 template<typename T, typename I, bool aligned>
 I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) const {
-	I j = n;
 	I i = 0;
 	while (i < n) {
 		if (x < a[i]) {
-			j = i;
 			i = 2*i + 1;
 		} else if (x > a[i]) {
 			i = 2*i + 2;
@@ -175,21 +173,21 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) 
 			return i;
 		}
 	}
-	return j;
+	I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+	return (j == 0) ? n : j-1;
 }
 
 // Branch-free code with or without prefetching
 template<typename T, typename I, bool aligned>
 template<bool prefetch>
 I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T x) const {
-	I j = n;
 	I i = 0;
 	while (i < n) {
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
-		j = (x <= a[i]) ? i : j;
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	return j;
+	I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+	return (j == 0) ? n : j-1;
 }
 
 // Branch-free code with or without prefetching

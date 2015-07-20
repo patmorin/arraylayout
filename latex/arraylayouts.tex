@@ -243,7 +243,7 @@ from RAM to the CPU, for a (theoretical) peak transfer rate of $8\times
 Individual memory transfers, however, incur \emph{latency}.  The
 \emph{(first-word) latency} of this RAM module is approximately 10ns:
 From the time a processor issues a request to read a word of memory
-until that memory is available is approximately $10^{-8}$ seconds.
+until that word is available is approximately $10^{-8}$ seconds.
 
 Observe that, if the CPU repeatedly reads 4 byte quantities from RAM,
 then it receives $10^8$ of these per second, for a transfer rate of
@@ -795,34 +795,13 @@ misses, just as in binary search.
 
 \subsubsection{Branchy Eytzinger Search}
 
-A branchy implementation of search in an Eytzinger array is nearly as
-simple as that of binary search, with only one slight complication. When
-branchy binary search completes, the value \mintinline{c++}{hi} stores the
-return value. In Eytzinger search, we must decode the return value from
-the value of \mintinline{c++}{i} at the end of the \mintinline{c++}{while}
-loops.  Since we haven't seen this before, we explain it here.
-
-The array element stored at position \mintinline{c++}{i} corresponds
-to a node in the virtual tree that has some depth $d$. Since the
-number of nodes at depth $d$ is $2^d$, notice that $i+1$ is the range
-$\{2^d,\ldots,2^{d+1}-1\}$.  Therefore, the binary representation\ldots
-
-; the only additional complication is
-the use of a variable, \mintinline{c++}{j} to keep track of the index
-of the smallest value encountered that is greater than \mintinline{c++}{x}.
-In case \mintinline{c++}{x} is not found, the index \mintinline{c++}{j}
-will be returned instead.
-
-
-\Lstref{eytzinger-iii} shows another optimized implementation that avoids
-explicitly keeping track of the value \mintinline{c++}{j}.  It uses the
-fact that, after the \mintinline{c++}{while} loop terminates, the value
-of \mintinline{c++}{i + 1} is a one bit followed by the search path
-encoded as a sequence of zeros and ones, denoting left and right turns,
-respectively. The code then extracts the last place the search path turned
-left (a zero bit in i+1), chops off all trailing right turns (one bits)
-and then turns the result back into an array location by subtracting one.
-
+A branchy implementation of search in an Eytzinger array, shown in
+\lstref{eytzinger-i}, is nearly as simple as that of binary search, with
+only one slight complication. When branchy binary search completes, the
+value \mintinline{c++}{hi} stores the return value. In Eytzinger search,
+we must decode the return value from the value of \mintinline{c++}{i}
+at the end of the \mintinline{c++}{while} loops.  Since we haven't seen
+this particular bit-manipulation trick before, we explain it here.
 
 
 \begin{listing}
@@ -839,12 +818,58 @@ I eytzinger_array<T,I>::branchy_search(T x) const {
             return i;
         }
     }
-    I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+    I j = (i+1) >> __builtin_ffs(~(i+1));
     return (j == 0) ? n : j-1;
 }
 \end{minted}
 \caption{Branchy implementation of search in an Eytzinger array.}
+\lstlabel{eytzinger-i}
 \end{listing}
+
+
+
+In our array, the $2^d$ nodes of the virtual tree at depth $d$
+appear consecutively, in left-to-right order, starting at index
+$\sum_{k=0}^{d-1}2^k = 2^d-1$.  Therefore, an array position
+$i\in\{2^d-1,\ldots,2^{d+1}-2\}$ corresponds to a node, $u$, of the
+virtual tree at depth $d$. Furthermore, the binary representation,
+$b_w,b_{w-1},\ldots,b_0$, of $i+1$ has a nice interpretation:
+
+\begin{itemize}
+  \item The bits $b_w=b_{w-1}=\cdots=b_{d+1}=0$, since $i+1 < 2^{d+1}$.
+  \item The bit $b_d=1$ since $i+1\ge 2^d$.
+  \item The bits $b_{d-1},\ldots,b_{0}$ encode the path,
+    $u_1,\ldots,u_{d}$, from the root of the virtual tree to
+    $u=u_{d}$: For each $k\in\{1,\ldots,d-1\}$, if $u_{k+1}$ is the left
+    (respectively, right) child of $u_k$, then $b_{d-k}=0$ (respectively,
+    $b_{d-k}=1$).
+\end{itemize}
+
+Therefore, the position of the highest order 1-bit of $i+1$  tells
+us the depth, $d$, of the node $u$ and the bits $b_{d-1},\ldots,b_{0}$ tell
+us the path to $u$.  This is true even if $i\ge n$, in which case we
+can think of $u$ as an external node of the virtual tree (that stores
+no data).  To answer a query, we are interested in the last node,
+$w$, on the path to $u$ at which the path proceeded to a left child.
+This corresponds to the position, $r$, of the lowest order 0 bit in the
+binary representation of $i+1$.  What's more by right-shifting $i+1$
+by $r+1$ positions we obtain an integer $j$ such that:
+
+\begin{enumerate}
+  \item $j-1$ is the index of $w$ in the array (if $w$ exists), or
+  \item $j=0$ if $w$ does not exist (because the path to $u$ never proceeds 
+        from a node to its left child).
+\end{enumerate}
+
+The latter case occurs precisely when we search for a value
+\mintinline{c++}{x} that is larger than any value in the array. The
+last two lines of code in \lstref{eytzinger-i} extract the value of $j$
+from the value of $i$ and convert this back into a correct return value.
+The only non-standard instruction used here is \mintinline{console}{gcc}'s
+\mintinline{c++}{__builtin_ffs} builtin that returns one plus the index
+of the least significant one bit of its argument.  This operation,
+or equivalent operations are supported by most hardware and C/C++
+compilers \cite{wikipedia:find-first-set}.
 
 \subsubsection{Branch-Free Eytzinger Search}
 
@@ -866,7 +891,7 @@ I eytzinger_array<T,I>::branchfree_search(T x) const {
     while (i < n) {
         i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
     }
-    I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+    I j = (i+1) >> __builtin_ffs(~(i+1));
     return (j == 0) ? n : j-1;
 }
 \end{minted}
@@ -1240,17 +1265,49 @@ resulting in twice as many cache misses as a 17-tree layout.
   search.
 \end{lesson}
 
+\section{Other Possible Strategies}
+
+In our experiments, we tried other approaches that seemed promising but that we were unable to make headway on. We outline some of these here:
+
+\subsection{A B-Tree Eytzinger Layout}
+
+We implemented a version of B-trees in which each node was layed out as an
+Eytzinger array.  The idea behind this implementation was to account for
+the fact that loading a cache line is a not an atomic operation. Except
+for the first word requested, the words in a cache line are loaded in
+left-to-right order so the first word is available earlier than, say,
+the fourth word. For example, the DDR-3 RAM in our test machine has a
+first-word latency of approximately 10ns and a fourth-word latency of
+approximately 14ns. Since a search in an Eytzinger accesses the array
+indices in increasing order, the search can start as soon as the first
+word of the cache line is loaded.
+
+A preliminary implementation of this idea did not show any noticeable
+improvement in running time on most of the platforms we tested. A noteable
+exception was the Atom 330, for which the mixed layout was a noticeable
+improvement over the standard B-Tree layout.
+
 \subsection{Blocked Eytzinger Arrays}
 
+The cache-use analysis of the Eytzinger array in
+\secref{eytzinger-cache-use} shows that the number of cache misses during
+a search is roughly $\log n-\log C$. Unlike binary search the $\log C$
+cache hits occur at the beginning of the search, which corresponds to
+searching in the top levels of the virtual tree.  We experimented with
+reducing the number of cache misses to $\log n -\log C - \log B$ by
+treating the first (roughly) $n/(B+1)$ elements of the array as an index
+into (roughly) $n/(B+1)$ blocks each of size $B$. The first part of the
+ array was then layed out as an Eytzinger array and the second part was
+ stored in sorted order.
 
-\section{Lessons Learned}
-
-\subsection{Predictable memory accesses can be better than blocked
-            memory accesses}
-
-\subsection{For big data, branchy code can be the best prefetcher}
-
-In here, discuss the Sun Rock's hardware scout and, more generally, the technique of Runahead: \url{http://users.ece.cmu.edu/~omutlu/pub/mutlu_hpca03.pdf}.
+A search in this hybrid layout involved a search in the Eytzinger array
+followed by a binary search in a block of size $B$.  Although this hybrid
+layoutdoes reduce the number of cache misses, it does not provide any
+performance improvement over our fastest implementation of search in the
+Eytzinger layout. The reason is that the algorithm pays the full latency
+penalty for the final cache miss, since it can not predict which block
+in the second part of the array is needed until the Eytzinger search in
+the first part of the array is complete.
 
 \section{Limitations}
 
@@ -1258,9 +1315,67 @@ With parallel searches, we run out of bandwidth.
 
 \section{Conclusion}
 
-Future Work: Look more closely still at the important special case of searching
-in a sorted array. We only used a simple prefetching strategy. Mix this
-in with a solution to the powers of two problem.
+We have compared the relative performance of four memory layouts for
+ordered arrays and the algorithms for searching in these layouts.  
+
+\subsection{Predictable memory accesses can be better than blocked
+            memory accesses}
+
+Contrary to our expectations and to previous findings, variants of the
+Eytzinger layout beat out B-trees.  This goes against conventional wisdom,
+which states that accesses to RAM are slow, and should be minimized.
+A more accurate statement, that accounts for our findings, is that
+accesses to RAM have high latency and this latency needs to be mitigated.
+
+The Eytzinger layout mitigates latency by having memory access patterns
+that are highly predictable.  Our results show that this kind of
+predictability can be at least as useful as reducing the number of
+cache misses.  Indeed, being able to predict a cache miss $d$ steps in
+advance can be as effective as reducing the number of cache misses by
+a factor of $d$.  There is \ldots
+
+Although the Eytzinger memory access pattern is predictable,
+it is still well beyond the capabilities of current hardware prefetchers.
+It would be interesting to know if other algorithmic problems could be 
+
+\subsection{For big data, branchy code can be a good prefetcher}
+
+For small data sets, micro-optimizations such as replacing branching
+with conditional instructions can produce significant improvements
+in running-time.  For instance, our branch-free implementation of
+binary search is about twice as fast as the branchy implementation for
+$n<2^{16}$ (refer to \figref{sorted-iii}).  
+
+However, as the amount of data increases beyond the size of the
+various processor caches, the branchy implementations become faster.
+Even for binary search, which represents the worst possible case for
+branch-prediction, the branchy code eventually outperforms the branch-free
+code by an increasing margin (refer to \figref{sorted-iv}).
+
+Our results show that this speedup is a result of the interaction
+between a long processor pipeline, speculative execution, and the memory
+subsystem.  Indeed, speculative execution is a form of prefetching that
+can speed up memory access patterns that are far too complicated for
+current prefetching techniques.  In extreme cases (like the Eytzinger
+layout) the resulting prefetches are perfectly correct even four branches
+ahead of the current execution point.
+
+In hardware design, the general idea of using speculative execution as a
+prefetching strategy is called \emph{runahead} \cite{blah}.  Runahead and
+runahead and other forms of speculative prefetching were part of the
+hardware scout technology proposed for the Sun Rock processor project,
+which was cancelled before the processor made it into production.
+
+Our results show that, in a processor that has speculative execution,
+one can obtain many of the benefits of runahead even on processors
+that do not specifically implement it. As a more general guideline, our
+results show that one has to be very careful with micro-optimizations.
+Optimizations that offer great speedups on small inputs can create great
+slowdowns on large inputs.
+
+\subsection{Future Work: In-Place Algorithms for Array Layouts}
+
+
 
 \end{document}
 

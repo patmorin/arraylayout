@@ -173,7 +173,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) 
 			return i;
 		}
 	}
-	I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+	I j = (i+1) >> __builtin_ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 
@@ -186,7 +186,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T 
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+	I j = (i+1) >> __builtin_ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 
@@ -199,7 +199,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search2(T
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I j = ((i+1) >> (1+__builtin_ctz(~(i+1))));
+	I j = (i+1) >> __builtin_ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 

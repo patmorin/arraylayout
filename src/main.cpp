@@ -133,7 +133,7 @@ template<class T, class I>
 T *build_and_fill(I n) {
 	T *a = new T[n];
 	for (I i = 0; i < n; i++)
-		a[i] = 2*i;
+		a[i] = 2*i+1;
 	return a;
 }
 
@@ -145,7 +145,7 @@ void run_test1_b(T *a, I n, I m, const std::string &name) {
         auto seed=232342;
 	std::mt19937 re(seed);
 	//std::minstd_rand re(seed);
-	D ui(0, 2*n+1);
+	D ui(0, 2*n+2);
 
 	std::cout << name << " " << type_name<T>() << " " << type_name<I>()
 			<< " " << n << " " << m << " ";

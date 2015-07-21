@@ -6,10 +6,13 @@ all: main cacher
 
 distrib: arraylayout.tgz
 
-mainfiles = main.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h
+mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h
 
 main : $(mainfiles)
 	$(CC) -std=c++11 -Wall -O4 -march=native main.cpp -o main
+
+main-mt : $(mainfiles)
+	$(CC) -std=c++11 -Wall -O4 -march=native -pthread main-mt.cpp -o main-mt -pthread
 
 main-debug : $(mainfiles)
 	g++ -std=c++11 -Wall -g3 main.cpp -o main-debug

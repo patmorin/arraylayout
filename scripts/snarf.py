@@ -171,7 +171,8 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
 
     
 if __name__ == "__main__":
-    lines = open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    #lines = open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    lines = open('data/lauteschwein-all-g++.dat').read().splitlines()
 
     # Cache sizes on Intel 4790K
     caches = [2**13, 2**16, 2**21]
@@ -195,8 +196,9 @@ if __name__ == "__main__":
               [2**13, 2**17])
 
     # Plots of Eytzinger on the Intel 4790K
-    lines = open('data/lauteschwein-eytzinger-g++.dat').read().splitlines()
-    lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    lines = open('data/lauteschwein-all-g++.dat').read().splitlines()
+    #lines = open('data/lauteschwein-eytzinger-g++.dat').read().splitlines()
+    #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp', 
                       'eytzinger_branchy', 'eytzinger_bf'], 2**27, 
         'figs/eytzinger-i', caches)
@@ -208,8 +210,8 @@ if __name__ == "__main__":
                       'eytzinger_bf', 'eytzinger_bfp_a'], 2**16, 
                       'figs/eytzinger-iii', caches[:1])
 
-    lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
-    lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
+    #lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
+    #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted_bf', 'eytzinger_bfp_a', 'btree16_naive_a', 
                       'btree16_a', 'btree16_bf_a'], 2**27, 'figs/btree-i', 
               caches)
@@ -217,9 +219,9 @@ if __name__ == "__main__":
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_naive_a', 'btree16_a', 
                       'btree16_bf_a'], 2**20, 'figs/btree-ii', caches[:2])
 
-    lines += open('data/lauteschwein-veb-g++.dat').read().splitlines()
+    #lines += open('data/lauteschwein-veb-g++.dat').read().splitlines()
 
-    make_plot(lines, ['veb', 'veb2', 'veb2e'], 2**27, 'figs/veb-all', caches)
+    make_plot(lines, ['veb', 'veb2'], 2**27, 'figs/veb-all', caches)
 
     make_plot(lines, ['btree16_bf_a', 'eytzinger_bfp_a',
                       'veb', 'veb2'], 2**27, 'figs/veb-i', caches)

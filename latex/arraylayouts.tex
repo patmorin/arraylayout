@@ -68,32 +68,32 @@ A sorted array combined with binary search represents \emph{the} classic
 data structure/query algorithm pair: theoretically optimal, fast in
 practice, and discoverable by school children playing guessing games.
 Although sorted arrays are \emph{static}---they don't support efficient
-insertion or deletion---they still have many practical applications
-involving bulk or batch processing of data.  They are useful in this
-context because even \naive\ implementations of binary search execute
-searches several times faster than the search algorithms of most
+insertion or deletion---they are still the method of choice for bulk or
+batch processing of data. Even \naive\ implementations of binary search
+execute searches several times faster than the search algorithms of most
 popular dynamic data structures such as red-black trees.\footnote{For
-example, Barba and Morin \cite{bmXX} found that a \naive\ implementation
-of binary search in a sorted array was approximately three times faster
-than searching using C++'s \texttt{stl::set} class (implemented as a
-red-black tree).}
+example, Barba and Morin \cite{barba.morin:top-down} found that a \naive\
+implementation of binary search in a sorted array was approximately
+three times faster than searching using C++'s \texttt{stl::set} class
+(implemented as a red-black tree).}
 
 Every major programming language and environment provides a sorting
 routine, so a sorted array is usually just a function call away. Many
 language also provide a matching binary search implementation.
-In C++, sorting is done with \mintinline{c++}{std::sort()} and binary
-search is implemented in \mintinline{c++}{std::lower_bound()} and
-\mintinline{c++}{std::upper_bound()}.
+For example, in C++, sorting is done with \mintinline{c++}{std::sort()}
+and binary search is implemented in \mintinline{c++}{std::lower_bound()}
+and \mintinline{c++}{std::upper_bound()}.
 
-The chromium browser code-base, for example, calls these
+Consider the chromium browser code-base which calls these
 implementations of binary search from 135 different locations
-in a wide variety of contexts, including cookie handling, GUI
-layout, graphics and text rendering, video handling, and certificate
-management.\footnote{\url{https://goo.gl/zpSdXo}}  This is the code-base
-on which Google Chrome, which now boasts over 1 billion users \cite{X},
-is based. Improvements to \mintinline{c++}{std::lower_bound()} and
-\mintinline{c++}{std::upper_bound()} could improve the user experience
-of hundreds of millions of users.
+in a wide variety of contexts, including cookie handling,
+GUI layout, graphics and text rendering, video handling, and
+certificate management.\footnote{\url{https://goo.gl/zpSdXo}}
+This is the code-base on which Google Chrome, which now boasts
+over a billion users \cite{protalinksi:google}, is based. It is
+not an exaggeration to say that faster
+implementations of binary search could improve the daily user
+experience of hundreds of millions of people.
 
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
@@ -115,7 +115,9 @@ accompanying search algorithms.  Our study focuses on the following case:
       array, the search algorithm returns the index $n$.
 
 \item We focus our study on the case where a single thread on a single
-      processor executes a large number of queries on the same array.
+      processor executes a large number of queries on the same
+      array. (Though our results also hold for multiple threads searching
+      the same array.)
 
 \item We study real (wall-clock) execution time, not CPU time, cache
       misses, other types of efficiency, or other proxies for real time.
@@ -155,7 +157,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   whose height is $h=\lceil\log (n+1)\rceil -1$. This tree is layed
   out recursively:  If $h=0$, then the single node of the tree is
   stored in $A[0]$.  Otherwise, the tree is split into a top-part
-  of height $\lfloor h/2\rfloor$, which is recursively layed in
+  of height $\lfloor h/2\rfloor$, which is recursively layed out in
   $A[0,\ldots,2^{1+\lfloor{h/2\rfloor}}-2]$.  Attached to the leaves of
   this top tree are up to $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which
   are each recursively layed out, in left-to-right order, starting at
@@ -164,23 +166,40 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
 
 \subsection{Related Work}
 
-Brodal, Fagerberg, and Jakob.
+TODO: Steal the background section from Brodal etal...
 
+The work most closely related to ours is that of Brodal, Fagerberg,
+and Jakob \cite{brodal.fagerberg.ea:cache}. As part of their work on
+cache-oblivious search trees, they present experimental results for
+all four of the layouts we study here.  Based on their experiments,
+they reach the following conclusions:
 
-These guys look at array layouts of multidimensional arrays within programming languages:
+\begin{enumerate}
 
-\url{https://engineering.purdue.edu/~mithuna/pubs/ics99.pdf}
+\item For array lengths smaller than the cache size, the layouts with
+simplest address arithmetic---sorted and Eytzinger---were the fastest. The
+Btree layout was next and the vEB layout---with its complicated address
+arithmetic---was by far the slowest.
+
+\item For array lengths much larger than the cache size, Btree layouts
+were the fastest, followed by vEB, then Eytzinger, and finally sorted
+was the slowest.
+\end{enumerate}
+
+Between these two extremes, there is an interval where their vEB
+implementation spends its time catching up to the sorted and Eytzinger
+implementations.
 
 
 \subsection{Summary of Results}
 
-Our findings, with respect to a single process/thread executing repeated random
-searches on a single array, $A$, are summarized as follows:
+Our findings, with respect to a single process/thread executing repeated
+random searches on a single array, $A$, are summarized as follows:
 
 \begin{enumerate}
   \item For small values of $n$ (smaller than the L1 cache), branch-free
     implementations of search algorithms are considerably faster than their
-    branchy counterparts, sometimes a factor of two.
+    branchy counterparts, sometimes by a factor of two.
   
   \item For small values of $n$ (smaller than the L2 cache), a good
     branch-free implementation of binary search is unbeaten by any other
@@ -199,26 +218,49 @@ searches on a single array, $A$, are summarized as follows:
     the memory subsystem to load a cache line that is correct 50\%
     of the time.  
 
-  \item For large values of $n$, the fastest method is the Eytzinger layout
-   combined with a branch-free search that uses explicit prefetching.
+  \item For large values of $n$, the fastest method is the Eytzinger
+   layout combined with a branch-free search that uses explicit prefetching.
 \end{enumerate}
 
-It is important to note that our conclusions are limited in scope. In
-particular, the preceding conclusions do not hold when multiple threads
-are searching simultaneously.  In such cases, the B-tree layout eventually
-wins out over the other layouts.
+Our conclusions holds across a wide variety of different processors and
+also hold in a setting in which multiple threads are performing repeated
+searches on a single array.  Our conclusions mostly agree with those of
+Brodal, Fagerberg and Jakob for small values of $n$, but are completely
+different for large values of $n$.  The reason for the differences is
+that there are a number of processor architecture considerations---beyond
+caching---that affect the relative performance of these layouts.
 
+It was only through careful and controlled experimentation with different
+implementations of each of the search algorithms that we are able
+to understand how the interactions between processor features such
+as pipelining, prefetching, speculative execution, and conditional
+moves affect the running times of the search algorithms.  With this
+understanding, we are able to choose layouts and design search algorithms
+that perform search in $1/2$ to $2/3$ (depending on the array length)
+the time of the C++ \mintinline{c++}{std::lower_bound()} implementation
+of binary search.
 
 \subsection{Outline}
 
-The remainder of this paper is organized as follows: \Secref{architecture} provides a brief review of processors architecture paying particular attention to aspects that affect the results in the current paper.  \Secref{algorithms} describes the 
+The remainder of this paper is organized as follows: \Secref{architecture}
+provides a brief review of processors architecture paying particular
+attention to aspects that affect the results in the current paper.
+\Secref{layouts} describes our implementations of the four memory
+layouts. \Secref{other} discusses two options for memory layouts
+that we experimented with and then discarded.  \Secref{experiments}
+discusses further experimental results for our implementations.
+Finally \secref{conclusions} summarizes and concludes with directions
+for further research.
 
 \section{Processor Architecture Considerations}
+\seclabel{architecture}
 
 In this section, we briefly review, at a very high level, the elements of
 modern processor architecture that affect our findings.  For concreteness,
-we will use numbers from a recent high-end desktop processor, the Intel
-4790K \cite{S} with 4 8GB DDR3-1866 memory modules.
+we will use numbers from a recent high-end desktop processor, the
+Intel 4790K \cite{intel:4790k} with 4 8GB DDR3-1866 memory modules.
+This processor/RAM combination is also the test machine used for
+generating the experimental data in \secref{layouts}.
 
 \subsection{CPU}
 
@@ -228,7 +270,7 @@ CPU runs at frequency of 4GHz, or $4\times10^9$ cycles per second.
 This CPU can execute roughly $4\times 10^{9}$ instructions per
 second.\footnote{This is only a very rough approximation of the
 truth; different instructions have different latencies and throughput
-\cite{granlund.instruction}.}
+\cite{granlund:instruction}.}
 
 %\url{https://gmplib.org/~tege/x86-timing.pdf}
 
@@ -342,11 +384,11 @@ executed while the next instruction is reading a memory address, while
 the next instruction is being decoded, while the next instruction is
 being fetched.
 
-The Nehalem processor architecture, on which the Intel 4790K is based
-has a 20--24 stage processor pipeline \cite{X}. If an instruction does
-not stall for any other reason, there is still at least a 20--24 cycle
-latency between the time an istruction is fetched and until the time it
-completes execution.
+The Nehalem processor architecture, on which the Intel 4790K is based, has
+a 20--24 stage processor pipeline \cite{bit-tech:intel}. If an instruction
+does not stall for any other reason, there is still at least a 20--24
+cycle latency between the time an istruction is fetched and until the
+time it completes execution.
 
 Processor pipelining works well provided that the CPU knows which
 instruction to fetch.  Where this breaks down is in code that contains
@@ -377,13 +419,13 @@ is highly predictable so that, e.g., the conditional jump condition is
 almost always taken or almost always not taken.
 
 Most modern processors use some form of two-level adaptive predictor
-\cite{yeh.patt.two-level} that can even handle second-order statistics,
+\cite{yeh.patt:two-level} that can even handle second-order statistics,
 such as conditional jumps that implement loops with a fixed number of
 iterations. In this case, they can detect conditions such as ``this
 conditional jump is taken $k$ times consecutively and then not taken
 once.''  In standard benchmarks, representative of typical work-loads,
 branch-predictor success rates above 90\% and even above 95\% are not
-uncommon \cite{X}.
+uncommon \cite{yeh.patt:alternative}.
 
 Another useful tool used to avoid branch misprediction (and branches
 altogether) is the conditional move \mintinline{nasm}{cmov} family
@@ -399,9 +441,22 @@ is true.  The Intel IA-64 and ARM CPU architectures include extensive
 predicated instruction sets.
 
 \section{The Layouts}
+\seclabel{layouts}
 
 In this section, we provide an in-depth discussion of the implementations
 and performance of the four array layouts we tested.
+
+Throughout this section, we present experimental results. Except where
+noted otherwise, these results were obtained on the Intel 4790K described
+in the previous section.  In all these experiments, the data consists of
+4-byte (32-bit) unsigned integers. In each case, the data stored in the
+array is the integer set $\{2i+1: i\in\{0,\ldots,n-1\}\}$ and searches are
+for uniformly randomly chosen integers in the set $\{0,\ldots,2n+1\}$.
+Therefore roughly half the searches were for values in the set and half
+were for values not in the set.
+All of the code and scripts used for our
+experiments are freely available through
+\texttt{github}.\footnote{\url{https://github.com/patmorin/arraylayout}}
 
 \subsection{Sorted}
 
@@ -587,16 +642,16 @@ the value of \mintinline{c++}{base} (if \mintinline{c++}{base[half]
 there is no branching within the while loop.  For this reason, we call
 this \emph{branch-free binary search}.
 
-The use of conditional move instructions to replace branching is
-often a topic of heated debate (see, e.g., \cite{X}).  Conditional move
-instructions tend to use more clock cycles than traditional instructions
-and, in many cases, branch predictors can achieve prediction accuracies
-exceeding 95\%, which makes it faster to use a conditional jump.  In this
-particular instance, however, the branch predictor will be unable to make
-predictions with accuracy exceeding 50\%, making a conditional move the
-best choice.  The resulting assembly code, shown in \lstref{bfbs-asm} is
-very lean.  The body of the \mintinline{c++}{while} loop is implemented
-by Lines~8--15 with the conditional move at Line~12.
+The use of conditional move instructions to replace branching is often a
+topic of heated debate (see, e.g., \cite{torvalds:cmov}).  Conditional
+move instructions tend to use more clock cycles than traditional
+instructions and, in many cases, branch predictors can achieve prediction
+accuracies exceeding 95\%, which makes it faster to use a conditional
+jump.  In this particular instance, however, the branch predictor will
+be unable to make predictions with accuracy exceeding 50\%, making a
+conditional move the best choice.  The resulting assembly code, shown in
+\lstref{bfbs-asm} is very lean.  The body of the \mintinline{c++}{while}
+loop is implemented by Lines~8--15 with the conditional move at Line~12.
 
 
 \begin{listing}
@@ -697,7 +752,7 @@ or disprove this hypothesis.
    complicated for a hardware prefetcher to predict. Nevertheless, we
    ruled out this possibility by disabling the hardware prefetcher and
    running the tests again.\footnote{Prefetching was disabled using
-   the \mintinline{console}{wrmsr} utility with register number 0x1a4 and value 0xf.  This disables all prefetching \cite{https://software.intel.com/en-us/articles/optimizing-application-performance-on-intel-coret-microarchitecture-using-hardware-implemented-prefetchers}.}    The running-times
+   the \mintinline{console}{wrmsr} utility with register number 0x1a4 and value 0xf.  This disables all prefetching \cite{intel:optimizing}.}    The running-times
    of the code were unchanged by disabling prefetching.
 
 \item We implemented a version of the branch-free code that adds explicit
@@ -759,9 +814,10 @@ three variants of binary search discussed here will have poor cache
 utilization.  This is caused by cache-line aliasing between the elements
 at the top levels of the binary search; in a $c$-way associative cache,
 these top-level elements are all restricted to use $O(c)$ cache lines.
-This problem is hinted at in the experimental results of Brodal \etal\
-\cite[Section~XX]{X} and examined in detail by the first author \cite{X},
-who also suggests workarounds.
+This problem is observed in the experimental results of Brodal \etal\
+\cite[Section~4.2]{brodal.fagerberg.ea:cache} and examined in detail
+by the first author \cite{khuong:binary}, who also suggests efficient
+workarounds.
 
 \subsection{Eytzinger}
 
@@ -776,6 +832,7 @@ at index $i$ are stored at indices $2i+1$ and $2i+2$, respectively.
 
 
 \subsubsection{Cache-Use Analysis}
+\seclabel{eytzinger-cache-use}
 
 With respect to caching, the performance of searches in an Eytzinger
 array should be comparable to that of binary searching in a sorted array,
@@ -869,7 +926,7 @@ The only non-standard instruction used here is \mintinline{console}{gcc}'s
 \mintinline{c++}{__builtin_ffs} builtin that returns one plus the index
 of the least significant one bit of its argument.  This operation,
 or equivalent operations are supported by most hardware and C/C++
-compilers \cite{wikipedia:find-first-set}.
+compilers \cite{wiki:find}.
 
 \subsubsection{Branch-Free Eytzinger Search}
 
@@ -1266,6 +1323,7 @@ resulting in twice as many cache misses as a 17-tree layout.
 \end{lesson}
 
 \section{Other Possible Strategies}
+\seclabel{other}
 
 In our experiments, we tried other approaches that seemed promising but that we were unable to make headway on. We outline some of these here:
 
@@ -1309,11 +1367,17 @@ penalty for the final cache miss, since it can not predict which block
 in the second part of the array is needed until the Eytzinger search in
 the first part of the array is complete.
 
-\section{Limitations}
+\section{Further Experiments}
+\seclabel{experiments}
 
-With parallel searches, we run out of bandwidth.
+\begin{itemize}
+\item Show results on different data sizes: 8- and 16-byte data.
+\item Show results when the number of threads is increased.
+\item Discuss results on other machines.
+\end{itemize}
 
 \section{Conclusion}
+\seclabel{conclusions}
 
 We have compared the relative performance of four memory layouts for
 ordered arrays and the algorithms for searching in these layouts.  
@@ -1328,15 +1392,20 @@ A more accurate statement, that accounts for our findings, is that
 accesses to RAM have high latency and this latency needs to be mitigated.
 
 The Eytzinger layout mitigates latency by having memory access patterns
-that are highly predictable.  Our results show that this kind of
+that are highly predictable, which allows for \emph{memory request pipelining}. Our results show that this kind of
 predictability can be at least as useful as reducing the number of
 cache misses.  Indeed, being able to predict a cache miss $d$ steps in
 advance can be as effective as reducing the number of cache misses by
-a factor of $d$.  There is \ldots
+a factor of $d$.  This raises our first open question:
 
-Although the Eytzinger memory access pattern is predictable,
-it is still well beyond the capabilities of current hardware prefetchers.
-It would be interesting to know if other algorithmic problems could be 
+\begin{op}\oplabel{other-problems}
+  Can memory request pipelining be used to design faster algorithms for
+  other problems?
+\end{op}
+
+An obvious candidate to consider in the context of \opref{other-problems}
+is the problem of sorting. There, the heap-sort algorithm, which uses
+the Eytzinger layout is an obvious starting point.
 
 \subsection{For big data, branchy code can be a good prefetcher}
 
@@ -1360,22 +1429,46 @@ current prefetching techniques.  In extreme cases (like the Eytzinger
 layout) the resulting prefetches are perfectly correct even four branches
 ahead of the current execution point.
 
-In hardware design, the general idea of using speculative execution as a
-prefetching strategy is called \emph{runahead} \cite{blah}.  Runahead and
-runahead and other forms of speculative prefetching were part of the
-hardware scout technology proposed for the Sun Rock processor project,
-which was cancelled before the processor made it into production.
-
-Our results show that, in a processor that has speculative execution,
-one can obtain many of the benefits of runahead even on processors
-that do not specifically implement it. As a more general guideline, our
-results show that one has to be very careful with micro-optimizations.
-Optimizations that offer great speedups on small inputs can create great
-slowdowns on large inputs.
+In hardware design, the general idea of using speculative execution
+as a prefetching strategy is called \emph{runahead execution}
+\cite{mutlu.stark.ea:runahead}.  Our results show that, in a processor
+that has speculative execution, one can obtain many of the benefits of
+runahead even on processors that do not specifically implement it. As a
+more general guideline, our results show that one has to be very careful
+with micro-optimizations.  Optimizations that offer great speedups on
+small inputs can create great slowdowns on large inputs.
 
 \subsection{Future Work: In-Place Algorithms for Array Layouts}
 
+Finally, we finish with one algorithmic question motivated by our work.
+Since sorted order is what is commonly used in current applications,
+it would be useful to have efficient in-place algorithms to convert from
+sorted order to and from other memory layouts.
 
+\begin{op}
+  Is there a linear time in-place algorithm that converts a sorted array
+  into an array stored in the Eytzinger layout?
+\end{op}
+
+As a starting point we note that, when $n$ is a power of two, there
+is such an algorithm.  In this case, we can use an existing in-place
+algorithm to partition the array into all the odd indices followed
+by all the even indices (this is called an \emph{unshuffle} operation
+\cite[Section~7]{ellis.markov:in-situ}. We can then recurse on the first
+half of the array. This takes linear time and, at the end of this process,
+the array is layed out in Eytzinger order.  Generalizing this algorithm
+to the case where $n$ is not a power of two seems non-trivial.
+
+\section*{Acknowledgement}
+
+We are grateful to  Gerth Brodal, Rolf Fagerberg, Rico Jakob who (kindly)
+make their source code available to us. However, for a variety of reasons,
+most of which have to do with the 12 years that have elapsed since it
+was written, we found it impossible to work with.
+
+
+\bibliographystyle{plainurl}
+\bibliography{arraylayouts}
 
 \end{document}
 

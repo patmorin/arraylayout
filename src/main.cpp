@@ -72,7 +72,7 @@ const char *type_name() {
 	case 8:
 		return "unknown64";
 	case 16:
-		return "int128";
+		return "uint128";
 	}
 	return "unknown";
 }
@@ -202,9 +202,9 @@ struct Tool<Array, double, I> {
 };
 
 template<typename Array, unsigned S, typename I>
-struct Tool<Array, fake_number<std::uint32_t,S>, I> {
-	static void run_test1(fake_number<std::uint32_t,S> *a, I n, I m, const std::string &name) {
-		run_test1_b<Array, fake_number<std::uint32_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
+struct Tool<Array, fake_number<std::uint64_t,S>, I> {
+	static void run_test1(fake_number<std::uint64_t,S> *a, I n, I m, const std::string &name) {
+		run_test1_b<Array, fake_number<std::uint64_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
 	}
 };
 
@@ -324,7 +324,7 @@ void usage(char *name) {
 	std::cerr << "Usage: " << name << " <dtype> <itype> <n> <m>"
 			<< std::endl
 			<< "  where " << std::endl
-			<< "  <dtype> is in {uint32, uint64, float32, float64, int128}"
+			<< "  <dtype> is in {uint32, uint64, float32, float64, uint128}"
 			<< std::endl
 			<< "  <itype> is in {uint32, uint64, fast_uint32}" << std::endl;
 }
@@ -347,7 +347,7 @@ void run_it(std::uint64_t n, std::uint64_t m) {
 int main(int argc, char *argv[]) {
 	std::uint64_t n, m;
 	int dt, it;
-	std::string dtypes[] = {"uint32", "float32", "uint64", "float64", "int128"};
+	std::string dtypes[] = {"uint32", "float32", "uint64", "float64", "uint128"};
 	std::string itypes[] = {"uint32", "uint64", "fast_uint32"};
 
 	if (argc == 5) {
@@ -397,11 +397,11 @@ int main(int argc, char *argv[]) {
 		run_it<double,std::uint_fast32_t>(n, m);
 
 	else if (dt == 4 && it == 0)
-		run_it<fake_number<std::uint32_t,16>,std::uint32_t>(n, m);
+		run_it<fake_number<std::uint64_t,16>,std::uint32_t>(n, m);
 	else if (dt == 4 && it == 1)
-		run_it<fake_number<std::uint32_t,16>,std::uint64_t>(n, m);
+		run_it<fake_number<std::uint64_t,16>,std::uint64_t>(n, m);
 	else if (dt == 4 && it == 2)
-		run_it<fake_number<std::uint32_t,16>,std::uint_fast32_t>(n, m);
+		run_it<fake_number<std::uint64_t,16>,std::uint_fast32_t>(n, m);
 
 	return 0;
 }

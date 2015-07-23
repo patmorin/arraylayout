@@ -277,6 +277,7 @@ truth; different instructions have different latencies and throughput
 
 
 \subsection{RAM, Latency, and Transfer Rate}
+\seclabel{bandwidth}
 
 The RAM on this system runs at 1866MHz, or roughly $1.866\times10^9$
 cycles per second.  This RAM module can transfer 8 bytes per cycle
@@ -1376,14 +1377,14 @@ than the Intel 4790K.
 
 \subsection{Multiple Threads}
 
-Since they Eytzinger search moves more data from RAM into cache, it uses
-more memory bandwidth.  This works because, as discussed in \secref{X},
-latency, not bandwidth, is the bottleneck; the bandwidth far exceeds the
-cache line width divided by the latency.  However, when multiple threads
-are performing searches in parallel they could---in theory---saturate
-the bandwidth.
+Since they Eytzinger search moves more data from RAM into cache,
+it uses more memory bandwidth.  This works because, as discussed in
+\secref{bandwidth}, latency, not bandwidth, is the bottleneck; the
+bandwidth far exceeds the cache line width divided by the latency.
+However, when multiple threads are performing searches in parallel they
+could---in theory---saturate the bandwidth.
 
-Figures~\ref{fig:threads2}--\ref{fig:threads8} show the results of tests
+Figure~\ref{fig:threads} shows the results of tests
 using 2, 4, and 8 threads.  In these tests, the array layout is created
 and $k$ threads are created, each of which performs $2\times 10^6$
 random searches (each thread seeds its own random number generator
@@ -1393,51 +1394,36 @@ the creation of the first thread until (after) the last thread completes.
 
 \begin{figure}
    \centering{\includegraphics{figs/threads2}}
-   \caption{The performance of algorithms on 64-bit data.}
-   \figlabel{threads2}
-\end{figure}
-
-\begin{figure}
    \centering{\includegraphics{figs/threads4}}
-   \caption{The performance of algorithms on 128-bit data.}
-   \figlabel{threads4}
-\end{figure}
-
-\begin{figure}
    \centering{\includegraphics{figs/threads8}}
-   \caption{The performance of algorithms on 128-bit data.}
-   \figlabel{threads8}
+   \caption{The performance of searches with two, four, and eight threads.}
+   \figlabel{threads}
 \end{figure}
 
 These graphs show that, although the performance gap narrows, the
-Eytzinger layout continues to outperform the other layouts even when eight
-threads are simultaneously accessing the array.  We did not test more
+Eytzinger layout continues to outperform the other layouts even with four
+threads simultaneously searching the array.  With eight threads and very
+large values of $n$ the two become equally matched.  We did not test more
 than eight threads since this seems unrealistic; the Intel 4790K has only
 4 hyperthreaded cores, which appear to the operating system as 8 CPUs.
 
 
 \subsection{Larger Data Items}
 
-\Figref{64bit} and \figref{128bit} show timing results for
-8-byte (64-bit) data items and 16-byte (128-bit) simulated data items.
-Each simulated 16-byte datum is a structure that contains an 8-byte
-unsigned integer and 8-bytes of padding.
+\Figref{larger} shows timing results for 8-byte (64-bit) data items and
+16-byte (128-bit) simulated data items.  Each simulated 16-byte datum is a
+structure that contains an 8-byte unsigned integer and 8-bytes of padding.
 
-In these figures, the $(B+1)$-trees use values of $B=8$ and $B=4$,
-respectively.Similarly, the Eytzinger search algorithm prefetches the
+In these experiments, the $(B+1)$-trees use values of $B=8$ and $B=4$,
+respectively. Similarly, the Eytzinger search algorithm prefetches the
 8 virtual nodes that are 3 (for 8-byte data) and the four virtual nodes
 that are 2 (for 16-byte data) levels below the current node.
 
 \begin{figure}
    \centering{\includegraphics{figs/64bit}}
-   \caption{The performance of algorithms on 64-bit data.}
-   \figlabel{64bit}
-\end{figure}
-
-\begin{figure}
    \centering{\includegraphics{figs/128bit}}
-   \caption{The performance of algorithms on 128-bit data.}
-   \figlabel{128bit}
+   \caption{The performance of algorithms on 64-bit and 128-bit data.}
+   \figlabel{larger}
 \end{figure}
 
 It is worth noting that, in both these figures, the largest value of

@@ -418,8 +418,8 @@ I __attribute__ ((noinline)) bqtree_array<D,Q,T,I>::unrolled_branchfree_search(T
 		const T *pred = branchfree_inner_search<D*Q>(base, x);
 		unsigned int nth = (*pred < x) + pred - base;
 		{
-			/* nth == B iff x > all values in block. */
-			const T current = base[nth % D];
+			/* nth == D*Q iff x > all values in block. */
+			const T current = base[nth % (D*Q)];
 			I next = i + nth;
 			j = (current >= x) ? next : j;
 		}

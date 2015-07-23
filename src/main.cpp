@@ -303,9 +303,13 @@ void run_tests(I n, I m) {
 	Tool<btree_array_naive<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_naive_a");
 	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
 	Tool<btree_array<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_a");
-//
+
 	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");
-//	Tool<btree_array_bfp<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bfp_a");
+	Tool<bqtree_array<B,1,T,I>,T,I>::run_test1(a, n, m, "bqtree16_1");
+	Tool<bqtree_array<B,4,T,I>,T,I>::run_test1(a, n, m, "bqtree16_4");
+
+
+	//	Tool<btree_array_bfp<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bfp_a");
 //	Tool<btree_array_bfp<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_bfp_a");
 //	Tool<btree_array_bfp<B/4,T,I,true>,T,I>::run_test1(a, n, m, "btree4_bfp_a");
 

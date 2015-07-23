@@ -101,6 +101,7 @@ public:
 };
 
 
+
 template<unsigned B, typename T, typename I, bool aligned>
 template<typename ForwardIterator>
 ForwardIterator btree_array<B,T,I,aligned>::copy_data(ForwardIterator a0, I i) {
@@ -349,6 +350,18 @@ I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(T x) {
 	}
 	return j;
 }
+
+
+
+template<unsigned B, unsigned Q, typename T, typename I>
+class bqtree_array : public btree_array<B*Q,T,I,true> {
+public:
+	template<typename ForwardIterator>
+	bqtree_array(ForwardIterator a0, I n0)
+		: btree_array<B*Q,T,I,true>(a0, n0) {};
+};
+
+
 
 } // namespace fbs
 #endif /* FBS_BTREE_ARRAY_H_ */

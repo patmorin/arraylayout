@@ -307,8 +307,11 @@ void run_tests(I n, I m) {
 	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");
 	Tool<bqtree_array<B,1,T,I>,T,I>::run_test1(a, n, m, "bqtree16_1");
 	Tool<bqtree_array<B,2,T,I>,T,I>::run_test1(a, n, m, "bqtree16_2");
+	Tool<bqtree_array<B,3,T,I>,T,I>::run_test1(a, n, m, "bqtree16_3");
 	Tool<bqtree_array<B,4,T,I>,T,I>::run_test1(a, n, m, "bqtree16_4");
+	Tool<bqtree_array<B,5,T,I>,T,I>::run_test1(a, n, m, "bqtree16_5");
 	Tool<bqtree_array<B,6,T,I>,T,I>::run_test1(a, n, m, "bqtree16_6");
+	Tool<bqtree_array<B,7,T,I>,T,I>::run_test1(a, n, m, "bqtree16_7");
 	Tool<bqtree_array<B,8,T,I>,T,I>::run_test1(a, n, m, "bqtree16_8");
 	Tool<bqtree_array<B,16,T,I>,T,I>::run_test1(a, n, m, "bqtree16_16");
 

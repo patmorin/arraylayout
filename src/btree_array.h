@@ -36,20 +36,20 @@ protected:
 	template<class ForwardIterator>
 	ForwardIterator copy_data(ForwardIterator a0, I i);
 
-	template<unsigned int Q>
-	const T* branchfree_inner_search(const T *base, const T x) const {
-		if (Q <= 1) return base;
-		const unsigned int half = Q / 2;
+	template<unsigned int C>
+	static const T* branchfree_inner_search(const T *base, const T x) {
+		if (C <= 1) return base;
+		const unsigned int half = C / 2;
 		const T *current = &base[half];
-		return branchfree_inner_search<Q - half>((*current < x) ? current : base, x);
+		return branchfree_inner_search<C - half>((*current < x) ? current : base, x);
 	}
 
-	template<unsigned Q>
-	I branchy_inner_search(const T *a, I i, T x) const {
-		if (Q==0) return i;
-		if (x <= a[i+Q/2])
-			return branchy_inner_search<Q/2>(a, i, x);
-		return branchy_inner_search<Q-Q/2-1>(a, i+Q/2+1, x);
+	template<unsigned C>
+	static I branchy_inner_search(const T *a, I i, T x) {
+		if (C==0) return i;
+		if (x <= a[i+C/2])
+			return branchy_inner_search<C/2>(a, i, x);
+		return branchy_inner_search<C-C/2-1>(a, i+C/2+1, x);
 	}
 
 public:
@@ -353,31 +353,43 @@ I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(T x) {
 
 
 
-template<unsigned B, unsigned Q, typename T, typename I>
-class bqtree_array : public btree_array<B*Q,T,I,true> {
+template<unsigned D, unsigned Q, typename T, typename I>
+class bqtree_array : public btree_array<D*Q,T,I,true> {
 protected:
-	using btree_array<B*Q,T,I,true>::a;
-	using btree_array<B*Q,T,I,true>::n;
-	using btree_array<B*Q,T,I,true>::child;
+	using btree_array<D*Q,T,I,true>::a;
+	using btree_array<D*Q,T,I,true>::n;
+	using btree_array<D*Q,T,I,true>::child;
+
+	template<unsigned int C>
+	static const T* branchfree_inner_search(const T *base, const T x) {
+		if (C <= 1) return base;
+		const unsigned int half = C / 2;
+		const T *current = &base[half];
+		return branchfree_inner_search<C - half>((*current < x) ? current : base, x);
+	}
+
+
 public:
 	template<typename ForwardIterator>
 	bqtree_array(ForwardIterator a0, I n0)
-		: btree_array<B*Q,T,I,true>(a0, n0) {};
+		: btree_array<D*Q,T,I,true>(a0, n0) {};
 
-	I search(T x) const;
+	I unrolled_branchfree_search(T x) const;
+	I naive_search(T x) const;
+	I search(T x) const { return unrolled_branchfree_search(x); };
 };
 
 
 // naive search
-template<unsigned B, unsigned Q, typename T, typename I>
-I __attribute__ ((noinline)) bqtree_array<B,Q,T,I>::search(T x) const {
+template<unsigned D, unsigned Q, typename T, typename I>
+I __attribute__ ((noinline)) bqtree_array<D,Q,T,I>::naive_search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i < n) {
-		for (int j = 0; j < Q; j++)
-			__builtin_prefetch(a+i+j*B);
+		for (int t = 0; t < Q; t++)
+			__builtin_prefetch(a+i+t*D);
 		I lo = i;
-		I hi = std::min(i+B*Q, n);
+		I hi = std::min(i+D*Q, n);
 		while (lo < hi) {
 			I m = (lo + hi) / 2;
 			if (x < a[m]) {
@@ -393,6 +405,45 @@ I __attribute__ ((noinline)) bqtree_array<B,Q,T,I>::search(T x) const {
 	}
 	return j;
 }
+
+
+template<unsigned D, unsigned Q, typename T, typename I>
+I __attribute__ ((noinline)) bqtree_array<D,Q,T,I>::unrolled_branchfree_search(T x) const {
+	I j = n;
+	I i = 0;
+	while (i + D*Q <= n) {
+		for (int t = 0; t < Q; t++)
+			__builtin_prefetch(a+i+t*D);
+		const T *base = &a[i];
+		const T *pred = branchfree_inner_search<D*Q>(base, x);
+		unsigned int nth = (*pred < x) + pred - base;
+		{
+			/* nth == B iff x > all values in block. */
+			const T current = base[nth % D];
+			I next = i + nth;
+			j = (current >= x) ? next : j;
+		}
+		i = child(nth, i);
+	}
+	if (__builtin_expect(i < n, 0)) {
+		// last (partial) block
+		const T *base = &a[i];
+		I m = n - i;
+		while (m > 1) {
+			I half = m / 2;
+			const T *current = &base[half];
+
+			base = (*current < x) ? current : base;
+			m -= half;
+		}
+
+		I ret = (*base < x) + base - a;
+		return (ret == n) ? j : ret;
+	}
+	return j;
+}
+
+
 
 
 } // namespace fbs

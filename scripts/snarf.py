@@ -41,16 +41,8 @@ styles = ['-', '--', ':']
 markers = [ "o", "s", "p", "*", "H" ]
 
 
-# Have this return true if you want alg to appear in the plot
-def i_care(alg):
-    return alg in ['sorted', 'sorted_stl']
-    return alg.startswith('sorted')
-    return alg.startswith('eytzinger') or alg.startswith('sorted_bf') \
-           or alg.startswith('btree16')  or alg.startswith('veb')  
-
-def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32'):
-    # Snarf the data into a giant nested dictionary.
-    
+def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
+              title=r'running time of $2\times 10^6$ searches on $n$ values'):
 
     mapper = [("sorted", ("-", None, None, r'branchy binary search')),
               ("sorted_stl", ("-", None, None, r'\texttt{stl::lower\_bound}')),
@@ -62,15 +54,22 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32'):
               ("eytzinger_bf", ("-", None, None, r'branch-free Eytzinger')),
               ("eytzinger_bfp_a", ("-", None, None, 
                r'aligned branch-free Eytzinger with prefetching')),
-              ("btree16_naive_a", ("-", None, None, r'na\"{\i}ve 17-tree')),
-              ("btree16_a", ("-", None, None, r'unrolled 17-tree')),
+              ("btree16_naive_a", ("-", None, None, r'na\"{\i}ve Btree')),
+              ("btree16_a", ("-", None, None, r'unrolled Btree')),
               ("btree16_bf_a", ("-", None, None, 
-               r'unrolled branch-free 17-tree')),
+               r'unrolled branch-free Btree')),
               ("veb", ("-", None, None, r'branchy vEB')),
               ("veb2", ("-", None, None, r'branch-free vEB')),
               ("veb2e", ("-", None, None,
                r'branch-free vEB with early termination'))
              ]
+    for i in range(1,17):
+        mapper.append(("bqtree16_{}".format(i), 
+                      ("-", " ", None, r'$Bk$tree ($k={}$)'.format(i))))
+
+    for f in mapper: print f
+
+    # Snarf the data into a giant nested dictionary.
     i = 0
     mapper2 = []
     for (k,v) in mapper:
@@ -116,12 +115,14 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32'):
                     data[alg].append((n, search_time))
 
     # Plot everything.
-    plt.figure(figsize=(6.8,3.5))
+    width,height = 6.8, 3.5
+    if not title: height = 2.6
+    plt.figure(figsize=(width,height))
     plt.ioff()
     plt.xscale('log', basex=2)
     plt.xlabel('$n$')
     plt.ylabel('running time (s)')
-    plt.title(r'running time of $2\times 10^6$ searches $n$ values')
+    if title: plt.title(title)
     plt.xlim(1, xmax)
     idx = 0
     for alg in algs:
@@ -139,7 +140,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32'):
                  color=clr,
                  linestyle=ls,
                  marker=mrk,
-                 linewidth=2, 
+                 linewidth=[2,1][alg.startswith('bqtree')], 
                  markersize=2.5)
 
     if caches:
@@ -227,12 +228,36 @@ if __name__ == "__main__":
     # 64 bit results
     lines = open('data/lauteschwein-all64-g++.dat').read().splitlines()
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted'], 
-              2**31, 'figs/64bit', [x/2 for x in caches], 'uint64')
+              2**31, 'figs/64bit', [x/2 for x in caches], 'uint64',
+              r'running time of $2\times 10^6$ searches on $n$ 64-bit values')
 
     # 128 bit results
     lines = open('data/lauteschwein-all128-g++.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted'], 
-              2**30, 'figs/128bit', [x/4 for x in caches], 'uint128')
+              2**30, 'figs/128bit', [x/4 for x in caches], 'uint128',
+              r'running time of $2\times 10^6$ searches on $n$ 128-bit values')
+
+
+    # multithread results
+    lines = open('data/lauteschwein-threads-2-g++.dat').read().splitlines()    
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
+              2**30, 'figs/threads2', caches, 'uint32', '')
+    lines = open('data/lauteschwein-threads-4-g++.dat').read().splitlines()    
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
+              2**30, 'figs/threads4', caches, 'uint32', '')
+    lines = open('data/lauteschwein-threads-8-g++.dat').read().splitlines()    
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
+              2**30, 'figs/threads8', caches, 'uint32', '')
+
+    # bqtree results
+    lines = open('data/lauteschwein-bqtrees-g++.dat').read().splitlines()    
+    lines += open('data/lauteschwein-all-g++.dat').read().splitlines()
+    make_plot(lines, ['bqtree16_{}'.format(i) for i in range(4,9)] 
+                     + ['eytzinger_bfp_a', 'btree16_bf_a'], 
+              2**30, 'figs/bqtrees', caches, 'uint32')
+
+
+
 
 
 

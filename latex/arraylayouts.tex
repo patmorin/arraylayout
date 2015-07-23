@@ -33,7 +33,7 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 
 
 \begin{abstract}
-  We attempt to determine the best order in which to store $n$ ordered
+  We attempt to determine the best order in which to store $n$ comparable
   data items in an array, $A$, of length $n$ so that we can, for any query
   value, $x$, quickly find the smallest value in $A$ that is greater
   than or equal to $x$. In particular, we consider the important case
@@ -84,23 +84,24 @@ For example, in C++, sorting is done with \mintinline{c++}{std::sort()}
 and binary search is implemented in \mintinline{c++}{std::lower_bound()}
 and \mintinline{c++}{std::upper_bound()}.
 
-Consider the chromium browser code-base which calls these
-implementations of binary search from 135 different locations
-in a wide variety of contexts, including cookie handling,
-GUI layout, graphics and text rendering, video handling, and
-certificate management.\footnote{\url{https://goo.gl/zpSdXo}}
-This is the code-base on which Google Chrome, which now boasts
-over a billion users \cite{protalinksi:google}, is based. It is
-not an exaggeration to say that faster
-implementations of binary search could improve the daily user
-experience of hundreds of millions of people.
-
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
 with the right query algorithm---may allow for faster queries.
 Other array layouts may be able to take advantage of (or be hurt less
 by) modern processor features such as caches, instruction pipelining,
 conditional moves, speculative execution, and prefetching.
+
+It would be difficult to overstate the importance of
+algorithms for searching in a static sorted set.  For a
+single example, consider the chromium browser code-base
+which calls \mintinline{c++}{std::lower_bound()} and
+\mintinline{c++}{std::upper_bound()} from 135 different locations
+in a wide variety of contexts, including cookie handling, GUI
+layout, graphics and text rendering, video handling, and certificate
+management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
+that is built and packaged to make Google Chrome a web browser that is
+now used by more than a billion users \cite{protalinksi:google}.
+
 
 In this experimental paper we consider four different memory layouts and
 accompanying search algorithms.  Our study focuses on the following case:
@@ -855,9 +856,9 @@ misses, just as in binary search.
 A branchy implementation of search in an Eytzinger array, shown in
 \lstref{eytzinger-i}, is nearly as simple as that of binary search, with
 only one slight complication. When branchy binary search completes, the
-value \mintinline{c++}{hi} stores the return value. In Eytzinger search,
+variable \mintinline{c++}{hi} stores the return value. In Eytzinger search,
 we must decode the return value from the value of \mintinline{c++}{i}
-at the end of the \mintinline{c++}{while} loops.  Since we haven't seen
+at the termination of the \mintinline{c++}{while} loop.  Since we haven't seen
 this particular bit-manipulation trick before, we explain it here.
 
 
@@ -883,9 +884,7 @@ I eytzinger_array<T,I>::branchy_search(T x) const {
 \lstlabel{eytzinger-i}
 \end{listing}
 
-
-
-In our array, the $2^d$ nodes of the virtual tree at depth $d$
+In the Eytzinger layout, the $2^d$ nodes of the virtual tree at depth $d$
 appear consecutively, in left-to-right order, starting at index
 $\sum_{k=0}^{d-1}2^k = 2^d-1$.  Therefore, an array position
 $i\in\{2^d-1,\ldots,2^{d+1}-2\}$ corresponds to a node, $u$, of the
@@ -971,7 +970,7 @@ search with prefetching.
 
 \begin{figure}
    \centering{\includegraphics{figs/eytzinger-i}}
-   \caption{The performance of \naive\ and branch-free Eytzinger search.}
+   \caption{The performance of branchy and branch-free Eytzinger search.}
    \figlabel{eytzinger-i}
 \end{figure}
 
@@ -1370,11 +1369,91 @@ the first part of the array is complete.
 \section{Further Experiments}
 \seclabel{experiments}
 
-\begin{itemize}
-\item Show results on different data sizes: 8- and 16-byte data.
-\item Show results when the number of threads is increased.
-\item Discuss results on other machines.
-\end{itemize}
+In this section, we discuss further experiments that consider the effects
+of multiple threads, larger data items, data sizes that exceed the size
+of the translation lookaside buffer, and experiments on machines other
+than the Intel 4790K.
+
+\subsection{Multiple Threads}
+
+Since they Eytzinger search moves more data from RAM into cache, it uses
+more memory bandwidth.  This works because, as discussed in \secref{X},
+latency, not bandwidth, is the bottleneck; the bandwidth far exceeds the
+cache line width divided by the latency.  However, when multiple threads
+are performing searches in parallel they could---in theory---saturate
+the bandwidth.
+
+Figures~\ref{fig:threads2}--\ref{fig:threads8} show the results of tests
+using 2, 4, and 8 threads.  In these tests, the array layout is created
+and $k$ threads are created, each of which performs $2\times 10^6$
+random searches (each thread seeds its own random number generator
+with its own unique seed).  The main thread then joins each of these
+threads. The total time measured is the time elapsed between (before)
+the creation of the first thread until (after) the last thread completes.
+
+\begin{figure}
+   \centering{\includegraphics{figs/threads2}}
+   \caption{The performance of algorithms on 64-bit data.}
+   \figlabel{threads2}
+\end{figure}
+
+\begin{figure}
+   \centering{\includegraphics{figs/threads4}}
+   \caption{The performance of algorithms on 128-bit data.}
+   \figlabel{threads4}
+\end{figure}
+
+\begin{figure}
+   \centering{\includegraphics{figs/threads8}}
+   \caption{The performance of algorithms on 128-bit data.}
+   \figlabel{threads8}
+\end{figure}
+
+These graphs show that, although the performance gap narrows, the
+Eytzinger layout continues to outperform the other layouts even when eight
+threads are simultaneously accessing the array.  We did not test more
+than eight threads since this seems unrealistic; the Intel 4790K has only
+4 hyperthreaded cores, which appear to the operating system as 8 CPUs.
+
+
+\subsection{Larger Data Items}
+
+\Figref{64bit} and \figref{128bit} show timing results for
+8-byte (64-bit) data items and 16-byte (128-bit) simulated data items.
+Each simulated 16-byte datum is a structure that contains an 8-byte
+unsigned integer and 8-bytes of padding.
+
+In these figures, the $(B+1)$-trees use values of $B=8$ and $B=4$,
+respectively.Similarly, the Eytzinger search algorithm prefetches the
+8 virtual nodes that are 3 (for 8-byte data) and the four virtual nodes
+that are 2 (for 16-byte data) levels below the current node.
+
+\begin{figure}
+   \centering{\includegraphics{figs/64bit}}
+   \caption{The performance of algorithms on 64-bit data.}
+   \figlabel{64bit}
+\end{figure}
+
+\begin{figure}
+   \centering{\includegraphics{figs/128bit}}
+   \caption{The performance of algorithms on 128-bit data.}
+   \figlabel{128bit}
+\end{figure}
+
+It is worth noting that, in both these figures, the largest value of
+$n$ corresponds to approximately 12GB of data. These figures show that
+our conclusions hold also for larger data items; the branch-free search
+with prefetching in the Eytzinger layout remains the method of choice.
+Indeed, as the size of individual data items increases, Eytzinger becomes
+a better and better choice.
+
+
+
+\subsection{TLB Issues}
+
+
+\subsection{Other Machines}
+
 
 \section{Conclusion}
 \seclabel{conclusions}
@@ -1423,20 +1502,27 @@ code by an increasing margin (refer to \figref{sorted-iv}).
 
 Our results show that this speedup is a result of the interaction
 between a long processor pipeline, speculative execution, and the memory
-subsystem.  Indeed, speculative execution is a form of prefetching that
-can speed up memory access patterns that are far too complicated for
-current prefetching techniques.  In extreme cases (like the Eytzinger
+subsystem.  Indeed, speculative execution acts as a form of prefetching
+that can speed up memory access patterns that are far too complicated
+for current prefetching techniques.  In extreme cases (like the Eytzinger
 layout) the resulting prefetches are perfectly correct even four branches
 ahead of the current execution point.
 
 In hardware design, the general idea of using speculative execution
 as a prefetching strategy is called \emph{runahead execution}
 \cite{mutlu.stark.ea:runahead}.  Our results show that, in a processor
-that has speculative execution, one can obtain many of the benefits of
-runahead even on processors that do not specifically implement it. As a
-more general guideline, our results show that one has to be very careful
-with micro-optimizations.  Optimizations that offer great speedups on
-small inputs can create great slowdowns on large inputs.
+that has speculative execution, one can obtain many of the benefits
+of runahead even on processors that do not specifically implement it.
+While this may not be news to hardware experts, to the best of our
+knowledge, we are unaware of any algorithms (or even implementations)
+that deliberately make  use of it.
+
+As a cautionary guideline, our results show that one has to be very
+careful when testing micro-optimizations.  Optimizations that offer great
+speedups on small or moderate-sized inputs can create great slowdowns on large inputs.
+For instance, if we compare branch-free versus branchy binary search for
+$n=2^{16}$, we find that branch-free binary search is about twice as fast.
+However, for $n=2^{27}$, branch-free binary search is about 30\% slower.
 
 \subsection{Future Work: In-Place Algorithms for Array Layouts}
 

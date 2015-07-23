@@ -48,7 +48,7 @@ def i_care(alg):
     return alg.startswith('eytzinger') or alg.startswith('sorted_bf') \
            or alg.startswith('btree16')  or alg.startswith('veb')  
 
-def make_plot(lines, algs, xmax, filename=None, caches=None):
+def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32'):
     # Snarf the data into a giant nested dictionary.
     
 
@@ -104,9 +104,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
     ns = sorted([int(x) for x in stuff[3]])
 
     # Collect the (n, searchtime) pairs for each algorithm.
-    dtype = 'uint32'
     itype = 'uint64'
-    best = defaultdict(lambda: ('none', 10.**6))
     ymax = 0
     for alg in algs:
         for n in ns:
@@ -116,8 +114,6 @@ def make_plot(lines, algs, xmax, filename=None, caches=None):
                     if search_time > ymax:
                         ymax = search_time
                     data[alg].append((n, search_time))
-                    if search_time < best[n][1]:
-                        best[n] = (alg, search_time)
 
     # Plot everything.
     plt.figure(figsize=(6.8,3.5))
@@ -177,22 +173,24 @@ if __name__ == "__main__":
     # Cache sizes on Intel 4790K
     caches = [2**13, 2**16, 2**21]
 
+    maxn = 2**30
+
     # Plots of binary search on Intel 4790K
-    make_plot(lines, ['sorted', 'sorted_stl'], 2**27, 'figs/sorted-i', caches)
+    make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs/sorted-i', caches)
 
     make_plot(lines, ['sorted'], 2**21, 'figs/sorted-ii', caches)
 
     make_plot(lines, ['sorted', 'sorted_bf', 'fake'], 2**16, 'figs/sorted-iii')
 
-    make_plot(lines, ['sorted', 'sorted_bf'], 2**27, 'figs/sorted-iv', caches)
+    make_plot(lines, ['sorted', 'sorted_bf'], maxn, 'figs/sorted-iv', caches)
 
-    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**27,
+    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], maxn,
               'figs/sorted-v', caches)
 
     # Plots of binary search on Atom 330.
     lines = open('data/scray-sorted-g++.dat').read().splitlines()
 
-    make_plot(lines, ['sorted', 'sorted_bf'], 2**27, 'figs/sorted-atom',
+    make_plot(lines, ['sorted', 'sorted_bf'], 2**26, 'figs/sorted-atom',
               [2**13, 2**17])
 
     # Plots of Eytzinger on the Intel 4790K
@@ -200,11 +198,11 @@ if __name__ == "__main__":
     #lines = open('data/lauteschwein-eytzinger-g++.dat').read().splitlines()
     #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp', 
-                      'eytzinger_branchy', 'eytzinger_bf'], 2**27, 
+                      'eytzinger_branchy', 'eytzinger_bf'], maxn, 
         'figs/eytzinger-i', caches)
 
     make_plot(lines, ['sorted_bfp', 'eytzinger_branchy', 'eytzinger_bf', 
-                      'eytzinger_bfp_a'], 2**27, 'figs/eytzinger-ii', caches)
+                      'eytzinger_bfp_a'], maxn, 'figs/eytzinger-ii', caches)
 
     make_plot(lines, ['sorted_bf', 'sorted_bfp', 'eytzinger_branchy',  
                       'eytzinger_bf', 'eytzinger_bfp_a'], 2**16, 
@@ -213,7 +211,7 @@ if __name__ == "__main__":
     #lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
     #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted_bf', 'eytzinger_bfp_a', 'btree16_naive_a', 
-                      'btree16_a', 'btree16_bf_a'], 2**27, 'figs/btree-i', 
+                      'btree16_a', 'btree16_bf_a'], maxn, 'figs/btree-i', 
               caches)
 
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_naive_a', 'btree16_a', 
@@ -221,8 +219,20 @@ if __name__ == "__main__":
 
     #lines += open('data/lauteschwein-veb-g++.dat').read().splitlines()
 
-    make_plot(lines, ['veb', 'veb2'], 2**27, 'figs/veb-all', caches)
+    make_plot(lines, ['veb', 'veb2'], maxn, 'figs/veb-all', caches)
 
     make_plot(lines, ['btree16_bf_a', 'eytzinger_bfp_a',
-                      'veb', 'veb2'], 2**27, 'figs/veb-i', caches)
+                      'veb', 'veb2'], maxn, 'figs/veb-i', caches)
+
+    # 64 bit results
+    lines = open('data/lauteschwein-all64-g++.dat').read().splitlines()
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted'], 
+              2**31, 'figs/64bit', [x/2 for x in caches], 'uint64')
+
+    # 128 bit results
+    lines = open('data/lauteschwein-all128-g++.dat').read().splitlines()    
+    make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted'], 
+              2**30, 'figs/128bit', [x/4 for x in caches], 'uint128')
+
+
 

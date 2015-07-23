@@ -169,6 +169,8 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
 
 TODO: Steal the background section from Brodal etal...
 
+http://arxiv.org/abs/1307.5899
+
 The work most closely related to ours is that of Brodal, Fagerberg,
 and Jakob \cite{brodal.fagerberg.ea:cache}. As part of their work on
 cache-oblivious search trees, they present experimental results for
@@ -1367,6 +1369,56 @@ penalty for the final cache miss, since it can not predict which block
 in the second part of the array is needed until the Eytzinger search in
 the first part of the array is complete.
 
+\section{A Theoretical Model and Engineered BTree}
+
+There is currently no theoretical model of caches or I/O that predicts
+that Eytzinger search is competitive with (and certainly not faster than)
+Btrees.  The I/O model \cite{aggarwal.vitter:input} predicts that the
+Eytzinger layout is a factor of $\log B$ slower than the Btree layout.
+However, we can augment the I/O model so that the cache line width,
+measured in data items, is $B$, the latency, measured in time units, for
+reading a cache line is $L$, and the bandwidth, measured as the number
+of cache lines that can be read per time unit, is $W$.  In this model,
+the time to search in a BTree is roughly
+\[
+     (L+C)\log_B n
+\]
+where $C=O(\log B)$ is the time to search on an (in-memory) block
+of size $B$.  This is because a B-tree search consists of $\log_B n$
+rounds where each round requires loading a cache line (at a cost of $L$)
+and searching that cache line (at a cost of $C$).
+
+On the other hand, if $WL > \log B$, then the running-time of Eytzinger
+search with prefetching is roughly
+\[
+    \max\{L,C\}\log_B n \enspace .
+\]
+This analysis shows two things: (1)~The experimental results we obtain do
+have a theoretical foundation, but (2)~The speedup (over B-trees) that we
+can get in this model is at most a factor of 2, since this model allows us
+to parallelize only two things: local computation ($C$) and memory latency
+($L$).
+
+After modelling it this way, we observe that this model allows a
+\emph{cheat}, in the sense that, for any $k\le W$ one can load $k$
+cache lines in $L+r(k)$ time units, where $r(k)$ is the time it takes
+to issue $k$ prefetch requests.  By doing this, one can simulate a model
+with cache line width $B'=kB$ and latency $L=L+r(k)$.  
+
+This immediately raises the question of whether this cheat can be used
+in reality.  To test this, we implemented a $(kB+1)$-tree where, before
+searching within a node, we first issue $k$ prefetch commands to load the
+$k$ cache lines used by that node.  \Figref{blah} shows the results of
+implementing this for values of $k$ ranging from 1 to 16. (The algorithm
+for searching within a node is the unrolled branch-free search.)
+
+
+
+
+
+
+
+
 \section{Further Experiments}
 \seclabel{experiments}
 
@@ -1433,13 +1485,37 @@ with prefetching in the Eytzinger layout remains the method of choice.
 Indeed, as the size of individual data items increases, Eytzinger becomes
 a better and better choice.
 
-
-
-\subsection{TLB Issues}
-
-
 \subsection{Other Machines}
 
+With the exception of \figref{atom-i}, the results presented here are
+running times on a single machine with a single memory configuration.
+In order to validate these results across a wider variety of hardware,
+we also ran a set of experiments on a number of hardware platforms. We
+did this by first running experiments on machines we had access to and
+then by asking for help from the Internet.
+
+After being surprised by the performance of the branchy
+Eytzinger implementation in our own initial experiments
+on a handful of machines, we posted to \texttt{reddit}
+asking for help testing our initial implementations of binary
+search.\footnote{\url{https://www.reddit.com/r/compsci/comments/35ad8d/alternatives_to_sorted_arrays_for_binary_searching/}}
+This story made the rounds of the usual hacking websites
+and, within two weeks we had received testing results
+for over 100 different CPUs.  These results are available
+online\footnote{\url{http://cglab.ca/~morin/misc/arraylayout/}} and,
+overwhelmingly, they showed that our branchy implementation of Eytzinger
+search was faster, or at least as fast as our branchy implementation
+of Btrees.  It was then that we started micro-optimizing our code to
+help understand the reason for this, which led to the conclusions in
+the current paper.
+
+The implementations studied in the current paper have been
+refined significantly since our initial round of Internet
+experiments, so we went back to the Internet for a second
+round of experiments, which we are also keeping track of
+online.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}} This
+data is still arriving but, for now, the results are overwhelmingly in
+favour of branch-free Eytzinger search with prefetching.
 
 \section{Conclusion}
 \seclabel{conclusions}
@@ -1447,8 +1523,7 @@ a better and better choice.
 We have compared the relative performance of four memory layouts for
 ordered arrays and the algorithms for searching in these layouts.  
 
-\subsection{Predictable memory accesses can be better than blocked
-            memory accesses}
+\subsection{An I/O Model with Bandwidth}
 
 Contrary to our expectations and to previous findings, variants of the
 Eytzinger layout beat out B-trees.  This goes against conventional wisdom,
@@ -1456,12 +1531,11 @@ which states that accesses to RAM are slow, and should be minimized.
 A more accurate statement, that accounts for our findings, is that
 accesses to RAM have high latency and this latency needs to be mitigated.
 
-The Eytzinger layout mitigates latency by having memory access patterns
-that are highly predictable, which allows for \emph{memory request pipelining}. Our results show that this kind of
-predictability can be at least as useful as reducing the number of
-cache misses.  Indeed, being able to predict a cache miss $d$ steps in
-advance can be as effective as reducing the number of cache misses by
-a factor of $d$.  This raises our first open question:
+
+In theory, the second observation is disappointing; there are no great
+speedups to be had. However, from a practical perspective, it opens up
+a whole category of algorithms and data structures that may be simpler
+to implement and faster in practice.  This raises our first open question:
 
 \begin{op}\oplabel{other-problems}
   Can memory request pipelining be used to design faster algorithms for
@@ -1469,8 +1543,8 @@ a factor of $d$.  This raises our first open question:
 \end{op}
 
 An obvious candidate to consider in the context of \opref{other-problems}
-is the problem of sorting. There, the heap-sort algorithm, which uses
-the Eytzinger layout is an obvious starting point.
+is the problem of sorting where heap-sort algorithm \cite{heap-sort},
+which already uses the Eytzinger layout, is an obvious starting point.
 
 \subsection{For big data, branchy code can be a good prefetcher}
 
@@ -1503,14 +1577,14 @@ While this may not be news to hardware experts, to the best of our
 knowledge, we are unaware of any algorithms (or even implementations)
 that deliberately make  use of it.
 
-As a cautionary guideline, our results show that one has to be very
-careful when testing micro-optimizations.  Optimizations that offer great
-speedups on small or moderate-sized inputs can create great slowdowns on large inputs.
+As a cautionary guideline, one has to be very careful when testing
+micro-optimizations.  Optimizations that offer great speedups on small
+or moderate-sized inputs can create great slowdowns on large inputs.
 For instance, if we compare branch-free versus branchy binary search for
 $n=2^{16}$, we find that branch-free binary search is about twice as fast.
-However, for $n=2^{27}$, branch-free binary search is about 30\% slower.
+However, for $n=2^{30}$, branch-free binary search is about 45\% slower.
 
-\subsection{Future Work: In-Place Algorithms for Array Layouts}
+\subsection{In-Place Algorithms for Moving Between Array Layouts}
 
 Finally, we finish with one algorithmic question motivated by our work.
 Since sorted order is what is commonly used in current applications,
@@ -1526,17 +1600,18 @@ As a starting point we note that, when $n$ is a power of two, there
 is such an algorithm.  In this case, we can use an existing in-place
 algorithm to partition the array into all the odd indices followed
 by all the even indices (this is called an \emph{unshuffle} operation
-\cite[Section~7]{ellis.markov:in-situ}. We can then recurse on the first
+\cite[Section~7]{ellis.markov:in-situ}). We can then recurse on the first
 half of the array. This takes linear time and, at the end of this process,
 the array is layed out in Eytzinger order.  Generalizing this algorithm
 to the case where $n$ is not a power of two seems non-trivial.
 
 \section*{Acknowledgement}
 
-We are grateful to  Gerth Brodal, Rolf Fagerberg, Rico Jakob who (kindly)
-make their source code available to us. However, for a variety of reasons,
-most of which have to do with the 12 years that have elapsed since it
-was written, we found it impossible to work with.
+We are grateful to  Gerth Brodal, Rolf Fagerberg, and Rico Jakob who
+kindly made their source code available to us. However, for a variety
+of reasons, most of which have to do with the 12 years that have elapsed
+since it was written, we found it impossible to use as a starting point
+for our own code.
 
 
 \bibliographystyle{plainurl}

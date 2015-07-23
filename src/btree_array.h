@@ -355,12 +355,44 @@ I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(T x) {
 
 template<unsigned B, unsigned Q, typename T, typename I>
 class bqtree_array : public btree_array<B*Q,T,I,true> {
+protected:
+	using btree_array<B*Q,T,I,true>::a;
+	using btree_array<B*Q,T,I,true>::n;
+	using btree_array<B*Q,T,I,true>::child;
 public:
 	template<typename ForwardIterator>
 	bqtree_array(ForwardIterator a0, I n0)
 		: btree_array<B*Q,T,I,true>(a0, n0) {};
+
+	I search(T x) const;
 };
 
+
+// naive search
+template<unsigned B, unsigned Q, typename T, typename I>
+I __attribute__ ((noinline)) bqtree_array<B,Q,T,I>::search(T x) const {
+	I j = n;
+	I i = 0;
+	while (i < n) {
+		for (int j = 0; j < Q; j++)
+			__builtin_prefetch(a+i+j*B);
+		I lo = i;
+		I hi = std::min(i+B*Q, n);
+		while (lo < hi) {
+			I m = (lo + hi) / 2;
+			if (x < a[m]) {
+				hi = m;
+				j = hi;
+			} else if (x > a[m]) {
+				lo = m+1;
+			} else {
+				return m;
+			}
+		}
+		i = child((unsigned)(hi-i), i);
+	}
+	return j;
+}
 
 
 } // namespace fbs

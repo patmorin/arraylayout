@@ -249,7 +249,12 @@ The remainder of this paper is organized as follows: \Secref{architecture}
 provides a brief review of processors architecture paying particular
 attention to aspects that affect the results in the current paper.
 \Secref{layouts} describes our implementations of the four memory
-layouts. \Secref{other} discusses two options for memory layouts
+layouts. \Secref{model} proposes a formal model of computation that
+captures
+
+
+
+discusses two options for memory layouts
 that we experimented with and then discarded.  \Secref{experiments}
 discusses further experimental results for our implementations.
 Finally \secref{conclusions} summarizes and concludes with directions
@@ -1324,52 +1329,53 @@ resulting in twice as many cache misses as a 17-tree layout.
   search.
 \end{lesson}
 
-\section{Other Possible Strategies}
-\seclabel{other}
+%\section{Other Possible Strategies}
+%\seclabel{other}
+%
+%In our experiments, we tried other approaches that seemed promising but that we were unable to make headway on. We outline some of these here:
+%
+%\subsection{A B-Tree Eytzinger Layout}
+%
+%We implemented a version of B-trees in which each node was layed out as an
+%Eytzinger array.  The idea behind this implementation was to account for
+%the fact that loading a cache line is a not an atomic operation. Except
+%for the first word requested, the words in a cache line are loaded in
+%left-to-right order so the first word is available earlier than, say,
+%the fourth word. For example, the DDR-3 RAM in our test machine has a
+%first-word latency of approximately 10ns and a fourth-word latency of
+%approximately 14ns. Since a search in an Eytzinger accesses the array
+%indices in increasing order, the search can start as soon as the first
+%word of the cache line is loaded.
+%
+%A preliminary implementation of this idea did not show any noticeable
+%improvement in running time on most of the platforms we tested. A noteable
+%exception was the Atom 330, for which the mixed layout was a noticeable
+%improvement over the standard B-Tree layout.
+%
+%\subsection{Blocked Eytzinger Arrays}
+%
+%The cache-use analysis of the Eytzinger array in
+%\secref{eytzinger-cache-use} shows that the number of cache misses during
+%a search is roughly $\log n-\log C$. Unlike binary search the $\log C$
+%cache hits occur at the beginning of the search, which corresponds to
+%searching in the top levels of the virtual tree.  We experimented with
+%reducing the number of cache misses to $\log n -\log C - \log B$ by
+%treating the first (roughly) $n/(B+1)$ elements of the array as an index
+%into (roughly) $n/(B+1)$ blocks each of size $B$. The first part of the
+% array was then layed out as an Eytzinger array and the second part was
+% stored in sorted order.
+%
+%A search in this hybrid layout involved a search in the Eytzinger array
+%followed by a binary search in a block of size $B$.  Although this hybrid
+%layoutdoes reduce the number of cache misses, it does not provide any
+%performance improvement over our fastest implementation of search in the
+%Eytzinger layout. The reason is that the algorithm pays the full latency
+%penalty for the final cache miss, since it can not predict which block
+%in the second part of the array is needed until the Eytzinger search in
+%the first part of the array is complete.
 
-In our experiments, we tried other approaches that seemed promising but that we were unable to make headway on. We outline some of these here:
-
-\subsection{A B-Tree Eytzinger Layout}
-
-We implemented a version of B-trees in which each node was layed out as an
-Eytzinger array.  The idea behind this implementation was to account for
-the fact that loading a cache line is a not an atomic operation. Except
-for the first word requested, the words in a cache line are loaded in
-left-to-right order so the first word is available earlier than, say,
-the fourth word. For example, the DDR-3 RAM in our test machine has a
-first-word latency of approximately 10ns and a fourth-word latency of
-approximately 14ns. Since a search in an Eytzinger accesses the array
-indices in increasing order, the search can start as soon as the first
-word of the cache line is loaded.
-
-A preliminary implementation of this idea did not show any noticeable
-improvement in running time on most of the platforms we tested. A noteable
-exception was the Atom 330, for which the mixed layout was a noticeable
-improvement over the standard B-Tree layout.
-
-\subsection{Blocked Eytzinger Arrays}
-
-The cache-use analysis of the Eytzinger array in
-\secref{eytzinger-cache-use} shows that the number of cache misses during
-a search is roughly $\log n-\log C$. Unlike binary search the $\log C$
-cache hits occur at the beginning of the search, which corresponds to
-searching in the top levels of the virtual tree.  We experimented with
-reducing the number of cache misses to $\log n -\log C - \log B$ by
-treating the first (roughly) $n/(B+1)$ elements of the array as an index
-into (roughly) $n/(B+1)$ blocks each of size $B$. The first part of the
- array was then layed out as an Eytzinger array and the second part was
- stored in sorted order.
-
-A search in this hybrid layout involved a search in the Eytzinger array
-followed by a binary search in a block of size $B$.  Although this hybrid
-layoutdoes reduce the number of cache misses, it does not provide any
-performance improvement over our fastest implementation of search in the
-Eytzinger layout. The reason is that the algorithm pays the full latency
-penalty for the final cache miss, since it can not predict which block
-in the second part of the array is needed until the Eytzinger search in
-the first part of the array is complete.
-
-\section{A Theoretical Model and Engineered BTree}
+\section{A Theoretical Model and an Engineered BTree}
+\seclabel{model}
 
 There is currently no theoretical model of caches or I/O that predicts
 that Eytzinger search is competitive with (and certainly not faster than)
@@ -1409,7 +1415,8 @@ This immediately raises the question of whether this cheat can be used
 in reality.  To test this, we implemented a $(kB+1)$-tree where, before
 searching within a node, we first issue $k$ prefetch commands to load the
 $k$ cache lines used by that node.  \Figref{bktree} shows the results of
-implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$, on this machine seem to be $k\in\{4,5,6,7\}$.
+implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$,
+on this machine seem to be $k\in\{6,7,8,9,10\}$.
 
 \begin{figure}
    \centering{\includegraphics{figs/bktrees-i}}
@@ -1418,17 +1425,19 @@ implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$, on thi
 \end{figure}
 
 These results show that one can, indeed, speedup the Btree layout for
-sufficiently large values of $n$ by using this technique.  This offers
+some sufficiently large values of $n$ by using this technique.  This offers
 some validation of the extension of the I/O model proposed above.
 For some choices of $k$ and some values of $n$, this yields a layout
 that is faster than the Eytzinger layout. 
 
-Unfortunately, the $(Bk+1)$-tree requires considerably more
-implementation effort and parameter-tuning than the Eytzinger layout.
-Counting semicolons, the Eytzinger search code consists of 5 lines of
-code, whereas the Btree code is 19 lines.  In a short test on a different
-Intel machine we found that the $(Bk+1)$-tree is fastest for $n=10$, thus
-the optimal of parameters depends heavily on the machine.
+Unfortunately, the $(Bk+1)$-tree requires more parameter-tuning than the
+Eytzinger layout and only beat the Eytzinger layout for a limited range
+of $n$.  This latter fact is because $(Bk+1)$-trees have extremely high
+arity; the fastest versions have internal nodes with 97 ($k=6$) to 161
+($k=10$) children per node. This makes them inefficient except when the
+bottom level is nearly full or nearly empty, i.e., when $n$ is close to
+a power of $(Bk+1)$.  This is what causes the large oscillations that
+appear in \figref{bktree}.
 
 \section{Further Experiments}
 \seclabel{experiments}
@@ -1528,25 +1537,36 @@ online.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}} This
 data is still arriving but, for now, the results are overwhelmingly in
 favour of branch-free Eytzinger search with prefetching.
 
-\section{Conclusion}
+\section{Conclusions and Future Work}
 \seclabel{conclusions}
 
 We have compared the relative performance of four memory layouts for
-ordered arrays and the algorithms for searching in these layouts.  
+ordered arrays and the algorithms for searching in these layouts.
 
-\subsection{An I/O Model with Bandwidth}
+\subsection{Eytzinger is Best}
+Our conclusion is that, for the fastest speed across a wide-variety of
+array lengths, an Eytzinger layout and a branch-free search algorithm
+with explict prefetching is an excellent choice.
 
-Contrary to our expectations and to previous findings, variants of the
-Eytzinger layout beat out B-trees.  This goes against conventional wisdom,
-which states that accesses to RAM are slow, and should be minimized.
-A more accurate statement, that accounts for our findings, is that
-accesses to RAM have high latency and this latency needs to be mitigated.
+Not only is searching in an Eytzinger layout fast, it is simple and
+compact to implement: Counting semicolons, the Eytzinger search code
+consists of 5 lines of code, whereas the fastest Btree code is 19 lines
+plus a separate inline subroutine for the inner search.  If we look at
+the compiled code, the Eytzinger code contains 26 assembly instructions
+and the Btree code contains 78.
 
+Our conclusion is contrary to our expectations and to previous findings
+and goes against conventional wisdom, which states that accesses to
+RAM are slow, and should be minimized.  A more accurate statement, that
+accounts for our findings, is that accesses to RAM have high latency and
+this latency needs to be mitigated.  This was formalized in \secref{model}
+ad the resulting computational model does have some predictive power:
+It lead us to the $(Bk+1)$-tree which is sometimes faster for some
+(enormous and limited) range of values of $n$.
 
-In theory, the second observation is disappointing; there are no great
-speedups to be had. However, from a practical perspective, it opens up
-a whole category of algorithms and data structures that may be simpler
-to implement and faster in practice.  This raises our first open question:
+Practically speaking, this work opens up a whole category of algorithms
+and data structures that may be simpler to implement and faster in
+practice.  This raises our first open question:
 
 \begin{op}\oplabel{other-problems}
   Can memory request pipelining be used to design faster algorithms for
@@ -1554,8 +1574,9 @@ to implement and faster in practice.  This raises our first open question:
 \end{op}
 
 An obvious candidate to consider in the context of \opref{other-problems}
-is the problem of sorting where heap-sort algorithm \cite{heap-sort},
-which already uses the Eytzinger layout, is an obvious starting point.
+is the problem of sorting where the heap-sort algorithm
+\cite{floyd:algorithm,williams:algorithm}, which already uses the
+Eytzinger layout, is an obvious starting point.
 
 \subsection{For big data, branchy code can be a good prefetcher}
 
@@ -1623,6 +1644,11 @@ kindly made their source code available to us. However, for a variety
 of reasons, most of which have to do with the 12 years that have elapsed
 since it was written, we found it impossible to use as a starting point
 for our own code.
+
+We are also grateful to the many people who responded to our online call for
+help in testing these algorithms.  Unless they have requested otherwise,
+their names are listed on the website we are using to keep track of
+timing results.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
 
 
 \bibliographystyle{plainurl}

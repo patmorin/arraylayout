@@ -313,9 +313,8 @@ this is still less than a third of the RAM's peak transfer rate.
 The key point to take from the preceding discussion is the following: In
 order to actually achieve a transfer rate close to the theoretical peak
 transfer rate, the CPU must issue memory read requests before previous
-requests have finished.  This will be important and is ultimately the
-reason that the Eytzinger layout outperforms other layouts; the Eytzinger
-layout uses excess bandwidth to reduce the effects of latency.
+requests have finished.  This will be important in understanding our
+experimental results.
 
 \subsection{Caches}
 
@@ -755,9 +754,10 @@ or disprove this hypothesis.
    access patterns for both version are quite similar, and probably too
    complicated for a hardware prefetcher to predict. Nevertheless, we
    ruled out this possibility by disabling the hardware prefetcher and
-   running the tests again.\footnote{Prefetching was disabled using
-   the \mintinline{console}{wrmsr} utility with register number 0x1a4 and value 0xf.  This disables all prefetching \cite{intel:optimizing}.}    The running-times
-   of the code were unchanged by disabling prefetching.
+   running the tests again.\footnote{Prefetching was disabled using the
+   \mintinline{console}{wrmsr} utility with register number 0x1a4 and
+   value 0xf.  This disables all prefetching \cite{intel:optimizing}.}
+   The running-times of the code were unchanged by disabling prefetching.
 
 \item We implemented a version of the branch-free code that adds explicit
    prefetching. At the top of the while loop, it
@@ -1498,7 +1498,7 @@ a better and better choice.
 
 \subsection{Other Machines}
 
-With the exception of \figref{atom-i}, the results presented here are
+With the exception of \figref{sorted-atom}, the results presented here are
 running times on a single machine with a single memory configuration.
 In order to validate these results across a wider variety of hardware,
 we also ran a set of experiments on a number of hardware platforms. We
@@ -1508,8 +1508,8 @@ then by asking for help from the Internet.
 After being surprised by the performance of the branchy
 Eytzinger implementation in our own initial experiments
 on a handful of machines, we posted to \texttt{reddit}
-asking for help testing our initial implementations of binary
-search.\footnote{\url{https://www.reddit.com/r/compsci/comments/35ad8d/alternatives_to_sorted_arrays_for_binary_searching/}}
+asking for help testing our initial implementations on more 
+hardware.\footnote{\url{https://www.reddit.com/r/compsci/comments/35ad8d/alternatives_to_sorted_arrays_for_binary_searching/}}
 This story made the rounds of the usual hacking websites
 and, within two weeks we had received testing results
 for over 100 different CPUs.  These results are available

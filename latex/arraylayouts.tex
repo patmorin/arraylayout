@@ -1408,22 +1408,27 @@ with cache line width $B'=kB$ and latency $L=L+r(k)$.
 This immediately raises the question of whether this cheat can be used
 in reality.  To test this, we implemented a $(kB+1)$-tree where, before
 searching within a node, we first issue $k$ prefetch commands to load the
-$k$ cache lines used by that node.  \Figref{bqtree} shows the results of
-implementing this for various values of $k$.  We tested values $k\in\{1,\ldots,16\}$, but \figref{bqtree} only shows the fastest values.
+$k$ cache lines used by that node.  \Figref{bktree} shows the results of
+implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$, on this machine seem to be $k\in\{4,5,6,7\}$.
 
 \begin{figure}
-   \centering{\includegraphics{figs/bqtrees}}
+   \centering{\includegraphics{figs/bktrees-i}}
    \caption{Testing $(Bk+1)$-ary trees}
    \figlabel{bktree}
 \end{figure}
 
 These results show that one can, indeed, speedup the Btree layout for
 sufficiently large values of $n$ by using this technique.  This offers
-some validation of the theoretical model proposed above.  For some
-choices of $k$ and some values of $n$, this yields a layout that is faster
-than the Eytzinger layout. Unfortunately, it requires considerably more
-implementation effort and parameter-tuning than the Eytzinger layout.
+some validation of the extension of the I/O model proposed above.
+For some choices of $k$ and some values of $n$, this yields a layout
+that is faster than the Eytzinger layout. 
 
+Unfortunately, the $(Bk+1)$-tree requires considerably more
+implementation effort and parameter-tuning than the Eytzinger layout.
+Counting semicolons, the Eytzinger search code consists of 5 lines of
+code, whereas the Btree code is 19 lines.  In a short test on a different
+Intel machine we found that the $(Bk+1)$-tree is fastest for $n=10$, thus
+the optimal of parameters depends heavily on the machine.
 
 \section{Further Experiments}
 \seclabel{experiments}

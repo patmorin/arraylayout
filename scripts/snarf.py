@@ -67,9 +67,6 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
         mapper.append(("bqtree16_{}".format(i), 
                       ("-", " ", None, r'$Bk$tree ($k={}$)'.format(i))))
 
-    for f in mapper: print f
-
-    # Snarf the data into a giant nested dictionary.
     i = 0
     mapper2 = []
     for (k,v) in mapper:
@@ -81,14 +78,13 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     mapper = dict(mapper2)
 
 
-    # Now I like default dicts.
+    # Snarf the data into a giant nested dictionary.
     def factory(): return defaultdict(factory)
     d = defaultdict(factory)
 
     # This keeps track of all different parameters.
     stuff = [set() for _ in range(5)]
 
-    
     for line in lines:
         line = line.split()
         for i in range(5): stuff[i].add(line[i])
@@ -123,6 +119,8 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     plt.xlabel('$n$')
     plt.ylabel('running time (s)')
     if title: plt.title(title)
+
+    
     plt.xlim(1, xmax)
     idx = 0
     for alg in algs:
@@ -136,11 +134,13 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
             idx += 1
         plt.plot([d[0] for d in data[alg]],
                  [d[1] for d in data[alg]],
-                 label=lbl, 
+                 label=[lbl,None][alg.startswith('bqtree')
+                         and alg not in ['bqtree16_{}'.format(i) for i in range(6,11)]], 
+                 #label=lbl,
                  color=clr,
                  linestyle=ls,
                  marker=mrk,
-                 linewidth=[2,1][alg.startswith('bqtree')], 
+                 linewidth=[2,.6][alg.startswith('bqtree')], 
                  markersize=2.5)
 
     if caches:
@@ -149,14 +149,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
         for i in range(len(caches)):
             plt.plot([caches[i]]*2, ylim, label="L{} cache size".format(i+1),
                      linestyle=":", color=colours[i], linewidth=1)
-    # Plot of the winners
-    """for n in ns:
-       if best[n][0] in algs:
-           idx = algs.index(best[n][0])
-           plt.plot([n], [mx+.5], color = colours[idx % len(colours)],
-                    marker = markers[idx % len(markers)],
-                    markersize = 8.0)
-    """
+
     plt.legend(loc='upper left', framealpha=0.5)
     if filename:
         filename += ".pdf"
@@ -196,8 +189,6 @@ if __name__ == "__main__":
 
     # Plots of Eytzinger on the Intel 4790K
     lines = open('data/lauteschwein-all-g++.dat').read().splitlines()
-    #lines = open('data/lauteschwein-eytzinger-g++.dat').read().splitlines()
-    #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp', 
                       'eytzinger_branchy', 'eytzinger_bf'], maxn, 
         'figs/eytzinger-i', caches)
@@ -209,16 +200,12 @@ if __name__ == "__main__":
                       'eytzinger_bf', 'eytzinger_bfp_a'], 2**16, 
                       'figs/eytzinger-iii', caches[:1])
 
-    #lines += open('data/lauteschwein-btree-g++.dat').read().splitlines()
-    #lines += open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     make_plot(lines, ['sorted_bf', 'eytzinger_bfp_a', 'btree16_naive_a', 
                       'btree16_a', 'btree16_bf_a'], maxn, 'figs/btree-i', 
               caches)
 
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_naive_a', 'btree16_a', 
                       'btree16_bf_a'], 2**20, 'figs/btree-ii', caches[:2])
-
-    #lines += open('data/lauteschwein-veb-g++.dat').read().splitlines()
 
     make_plot(lines, ['veb', 'veb2'], maxn, 'figs/veb-all', caches)
 
@@ -250,11 +237,14 @@ if __name__ == "__main__":
               2**30, 'figs/threads8', caches, 'uint32', '')
 
     # bqtree results
-    lines = open('data/lauteschwein-bqtrees-g++.dat').read().splitlines()    
-    lines += open('data/lauteschwein-all-g++.dat').read().splitlines()
-    make_plot(lines, ['bqtree16_{}'.format(i) for i in range(4,9)] 
+    lines = open('data/lauteschwein-bqtrees-g++.dat').read().splitlines() \
+            + open('data/lauteschwein-all-g++.dat').read().splitlines()
+    make_plot(lines, ['bqtree16_{}'.format(i) for i in range(2,17)] 
+                     + ['eytzinger_bfp_a', 'btree16_bf_a', 'bqtree16_1'], 
+              2**30, 'figs/bktrees-i', caches, 'uint32')
+    make_plot(lines, ['bqtree16_{}'.format(i) for i in range(6,11)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs/bqtrees', caches, 'uint32')
+              2**30, 'figs/bktrees-ii', caches, 'uint32')
 
 
 

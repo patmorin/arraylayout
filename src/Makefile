@@ -1,5 +1,6 @@
-version=0.0
+version=0.1
 CC=g++
+CFLAGS=-std=c++11 -Wall -O4 -march=native 
 #CC=clang++-3.6
 
 all: main cacher
@@ -9,10 +10,10 @@ distrib: arraylayout.tgz
 mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h
 
 main : $(mainfiles)
-	$(CC) -std=c++11 -Wall -O4 -march=native main.cpp -o main
+	$(CC) $(CFLAGS) main.cpp -o main
 
 main-mt : $(mainfiles)
-	$(CC) -std=c++11 -Wall -O4 -march=native -pthread main-mt.cpp -o main-mt -pthread
+	$(CC) $(CFLAGS) -pthread main-mt.cpp -o main-mt -pthread
 
 main-debug : $(mainfiles)
 	g++ -std=c++11 -Wall -g3 main.cpp -o main-debug
@@ -32,36 +33,33 @@ clean :
 
 # This is all stuff for doing the test battery
 datadir = run_data
-magnitudes = "" 0 00 000 0000 00000 000000 0000000
 nums = 1 2 3 4 5 6 7 8 9 10
 m = 2000000
 x = 1
-dtypes32 = uint32 float32
-itypes = uint32 uint64
-ns32 = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
-ns32 += 150000000 200000000 250000000
+dtypes32 = uint32
+itypes = fast_uint32 uint64
+ns32 = 1 2 3 5 6 7 10 12 15 19 25 31 39 50 63 79 100 125 158 199 251 316 398 501 630 794 1000 1258 1584 1995 2511 3162 3981 5011 6309 7943 10000 12589 15848 19952 25118 31622 39810 50118 63095 79432 100000 125892 158489 199526 251188 316227 398107 501187 630957 794328 1000000 1258925 1584893 1995262 2511886 3162277 3981071 5011872 6309573 7943282 10000000 12589254 15848931 19952623 25118864 31622776 39810717 50118723 63095734 79432823 100000000 125892541 158489319 199526231 251188643
+# 316227766, 398107170, 501187233, 630957344, 794328234, 1000000000, 1258925411, 1584893192
 
 rawdata = $(foreach dt, $(dtypes32), \
            $(foreach it, $(itypes), \
             $(foreach n, $(ns32), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
-dtypes64 = uint64 float64
-ns64 = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
+dtypes64 = uint64
+ns64 = 1 2 3 5 6 7 10 12 15 19 25 31 39 50 63 79 100 125 158 199 251 316 398 501 630 794 1000 1258 1584 1995 2511 3162 3981 5011 6309 7943 10000 12589 15848 19952 25118 31622 39810 50118 63095 79432 100000 125892 158489 199526 251188 316227 398107 501187 630957 794328 1000000 1258925 1584893 1995262 2511886 3162277 3981071 5011872 6309573 7943282 10000000 12589254 15848931 19952623 25118864 31622776 39810717 50118723 63095734 79432823 100000000 125892541
 rawdata += $(foreach dt, $(dtypes64), \
             $(foreach it, $(itypes), \
              $(foreach n, $(ns64), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
-dtypes128 = int128
-magnitudes = 00 000 0000 00000 000000
-ns128 = $(foreach mag,$(magnitudes), $(foreach x,$(nums),$x$(mag)))
-ns128 += 20000000 30000000 40000000 50000000 60000000
+dtypes128 = uint128
+ns128 = 1 2 3 5 6 7 10 12 15 19 25 31 39 50 63 79 100 125 158 199 251 316 398 501 630 794 1000 1258 1584 1995 2511 3162 3981 5011 6309 7943 10000 12589 15848 19952 25118 31622 39810 50118 63095 79432 100000 125892 158489 199526 251188 316227 398107 501187 630957 794328 1000000 1258925 1584893 1995262 2511886 3162277 3981071 5011872 6309573 7943282 10000000 12589254 15848931 19952623 25118864 31622776 39810717 50118723 63095734
 rawdata += $(foreach dt, $(dtypes128), \
             $(foreach it, $(itypes), \
              $(foreach n, $(ns128), $(datadir)/$(dt)-$(it)-$(n)-$(m).t)))
 
 datafiles = $(datadir)/cpuinfo $(datadir)/free-h $(datadir)/uname-a \
-            $(datadir)/gcc-v $(datadir)/cacher.data $(datadir)/sha1sums \
-            $(rawdata)
+            $(datadir)/gcc-v $(datadir)/cacher.data $(datadir)/sha1sums  \
+            $(datadir)/main.s $(rawdata)
 
 data : main cacher $(datadir) $(datafiles) run_data.tgz
 	echo "Done! Please send run_data.tgz to morin@scs.carleton.ca"
@@ -85,6 +83,9 @@ $(datadir)/gcc-v :
 	gcc -march=native -Q --help=target > $@
 	echo | gcc -dM -E - -march=native >> $@
 
+$(datadir)/main.s : $(mainfiles)
+	gcc $(CFLAGS) -S -c main.cpp -o $@
+
 $(datadir)/cacher.data : cacher
 	./cacher > $@
 
@@ -93,7 +94,7 @@ $(datadir)/%.t : main
 		>> $(datadir)/alldata.dat 
 	touch $@
 
-run_data.tgz : data
+run_data.tgz : $(datadir) $(datafiles)
 	tar czvf run_data.tgz run_data --exclude "*.t"
 
 clean-data :

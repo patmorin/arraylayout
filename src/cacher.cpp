@@ -9,8 +9,8 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-	for (int nbytes = 16; nbytes <= (1<<28); nbytes *= 2) {
-		std::cout << nbytes << " ";
+	for (double dbytes = 16; dbytes <= (1<<28); dbytes *= 1.2589254117941673) {
+        int nbytes = (int)dbytes;
     	int n = nbytes/sizeof(int);
 		int m = 10000000;
     	int *a = new int[n];
@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
     	auto stop = std::chrono::high_resolution_clock::now();
     	std::chrono::duration<double> elapsed = stop - start;
     	delete[] a;
-    	std::cout << elapsed.count() << " " << sum << std::endl; 
+		std::cout << nbytes << " " << elapsed.count() << " " 
+                  << sum << std::endl; 
    } 
    return 0;
 }

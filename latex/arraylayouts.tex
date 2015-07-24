@@ -51,8 +51,7 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
   of queries.  The latter conclusion is unexpected and goes counter to
   earlier experimental work by Brodal, Fagerberg, and Jakob (SODA~2003),
   who concluded that both the B-tree and van Emde Boas layouts were faster
-  than the Eytzinger layout for large values of $n$.  The reason for this
-  discrepancy is that, since 2003, processors have changed qualitatively.
+  than the Eytzinger layout for large values of $n$. 
 \end{abstract}
 
 \end{titlepage}
@@ -196,8 +195,17 @@ implementations.
 
 \subsection{Summary of Results}
 
-Our findings, with respect to a single process/thread executing repeated
-random searches on a single array, $A$, are summarized as follows:
+For readers just looking for the TL;DR, our results are the following:
+For arrays that can be kept in the L2 cache, the branch-free binary
+search code listed in \lstref{bfbs} is the fastest algorithm (see
+\figref{eytzinger-ii}).  For larger arrays, the Eytzinger layout, combined
+with the branch-free prefetching search algorithm in \lstref{eytzinger-ii}
+is the fastest general-purpose layout/search algorithm combination
+(see Figures~\ref{fig:eytzinger-i}--\ref{fig:larger}).
+
+In more detail, our findings, with respect to a single process/thread
+executing repeated random searches on a single array, $A$, are summarized
+as follows:
 
 \begin{enumerate}
   \item For small values of $n$ (smaller than the L1 cache), branch-free
@@ -215,14 +223,18 @@ random searches on a single array, $A$, are summarized as follows:
     search.
   
   \item For large values of $n$ (larger than the L3 cache), the branchy
-    implementations of search algorithms usually perform better than the
-    branch-free implementations.  Branch prediction, even though it is
-    incorrect and leads to a pipeline flush 50\% of the time triggers
-    the memory subsystem to load a cache line that is correct 50\%
-    of the time.  
+    implementations of search algorithms usually perform better than their
+    branch-free counterparts.
 
   \item For large values of $n$, the fastest method is the Eytzinger
    layout combined with a branch-free search that uses explicit prefetching.
+
+  \item The standard I/O model of computation \cite{aggarwal.vitter:input}
+   is insufficient to explain our results, though a simple extension of
+   this model does explain them.  This model suggests a variant of the
+   Btree and search algorithm. Preliminary tests with this extension
+   of the Btree layout and search algorithm show that this model has
+   predictive power.
 \end{enumerate}
 
 Our conclusions holds across a wide variety of different processors and
@@ -248,17 +260,12 @@ of binary search.
 The remainder of this paper is organized as follows: \Secref{architecture}
 provides a brief review of processors architecture paying particular
 attention to aspects that affect the results in the current paper.
-\Secref{layouts} describes our implementations of the four memory
-layouts. \Secref{model} proposes a formal model of computation that
-captures
-
-
-
-discusses two options for memory layouts
-that we experimented with and then discarded.  \Secref{experiments}
-discusses further experimental results for our implementations.
-Finally \secref{conclusions} summarizes and concludes with directions
-for further research.
+\Secref{layouts} describes our implementations of the four memory layouts
+and experimental results for these implementations. \Secref{model}
+proposes a formal model of computation that provides an explanation for
+our results.  \Secref{experiments} discusses further experimental results
+for our implementations.  Finally \secref{conclusions} summarizes and
+concludes with directions for further research.
 
 \section{Processor Architecture Considerations}
 \seclabel{architecture}
@@ -1384,8 +1391,11 @@ Eytzinger layout is a factor of $\log B$ slower than the Btree layout.
 However, we can augment the I/O model so that the cache line width,
 measured in data items, is $B$, the latency, measured in time units, for
 reading a cache line is $L$, and the bandwidth, measured as the number
-of cache lines that can be read per time unit, is $W$.  In this model,
-the time to search in a BTree is roughly
+of cache lines that can be read per time unit, is $W$.\footnote{The I/O
+model already has the parameter $B$, so the only real addition to the
+model here is the bandwidth parameter $W$, since we can take $L=1$,
+without loss of generality.}  In this model, the time to search in a
+BTree is roughly
 \[
      (L+C)\log_B n
 \]
@@ -1564,7 +1574,7 @@ ad the resulting computational model does have some predictive power:
 It lead us to the $(Bk+1)$-tree which is sometimes faster for some
 (enormous and limited) range of values of $n$.
 
-Practically speaking, this work opens up a whole category of algorithms
+Practically speaking, this work opens up a whole class of algorithms
 and data structures that may be simpler to implement and faster in
 practice.  This raises our first open question:
 
@@ -1578,13 +1588,14 @@ is the problem of sorting where the heap-sort algorithm
 \cite{floyd:algorithm,williams:algorithm}, which already uses the
 Eytzinger layout, is an obvious starting point.
 
-\subsection{For big data, branchy code can be a good prefetcher}
+\subsection{For Big Data, Branchy Code can be a Good Prefetcher}
 
-For small data sets, micro-optimizations such as replacing branching
-with conditional instructions can produce significant improvements
-in running-time.  For instance, our branch-free implementation of
-binary search is about twice as fast as the branchy implementation for
-$n<2^{16}$ (refer to \figref{sorted-iii}).  
+Today, no computer science research paper is complete unless it says
+something about big data.  For small data sets, micro-optimizations
+such as replacing branching with conditional instructions can produce
+significant improvements in running-time.  For instance, our branch-free
+implementation of binary search is about twice as fast as the branchy
+implementation for $n<2^{16}$ (refer to \figref{sorted-iii}).
 
 However, as the amount of data increases beyond the size of the
 various processor caches, the branchy implementations become faster.
@@ -1592,7 +1603,7 @@ Even for binary search, which represents the worst possible case for
 branch-prediction, the branchy code eventually outperforms the branch-free
 code by an increasing margin (refer to \figref{sorted-iv}).
 
-Our results show that this speedup is a result of the interaction
+Our experiments show that this speedup is a result of the interaction
 between a long processor pipeline, speculative execution, and the memory
 subsystem.  Indeed, speculative execution acts as a form of prefetching
 that can speed up memory access patterns that are far too complicated
@@ -1637,7 +1648,7 @@ half of the array. This takes linear time and, at the end of this process,
 the array is layed out in Eytzinger order.  Generalizing this algorithm
 to the case where $n$ is not a power of two seems non-trivial.
 
-\section*{Acknowledgement}
+\section*{Acknowledgements}
 
 We are grateful to  Gerth Brodal, Rolf Fagerberg, and Rico Jakob who
 kindly made their source code available to us. However, for a variety
@@ -1645,10 +1656,11 @@ of reasons, most of which have to do with the 12 years that have elapsed
 since it was written, we found it impossible to use as a starting point
 for our own code.
 
-We are also grateful to the many people who responded to our online call for
-help in testing these algorithms.  Unless they have requested otherwise,
-their names are listed on the website we are using to keep track of
-timing results.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
+We are also grateful to the many people who responded to
+our online calls for help in testing these algorithms.
+Unless they have requested otherwise, their names are
+listed on the website we are using to keep track of timing
+results.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
 
 
 \bibliographystyle{plainurl}

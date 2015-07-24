@@ -144,7 +144,7 @@ std::uint64_t dummy;
 template<typename Array, typename T, typename I, typename D>
 void kicker(Array& aa, int k, I n, I m) {
 	auto seed=232342+k;
-    // std::cout << "+";
+    //std::cout << k;
 	std::mt19937 re(seed);
 	D ui(0, 2*n+1);
 	T sum = 0;
@@ -175,7 +175,7 @@ void run_test1_b(T *a, I n, I m, I nthreads, const std::string &name) {
 	for (auto &th : threads) th.join();
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;
-	std::cout << elapsed.count() << " mt" << std::endl;
+	std::cout << " " << elapsed.count() << " mt" << std::endl;
 }
 
 

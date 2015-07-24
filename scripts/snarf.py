@@ -65,7 +65,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
              ]
     for i in range(1,17):
         mapper.append(("bqtree16_{}".format(i), 
-                      ("-", " ", None, r'$Bk$tree ($k={}$)'.format(i))))
+                      ("-", " ", None, r'$(Bk+1)$ary tree ($k={}$)'.format(i))))
 
     i = 0
     mapper2 = []
@@ -150,7 +150,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
             plt.plot([caches[i]]*2, ylim, label="L{} cache size".format(i+1),
                      linestyle=":", color=colours[i], linewidth=1)
 
-    plt.legend(loc='upper left', framealpha=0.5)
+    plt.legend(loc='upper left', framealpha=0.3)
     if filename:
         filename += ".pdf"
         print "Writing {}".format(filename)

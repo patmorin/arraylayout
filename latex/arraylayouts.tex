@@ -152,7 +152,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
 
   \begin{figure}
     \begin{center}\includegraphics{btree}\end{center}
-    \caption{The BTree layout with $B=2$}
+    \caption{The Btree layout with $B=2$}
     \figlabel{btree}
   \end{figure}
 
@@ -239,7 +239,7 @@ For readers only interested in an executive summary, our results are the
 following: For arrays that can be kept in the L2 cache, the branch-free
 binary search code listed in \lstref{bfbs} is the fastest algorithm (see
 \figref{eytzinger-ii}).  For larger arrays, the Eytzinger layout, combined
-with the branch-free prefetching search algorithm in \lstref{eytzinger-ii}
+with the branch-free prefetching search algorithm in \lstref{eytzinger-iii}
 is the fastest general-purpose layout/search algorithm combination
 (see Figures~\ref{fig:eytzinger-i}--\ref{fig:larger}).
 
@@ -768,6 +768,7 @@ between the two continues to widen from this point onward.
 \end{figure}
 
 \subsubsection{Branchy Code, Speculative Execution, and Implicit Prefetching}
+\seclabel{sorted-discussion}
 
 The reason for the change in relative performance between branchy
 and branch-free binary search was not immediately obvious to us.
@@ -835,7 +836,7 @@ or disprove this hypothesis.
    because the memory bandwidth is more than twice the cache line width
    divided by the memory latency.
 
-\item We ran our code on Atom 330 processor that we had available. This
+\item We ran our code on an Atom 330 processor that we had available. This
    low-power processor was designed to minimize watts-per-instruction
    so it does not do any form or speculative execution, including
    branch-prediction. The results, which are shown in \figref{sorted-atom}
@@ -1066,11 +1067,35 @@ subystem to begin loading the cache line that will eventually be needed.
 Knowing this, there are two optimizations we can make:
 \begin{enumerate}
   \item We can add an explicit prefetch instruction to the branch-free code
-    so that it loads the correct cache line.
+    so that it loads the correct cache line.  The resulting code is shown
+    in \figref{eytzinger-iii}.
+
   \item We can align the array so that \mintinline{c++}{a[0]} is the
     second element of a cache line.  In this way, all 16 great-great
     grandchildren of a node will always be stored in a single cache line.
 \end{enumerate}
+
+\begin{listing}
+\begin{minted}[linenos]{c++}
+template<typename T, typename I>
+I eytzinger_array<T,I>::branchfree_search(T x) const {
+    I i = 0;
+    while (i < n) {
+        __builtin_prefetch(a+(multiplier*i + offset));
+        i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+    }
+    I j = (i+1) >> __builtin_ffs(~(i+1));
+    return (j == 0) ? n : j-1;
+}
+\end{minted}
+\caption{Branch-free prefetching implementation of search in an
+         Eytzinger array. (The value of \mintinline{c++}{multiplier}
+         in this code is the cache line width, $B$, and the value of
+         \mintinline{c++}{offset} is $\lfloor3B/2\rfloor-1$.)}
+\lstlabel{eytzinger-iii}
+\end{listing}
+
+
 
 The results of implementing both of these optimizations are shown in
 \figref{eytzinger-ii}.  With these optimizations, the change in slope
@@ -1120,7 +1145,7 @@ the while loop.
   outperforms all versions of binary search by a wide margin.
 \end{lesson}
 
-\subsection{BTree}
+\subsection{Btree}
 
 Recall that the $(B+1)$-tree layout simulates search on a $(B+1)$-ary
 search tree, in which each node stores $B$ values.  The nodes of this
@@ -1133,7 +1158,7 @@ at indices $f(i,j),\ldots,f(i,j)+B-1$ where $f(i,j)=i(B+1)+(j+1)B$.
 
 The code for search in a $(B+1)$-tree layout consists of a while loop
 that contains an inner binary search on a subarray (block) of length
-$B$. Very occasionally, the BTree search completes with one binary search
+$B$. Very occasionally, the Btree search completes with one binary search
 on a block of size less than $B$. The block size, $B$, is chosen to fit
 neatly into one cache line. On our test machines, cache lines are 64
 bytes wide, so we chose $B=16$ for 4-byte data. Preliminary testing with
@@ -1165,7 +1190,7 @@ of cache misses should be reduced by a factor of $\log 17\approx
 occurs at $n=2^{21}$, but it should be significantly less pronounced
 than in binary search.
 
-\subsubsection{Na\"{\i}ve and Branch-Free BTree Implementations}
+\subsubsection{Na\"{\i}ve and Branch-Free Btree Implementations}
 
 We made and tested several implementations of the Btree search algorithm,
 including a completely na\"{\i}ve implementation, an implementation that
@@ -1201,7 +1226,7 @@ Eytzinger search implementation across the entire spectrum of values
 of $n$.  For small values of $n$, this is due to the fact that Eytzinger
 search is a simpler algorithm with smaller constants.  One reason
 Eytzinger search has smaller constants is that the inner binary search
-of Btrees is inherently inefficient. Our virtual BTree stores 16 keys per
+of Btrees is inherently inefficient. Our virtual Btree stores 16 keys per
 node, so the inner binary search has 17 possible outcomes, and therefore
 requires $\lceil\log_2 17\rceil=5$ comparisons in some cases (and in
 all cases for the branch-free code).  This could fixed by using 16-ary
@@ -1252,7 +1277,7 @@ the node at level $\ell+4$. This effectively hides the L3 cache latency.
 
 %17-trees, which are theoretically the most promising, unfortunately lose
 %out simply because the constants they incur are too large.  
-%Unlike the Eytzinger layout, the BTree layout is unable to take much
+%Unlike the Eytzinger layout, the Btree layout is unable to take much
 %advantage of implicit or explicit prefetching.  
 %
 %In summary, $(B+1)$-trees must make a choice between being efficient in
@@ -1266,11 +1291,11 @@ the node at level $\ell+4$. This effectively hides the L3 cache latency.
 %
 %
 %The performance
-%We implemented several variations of BTree search:
+%We implemented several variations of Btree search:
 %
-%several variations of BTree searches:
+%several variations of Btree searches:
 %
-%Some also tried:  BTree with Eytzinger layouts.
+%Some also tried:  Btree with Eytzinger layouts.
 %
 \subsection{Van Emde Boas}
 
@@ -1422,7 +1447,7 @@ resulting in twice as many cache misses as a Btree layout.
 %in the second part of the array is needed until the Eytzinger search in
 %the first part of the array is complete.
 
-\section{A Theoretical Model and an Engineered BTree}
+\section{A Theoretical Model and an Engineered Btree}
 \seclabel{model}
 
 There is currently no theoretical model of caches or I/O that predicts
@@ -1436,7 +1461,7 @@ of cache lines that can be read per time unit, is $W$.\footnote{The I/O
 model already has the parameter $B$, so the only real addition to the
 model here is the bandwidth parameter $W$, since we can take $L=1$,
 without loss of generality.}  In this model, the time to search in a
-BTree is roughly
+Btree is roughly
 \[
      (L+C)\log_B n
 \]
@@ -1584,9 +1609,27 @@ The implementations studied in the current paper have been
 refined significantly since our initial round of Internet
 experiments, so we went back to the Internet for a second
 round of experiments, which we are also keeping track of
-online.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}} This
-data is still arriving but, for now, the results are overwhelmingly in
-favour of branch-free Eytzinger search with prefetching.
+online.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
+This data is still arriving but in the vast majority of cases so far,
+the conclusions agree with those we obtained on the Intel 4790K.  There are two notable exceptions:
+\begin{enumerate}
+\item With the Atom family of processors, the branch-free code is
+typically faster than the branchy code over the full range of values
+of $n$.  As discussed in \secref{sorted-discussion}, this is due to
+fact that the Atom processors do not perform speculative execution so
+the branchy code does not obtain the benefit of implicit prefetching.
+
+\item With a small number of processors (the AMD Phenom II and Intel
+Celeron J1900 are two examples) the code that does explicit prefetching
+is \emph{much} slower, especially for smaller values of $n$.  We believe
+that this this is due to executing prefetch instructions that attempt
+to prefetch data outside the input array.  Although the documentation
+for the \mintinline{c++}{__builtin_prefetch()} instruction specifically
+allows prefetching invalid addresses, this seems to cause a significant
+performance hit on a handful of processors.  On such architectures,
+a work-around is to use a bit-mask to ensure that we never request an
+address outside the input array.
+\end{enumerate}
 
 \section{Conclusions and Future Work}
 \seclabel{conclusions}

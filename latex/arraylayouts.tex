@@ -47,11 +47,11 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
   we arrive at the conclusion that, for small values of $n$, sorted
   order, combined with a good implementation of binary search is best.
   For larger values of $n$, we arrive at the surprising conclusion that
-  the Eytzinger layout is the fastest when executing a single sequence
-  of queries.  The latter conclusion is unexpected and goes counter to
-  earlier experimental work by Brodal, Fagerberg, and Jakob (SODA~2003),
-  who concluded that both the B-tree and van Emde Boas layouts were faster
-  than the Eytzinger layout for large values of $n$. 
+  the Eytzinger layout is usually the fastest.  The latter conclusion is
+  unexpected and goes counter to earlier experimental work by Brodal,
+  Fagerberg, and Jakob (SODA~2003), who concluded that both the B-tree
+  and van Emde Boas layouts were faster than the Eytzinger layout for
+  large values of $n$.
 \end{abstract}
 
 \end{titlepage}
@@ -103,7 +103,7 @@ now used by more than a billion users \cite{protalinksi:google}.
 
 
 In this experimental paper we consider four different memory layouts and
-accompanying search algorithms.  Our study focuses on the following case:
+accompanying search algorithms.  The following points describe the scope of our study:
 
 \begin{itemize}
 \item We only consider array layouts that store $n$ data items in a
@@ -113,11 +113,6 @@ accompanying search algorithms.  Our study focuses on the following case:
       index of the largest value that is greater than or equal to $x$
       for any value $x$. In case $x$ is greater than any value in the
       array, the search algorithm returns the index $n$.
-
-\item We focus our study on the case where a single thread on a single
-      processor executes a large number of queries on the same
-      array. (Though our results also hold for multiple threads searching
-      the same array.)
 
 \item We study real (wall-clock) execution time, not CPU time, cache
       misses, other types of efficiency, or other proxies for real time.
@@ -131,44 +126,89 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   the data is stored in sorted order and searching is done using binary
   search.
 
-  \item \texttt{Eytzinger}: In this layout, the data is viewed as being
-  stored in a complete binary search tree and the values of the nodes
-  in this virtual tree are placed in the array in the order they would
-  be encountered in a left-to-right breadth-first traversal.  The search
-  algorithm simulates a search in this implicit binary search tree.
+  \item \texttt{Eytzinger} (see \figref{eytzinger}): In this layout,
+  the data is viewed as being stored in a complete binary search tree and
+  the values of the nodes in this virtual tree are placed in the array in
+  the order they would be encountered in a left-to-right breadth-first
+  traversal.  The search algorithm simulates a search in this implicit
+  binary search tree.
+
+  \begin{figure}
+    \begin{center}\includegraphics{eytzinger}\end{center}
+    \caption{The Eytzinger layout}
+    \figlabel{eytzinger}
+  \end{figure}
 
 %  The root of this tree is
 %  stored at $A[0]$, and the left and right children of the node stored
 %  at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
-  \item \texttt{Btree}: In this layout, the data is viewed as being stored
-  in a complete $(B+1)$-ary tree, so that each node stores $B$ values.
-  The parameter $B$ is chosen so that $B$ values fit neatly into a single
-  cache line and the nodes of this tree are mapped to array locations in
-  the order they are encountered in a breadth-first search.
+  \item \texttt{Btree} (see \figref{btree}): In this layout, the data
+  is viewed as being stored in a complete $(B+1)$-ary tree, so that
+  each node stores $B$ values.  The parameter $B$ is chosen so that $B$
+  values fit neatly into a single cache line and the nodes of this tree
+  are mapped to array locations in the order they are encountered in a
+  breadth-first search.
+
+  \begin{figure}
+    \begin{center}\includegraphics{btree}\end{center}
+    \caption{The BTree layout with $B=2$}
+    \figlabel{btree}
+  \end{figure}
 
 %  using
 %  a generalization of the Eytzinger mapping:  For $j\in \{0,\ldots,b\}$,
 %  the $j$th child of the node that starts at position $i$ is stored
 %  beginning at position $i(b+1)+(j+1)b$.
 
-  \item \texttt{vEB}: In this, the \emph{van Emde Boas} layout,
-  the data is viewed as being stored in a complete binary tree
-  whose height is $h=\lceil\log (n+1)\rceil -1$. This tree is layed
-  out recursively:  If $h=0$, then the single node of the tree is
-  stored in $A[0]$.  Otherwise, the tree is split into a top-part
+  \item \texttt{vEB} (see \figref{veb}): In this, the \emph{van Emde
+  Boas} layout, the data is viewed as being stored in a complete binary
+  tree whose height is $h=\lceil\log (n+1)\rceil -1$. This tree is
+  layed out recursively:  If $h=0$, then the single node of the tree
+  is stored in $A[0]$.  Otherwise, the tree is split into a top-part
   of height $\lfloor h/2\rfloor$, which is recursively layed out in
   $A[0,\ldots,2^{1+\lfloor{h/2\rfloor}}-2]$.  Attached to the leaves of
   this top tree are up to $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which
   are each recursively layed out, in left-to-right order, starting at
   array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
+
+  \begin{figure}
+    \begin{center}\includegraphics{veb}\end{center}
+    \caption{The vEB layout}
+    \figlabel{veb}
+  \end{figure}
+
+
 \end{enumerate}
 
 \subsection{Related Work}
 
-TODO: Steal the background section from Brodal etal...
+Of the four memory layouts/search algorithm pairs we study, the sorted
+array combined with binary search is, of course, the most well-known
+and variants of binary search have been studied for more than half a
+century. Knuth \cite[Section~6.2.1]{knuth:art} is a good reference.
 
-http://arxiv.org/abs/1307.5899
+The idea of implicitly representing a complete binary tree by listing
+its nodes in breadth-first order goes back half a millenium to Eytzinger
+\cite{eytzinger:thesaurus}. In more modern times, this method was proposed by
+Williams for an implementation of binary heaps \cite{williams:algorithm}.
+
+The implicit Btree layouts we study are a marriage of the Eytzinger layout
+mentioned above and complete $(B+1)$-ary trees as used in Bayer and
+McCreight's B-Trees \cite{bayer.mccreight:organization}.  This layout
+was studied by Jones \cite{jones:empirical} and LaMarca and Ladner
+\cite{lamarca.ladner:influence} in the context of implementing heaps.
+
+The vEB layout was proposed by Prokop
+\cite[Section~10.2]{prokop:cache-oblivious} because it has the advantage
+over the Btree layout of being \emph{cache-oblivious}; the number of
+cache lines used during a search is within a factor of four of what can
+be obtained with a B-tree using an optimal choice of $B$.
+
+%The effects of memory layouts on the performance of algorithms have been
+%studied in other contexts as well. For example, for storing matrices,
+%memory layouts have profound effects on the running times of various
+%matrix operations \cite{X}.
 
 The work most closely related to ours is that of Brodal, Fagerberg,
 and Jakob \cite{brodal.fagerberg.ea:cache}. As part of their work on
@@ -180,8 +220,8 @@ they reach the following conclusions:
 
 \item For array lengths smaller than the cache size, the layouts with
 simplest address arithmetic---sorted and Eytzinger---were the fastest. The
-Btree layout was next and the vEB layout---with its complicated address
-arithmetic---was by far the slowest.
+Btree layout was next and the vEB layout, with its complicated address
+arithmetic, was by far the slowest.
 
 \item For array lengths much larger than the cache size, Btree layouts
 were the fastest, followed by vEB, then Eytzinger, and finally sorted
@@ -195,9 +235,9 @@ implementations.
 
 \subsection{Summary of Results}
 
-For readers just looking for the TL;DR, our results are the following:
-For arrays that can be kept in the L2 cache, the branch-free binary
-search code listed in \lstref{bfbs} is the fastest algorithm (see
+For readers only interested in an executive summary, our results are the
+following: For arrays that can be kept in the L2 cache, the branch-free
+binary search code listed in \lstref{bfbs} is the fastest algorithm (see
 \figref{eytzinger-ii}).  For larger arrays, the Eytzinger layout, combined
 with the branch-free prefetching search algorithm in \lstref{eytzinger-ii}
 is the fastest general-purpose layout/search algorithm combination
@@ -348,15 +388,13 @@ but still much faster than RAM.
 To help achieve peak memory throughput and avoid having the processor
 stall while waiting on RAM, the CPU includes a prefetcher that analyzes
 memory access patterns in an attempt to predict future memory accesses.
-For instance, in simple code such as the following:
-
+For instance, in simple code such as the following,
 \begin{minted}{c++}
     long sum = 0;
     for (int i = 0; i < n; i++) 
         sum += a[i];
 \end{minted}
-
-The prefetcher is likely to detect that memory allocated to array
+the prefetcher is likely to detect that memory allocated to array
 \mintinline{c++}{a} is being accessed sequentially.  The prefetcher will
 then load blocks of \mintinline{c++}{a} into the cache hierarchy even
 before they are accessed.  By the time the code actually needs the value
@@ -402,7 +440,7 @@ being fetched.
 The Nehalem processor architecture, on which the Intel 4790K is based, has
 a 20--24 stage processor pipeline \cite{bit-tech:intel}. If an instruction
 does not stall for any other reason, there is still at least a 20--24
-cycle latency between the time an istruction is fetched and until the
+cycle latency between the time an instruction is fetched and until the
 time it completes execution.
 
 Processor pipelining works well provided that the CPU knows which
@@ -415,9 +453,9 @@ jump or will be the target of the conditional jump. The CPU has two
 options:
 \begin{enumerate}
   \item Wait until the condition that determines the target
-   of the jump has been tested. In this case, the insruction pipeline
+   of the jump has been tested. In this case, the instruction pipeline
    is not being filled from the time the conditional jump instruction
-   enters the pipleline until the the time the jump condition is tested.
+   enters the pipeline until the the time the jump condition is tested.
 
   \item Predict whether the jump will occur or not and begin loading
   the instructions from the jump target, or immediately after the jump,
@@ -489,7 +527,7 @@ analyses, we use the following variables:
 \begin{itemize}
   \item $n$ is the number of data items (the length of the array).
   \item $C$ is the cache size, measured in data items.
-  \item $W$ is the cache-line width, the number of data items that fit
+  \item $B$ is the cache-line width, the number of data items that fit
         into a single cache line.
 \end{itemize}
 
@@ -500,14 +538,14 @@ two ways in which this takes advantage of the cache:
   \item (Frequently access values) After a large number of searches,
     we expect to find the most frequently accessed values in the cache.
     These are the values at the top of the (implicit) binary search tree
-    implemented by binary search.  If $n>C/W$, each of these values will
-    occupy their own cache line, so the cache only has room for $C/W$
+    implemented by binary search.  If $n>C/B$, each of these values will
+    occupy their own cache line, so the cache only has room for $C/B$
     of these frequently accessed values.
   \item (Spatial locality) Once an individual binary search has reduced
-    the search range down to a size less than or equal to $W$, the
+    the search range down to a size less than or equal to $B$, the
     subarray that remains to be searched will occupy at most one or two
     cache lines. Thus, on average, we expect binary search to incur
-    roughly $\log n -\log(C/W) - \log W + 1 = \log n - \log C + 1$
+    roughly $\log n -\log(C/B) - \log B + 1 = \log n - \log C + 1$
     cache misses.
 \end{enumerate}
 
@@ -620,14 +658,16 @@ cost of another pipeline flush.
 \end{enumerate}
 
 \Lstref{bfbs} shows an alternative implementation of binary search
-that attempts to alleviate both problems described above.  In this
-implementation, there is no early termination and, for a given array
-length \mintinline{c++}{n}, the number of iterations is fixed (because the
-value of \mintinline{c++}{n} always decreases by \mintinline{c++}{half}
-during each iteration of the loop).  Therefore, when this method is
-called repeatedly on the same array, a good branch-predictor will very
-quickly learn the number of iterations of the \mintinline{c++}{while}
-loop, and it will generate no further branch mispredictions.
+that attempts to alleviate both problems described above. (This
+code implements a variant of Knuth's Algorithm U (Uniform Binary Search)
+\cite[Section~6.2.1]{knuth:art}.)  In this implementation, there is no
+early termination and, for a given array length \mintinline{c++}{n}, the
+number of iterations is fixed (because the value of \mintinline{c++}{n}
+always decreases by \mintinline{c++}{half} during each iteration of
+the loop).  Therefore, when this method is called repeatedly on the
+same array, a good branch-predictor will very quickly learn the number
+of iterations of the \mintinline{c++}{while} loop, and it will generate
+no further branch mispredictions.
 
 \begin{listing}
 \begin{minted}[linenos]{c++}
@@ -1011,7 +1051,7 @@ the first element of the array is the first element of a cache line,
 this means that, of those 16 descendants, 15 are contained in a single
 cache line (the ones stored at array indices $16i+16,\ldots,16i+30$.)
 
-With the Intel 4790K's 20--24 instruction pipleline, instructions in
+With the Intel 4790K's 20--24 instruction pipeline, instructions in
 the pipeline can be several iterations ahead in the execution of the
 \mintinline{c++}{while} loop, which only executes 5--6 instructions per
 iteration.  The probability that the branch-predictor correctly guesses
@@ -1127,85 +1167,86 @@ than in binary search.
 
 \subsubsection{Na\"{\i}ve and Branch-Free BTree Implementations}
 
-We made and tested several implementations of 17-trees, including a
-completely na\"{\i}ve implementation, an implementation that uses C++
-templates to unroll the inner search, and an implementation that uses C++
-templates to generate an unrolled branch-free inner search.
+We made and tested several implementations of the Btree search algorithm,
+including a completely na\"{\i}ve implementation, an implementation that
+uses C++ templates to unroll the inner search, and an implementation
+that uses C++ templates to generate an unrolled branch-free inner search.
 
 \Figref{btree-i} shows the results for our three implementations of
-17-trees as well as branch-free binary search and our best implementation
+Btree search as well as branch-free binary search and our best implementation
 of Eytzinger search.  For small values of $n$, the na\"ive implementation
-of 17-trees is much slower than the unrolled implementations, and there
+of Btree search is much slower than the unrolled implementations, and there
 is little difference between the two unrolled implementations. For values
-of $n$ larger than the L3 cache, the running time of all three 17-tree
-implementations becomes almost indistinguishable. This is expected,
+of $n$ larger than the L3 cache, the running time of all three Btree
+search implementations becomes almost indistinguishable. This is expected,
 since the for large $n$, the running-time becomes dominated by L3 cache
 misses, which are the same for all three implementations.
 
 \begin{figure}
    \centering{\includegraphics{figs/btree-i}}
-   \caption{The performance of 17-trees.}
+   \caption{The performance of Btrees search algorithms.}
    \figlabel{btree-i}
 \end{figure}
 
 
-Compared to branch-free binary search, the 17-tree implementations
+Compared to branch-free binary search, the Btree search implementations
 behave as the cache-use analysis predicts:  Both algorithms are fast for
 $n<2^{21}$ after which both show an increase in slope. At this point,
 the the slope for branch-free binary search is approximately 3.8 times
-larger than that of the 17-tree search. (The analysis predicts a factor
+larger than that of the Btree search. (The analysis predicts a factor
 of $\log 17\approx 4.09$.)
 
-All three implementations of 17-trees perform worse than our best
+All three implementations of Btree search perform worse than our best
 Eytzinger search implementation across the entire spectrum of values
 of $n$.  For small values of $n$, this is due to the fact that Eytzinger
 search is a simpler algorithm with smaller constants.  One reason
-Eytzinger search has smaller constants is that the inner binary search of
-17-trees is inherently inefficient. The search has 17 possible outcomes,
-and therefore requires $\lceil\log_2 17\rceil=5$ comparisons in some cases
-(and in all cases for the branch-free code).  This could be fixed by using
-16-trees instead, but then the number of keys stored in a block would
-be 15, which does not align with cache lines.  We tested 16-trees and
-found them to be slower than 17-trees for all values of $n$.\footnote{A
+Eytzinger search has smaller constants is that the inner binary search
+of Btrees is inherently inefficient. Our virtual BTree stores 16 keys per
+node, so the inner binary search has 17 possible outcomes, and therefore
+requires $\lceil\log_2 17\rceil=5$ comparisons in some cases (and in
+all cases for the branch-free code).  This could fixed by using 16-ary
+trees instead, but then the number of keys stored in a block would be 15,
+which does not align with cache lines.  We tested 16-ary trees and found
+them to be slower than 17-ary trees for all values of $n$.\footnote{A
 third alternative is to store 15 keys in blocks size 16, but this would
 be outside the model we consider, in which all data resides in a single
 array of length $n$.}
 
 For values of $n$ larger than the L3 cache size, Eytzinger search and
-17-tree search have the same rate of growth, but Eytzinger search starts
+Btree search have the same rate of growth, but Eytzinger search starts
 out being faster and remains so.  That the two algorithms have the same
 rate of growth is no coincidence: This growth is caused by RAM latency.
-In the case of 17-trees, the time between finishing the search in one
+In the case of Btrees, the time between finishing the search in one
 node and beginning the search in the next node is lower-bounded by the
 time needed to fetch the next node from RAM.  In the case of Eytzinger
-search, the time it takes to advance from level $i$ in the implicit
-search tree to level $i+4$ is lower-bounded by the time needed to fetch
-the node at level $i+4$ from RAM.  Thus, both algorithm pay one unit of
+search, the time it takes to advance from level $\ell$ in the implicit
+search tree to level $\ell+4$ is lower-bounded by the time needed to fetch
+the node at level $\ell+4$ from RAM.  Thus, both algorithm pay one unit of
 latency for every 4 or 5 comparisons.
 
-\Figref{btree-ii} compares 17-trees with Eytzinger search for values
+\Figref{btree-ii} compares Btrees with Eytzinger search for values
 of $n$ smaller than the L3 cache size.  One interesting aspect of
-this plot is that the 17-tree plots have a slight increase in slope
+this plot is that the Btree plots have a slight increase in slope
 at $n=2^{16}$---at the point in which the data exceeds the L2 cache
 size---while the Eytzinger search algorithm shows almost no change in
-behaviour.  This is because 17-trees work synchronously
-with the memory subsystem; each 17-tree node is searched using 4--5
-comparisons and then the memory subsystem begins loading the next node
-(from L3 cache).  The Eytzinger search on the other hand begins loading
-the node at level $d+4$ and continues to perform comparisons at levels $d$,
-$d+1$, $d+2$, and $d+3$ while the memory subsystem asynchronously fetches
-the node at level $d+4$. This effectively hides the L3 cache latency.
+behaviour.  This is because Btree search work synchronously with the memory
+subsystem; each Btree node is searched using 4--5 comparisons and
+then the memory subsystem begins loading the next node (from L3 cache).
+The Eytzinger search on the other hand begins loading the node at level
+$\ell+4$ and continues to perform comparisons at levels $\ell$, $\ell+1$,
+$\ell+2$, and $\ell+3$ while the memory subsystem asynchronously fetches
+the node at level $\ell+4$. This effectively hides the L3 cache latency.
 
 \begin{figure}
    \centering{\includegraphics{figs/btree-ii}}
-   \caption{The performance of 17-trees for small values of $n$.}
+   \caption{The performance of Btree search for small values of $n$.}
    \figlabel{btree-ii}
 \end{figure}
 
 \begin{lesson}
   Even though it moves $B$ times more data between levels of the cache
   hierarchy, Eytzinger search with explicit prefetching outperforms
-  B-trees.  It does this by exploiting parallelism within the memory
+  Btrees.  It does this by exploiting parallelism within the memory
   subsystem and between the processor and memory subsystem.
 \end{lesson}
 
@@ -1233,16 +1274,16 @@ the node at level $d+4$. This effectively hides the L3 cache latency.
 %
 \subsection{Van Emde Boas}
 
-Unlike B-trees, the Van Emde Boas layout is parameter free.  It is a
-recursive layout that provides asympotically optimal behaviour for any
-cache line width, $W$.  In the case where there are multiple levels
-of cache with different cache line widths, the van Emde Boas layout
-is asymptotically optimal for all levels simultaneously.  Indeed, for
-any value of $W$, a search in a van Emde Boas layout can be viewed
+Unlike the Btree layout, the Van Emde Boas layout is parameter free.
+It is a recursive layout that provides asympotically optimal behaviour
+for any cache line width, $B$.  In the case where there are multiple
+levels of cache with different cache line widths, the van Emde Boas
+layout is asymptotically optimal for all levels simultaneously.  Indeed,
+for any value of $B$, a search in a van Emde Boas layout can be viewed
 as searching in a sequence of binary trees whose heights are in the
-interval $((1/2)\log W,W]$, and each of these subtrees is stored in a
-contiguous subarray (and therefore in at most 2 cache lines).  The sum
-of the heights of these subtrees is $\lceil\log n\rceil$.
+interval $((1/2)\log B,\log B]$, and each of these subtrees is stored
+in a contiguous subarray (and therefore in at most 2 cache lines).
+The sum of the heights of these subtrees is $\lceil\log n\rceil$.
 
 
 \subsubsection{Cache-Use Analysis}
@@ -1251,9 +1292,9 @@ The cache-use analysis of the vEB layout approximates that of B-trees.
 We expect to find the most frequently accessed subtrees in the cache,
 which correspond, roughly, to the first $\log C$ iterations of the search
 algorithm.  Beyond this point, the search passes through a sequence of
-subtrees whose height is in the interval $((1/2)\log W,W]$ and each of
+subtrees whose height is in the interval $((1/2)\log B,\log B]$ and each of
 which is contained in at most two cache lines.  Thus, the number of cache
-misses we expect to see is about $O((\log n - \log C)/\log W)$.  Here,
+misses we expect to see is about $O((\log n - \log C)/\log B)$.  Here,
 we use big-Oh notation since the exact leading constant is somewhere
 between $1$ in the best case and $4$ in the worst case.
 
@@ -1307,7 +1348,7 @@ I veb_array<T,I>::search(T x) {
 In addition to the code in \lstref{veb}, we also implemented (as much as
 possible) a branch-free version of the vEB code.  Performance results for
 the vEB search implementations are shown in \figref{veb-i}, along with our
-best implementations of 17-trees and Eytzinger arrays.  As seen with other
+best implementations of Btree search and Eytzinger arrays.  As seen with other
 layouts, the branch-free implementation is faster until we exceed the size
 of the L3 cache, at which point the branchy implementation starts to catch
 up. However, in this case, the branchy implementation has a lot of ground
@@ -1319,7 +1360,7 @@ to make up and only beats the branch-free implementation for $n>2^{25}$.
    \figlabel{veb-i}
 \end{figure}
 
-The branch-free version of the vEB code is competitive with 17-trees
+The branch-free version of the vEB code is competitive with Btrees
 until $n$ exceeds the L3 cache size.  At this point, the vEB code becomes
 much slower.  This is because the vEB layout only minimizes the number
 of L3 cache misses to within a constant factor.  Indeed, the subtrees
@@ -1327,7 +1368,7 @@ of a vEB tree have sizes that are odd and will therefore never be
 perfectly aligned with cache boundaries.  Even in the (extremely lucky)
 case where a vEB search goes through a sequence of subtrees of size 15,
 each of these subtrees is likely to be split across two cache lines,
-resulting in twice as many cache misses as a 17-tree layout.
+resulting in twice as many cache misses as a Btree layout.
 
 \begin{lesson}
   The vEB layout is a useful theoretical tool, and may be useful in
@@ -1570,7 +1611,7 @@ and goes against conventional wisdom, which states that accesses to
 RAM are slow, and should be minimized.  A more accurate statement, that
 accounts for our findings, is that accesses to RAM have high latency and
 this latency needs to be mitigated.  This was formalized in \secref{model}
-ad the resulting computational model does have some predictive power:
+and the resulting computational model does have some predictive power:
 It lead us to the $(Bk+1)$-tree which is sometimes faster for some
 (enormous and limited) range of values of $n$.
 
@@ -1620,33 +1661,34 @@ While this may not be news to hardware experts, to the best of our
 knowledge, we are unaware of any algorithms (or even implementations)
 that deliberately make  use of it.
 
-As a cautionary guideline, one has to be very careful when testing
+Our results also show
+that one has to be very careful with
 micro-optimizations.  Optimizations that offer great speedups on small
 or moderate-sized inputs can create great slowdowns on large inputs.
 For instance, if we compare branch-free versus branchy binary search for
 $n=2^{16}$, we find that branch-free binary search is about twice as fast.
 However, for $n=2^{30}$, branch-free binary search is about 45\% slower.
 
-\subsection{In-Place Algorithms for Moving Between Array Layouts}
-
-Finally, we finish with one algorithmic question motivated by our work.
-Since sorted order is what is commonly used in current applications,
-it would be useful to have efficient in-place algorithms to convert from
-sorted order to and from other memory layouts.
-
-\begin{op}
-  Is there a linear time in-place algorithm that converts a sorted array
-  into an array stored in the Eytzinger layout?
-\end{op}
-
-As a starting point we note that, when $n$ is a power of two, there
-is such an algorithm.  In this case, we can use an existing in-place
-algorithm to partition the array into all the odd indices followed
-by all the even indices (this is called an \emph{unshuffle} operation
-\cite[Section~7]{ellis.markov:in-situ}). We can then recurse on the first
-half of the array. This takes linear time and, at the end of this process,
-the array is layed out in Eytzinger order.  Generalizing this algorithm
-to the case where $n$ is not a power of two seems non-trivial.
+%\subsection{In-Place Algorithms for Moving Between Array Layouts}
+%
+%Finally, we finish with one algorithmic question motivated by our work.
+%Since sorted order is what is commonly used in current applications,
+%it would be useful to have efficient in-place algorithms to convert from
+%sorted order to and from other memory layouts.
+%
+%\begin{op}
+%  Is there a linear time in-place algorithm that converts a sorted array
+%  into an array stored in the Eytzinger layout?
+%\end{op}
+%
+%As a starting point we note that, when $n$ is a power of two, there
+%is such an algorithm.  In this case, we can use an existing in-place
+%algorithm to partition the array into all the odd indices followed
+%by all the even indices (this is called an \emph{unshuffle} operation
+%\cite[Section~7]{ellis.markov:in-situ}). We can then recurse on the first
+%half of the array. This takes linear time and, at the end of this process,
+%the array is layed out in Eytzinger order.  Generalizing this algorithm
+%to the case where $n$ is not a power of two seems non-trivial.
 
 \section*{Acknowledgements}
 

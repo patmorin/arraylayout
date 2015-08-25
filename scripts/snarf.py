@@ -45,7 +45,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
               title=r'running time of $2\times 10^6$ searches on $n$ values'):
 
     mapper = [("sorted", ("-", None, None, r'branchy binary search')),
-              ("sorted_stl", ("-", None, None, r'\texttt{stl::lower\_bound}')),
+              ("sorted_stl", ("-", None, None, r'\texttt{std::lower\_bound}')),
               ("sorted_bf", ("-", None, None, "branch-free binary search")),
               ("sorted_bfp", ("-", None, None, 
                "branch-free binary search with prefetching")),

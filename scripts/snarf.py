@@ -172,7 +172,7 @@ if __name__ == "__main__":
     # Plots of binary search on Intel 4790K
     make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs/sorted-i', caches)
 
-    make_plot(lines, ['sorted'], 2**21, 'figs/sorted-ii', caches)
+    make_plot(lines, ['sorted'], 2**21, 'figs/sorted-ii', caches[:2])
 
     make_plot(lines, ['sorted', 'sorted_bf', 'fake'], 2**16, 'figs/sorted-iii')
 

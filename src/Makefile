@@ -7,7 +7,7 @@ all: main cacher
 
 distrib: arraylayout.tgz
 
-mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h
+mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h esmixed_array.h
 
 main : $(mainfiles)
 	$(CC) $(CFLAGS) main.cpp -o main

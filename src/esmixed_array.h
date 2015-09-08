@@ -29,14 +29,11 @@ protected:
 	using base_array<T,I>::a;
 	using base_array<T,I>::n;
 
-	// The size of the Eytzinger tree part
+	// The size of the complete Eytzinger tree part
 	I m;
 
-	// The height of the _complete_ Eytzinger subtree
+	// The height of the complete Eytzinger subtree
 	I h;
-
-	// The number of leaves in the (partial) bottom level
-	I bottom_level;
 
 	// We always prefetch multiplier*i + offset
 	static const I B = W/sizeof(T);
@@ -49,13 +46,14 @@ protected:
 	template<typename ForwardIterator>
 	ForwardIterator copy_data_r(ForwardIterator a0, I i);
 
-	template<unsigned int Q>
-	const T* inner_search(const T *base, const T x) const {
-		if (Q <= 1) return base;
-		const unsigned int half = Q / 2;
+	template<unsigned int C>
+	static const T* branchfree_inner_search(const T *base, const T x) {
+		if (C <= 1) return base;
+		const unsigned int half = C / 2;
 		const T *current = &base[half];
-		return inner_search<Q - half>((*current < x) ? current : base, x);
+		return branchfree_inner_search<C - half>((*current < x) ? current : base, x);
 	}
+
 
 public:
 	template<typename ForwardIterator>
@@ -76,9 +74,7 @@ ForwardIterator esmixed_array<T,I,W>::copy_data_r(ForwardIterator a0, I i) {
 	a0 = copy_data_r(a0, 2*i+1);
 
 	// put data at the root
-	a[i] = *a0;
-//	cout << "a[" << i << "]=" << *a0 << endl;
-	a0 += B+1;
+	a[i] = *a0++;
 
 	// visit right child
 	a0 = copy_data_r(a0, 2*i+2);
@@ -90,39 +86,31 @@ template<typename T, typename I, unsigned W>
 template<typename ForwardIterator>
 esmixed_array<T,I,W>::esmixed_array(ForwardIterator a0, I n0) {
 	n = n0;
-//	cout << "multiplier = " << multiplier << ", offset = " << offset << endl;
+
 	// FIXME: Use std::align once gcc supports it
 	assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
 	a++;
+	std::fill_n(a, n, 0);   // FIXME: for debugging only
 
-	// The height of our (complete) Eytzinger tree
+	// Figure out the height and size of the complete Eytzinger part
 	h = 0;
 	while (((1<<(h+1))-1) + B*(1<<(h+1)) < n) h++;
+	m = (1<<(h+1))-1;
 
-	// The size of our (complete) Eytzinger tree
-	I en = (1<<(h+1))-1;
+	// Figure out how much is at the leaves
+	I q = (n - m)/B; // the number of full leaves
+	I r = (n - m)%B; // number of items in the last partial leaf
 
-	// The number of complete blocks attached to the Eytzinger tree
-	I k = 0;
-	while (n-(k+1)*B >= en) k++;
-
-	for (I i = 0; i < k; i++) {
-		atmp[i]
-	}
-
-	// Build the top part using a[B+i(B+1)] for i in 0,...,m-1
-	copy_data_r(a0+B, 0);
-
-	// Build remainder using everything else
-	for (int i = 0; i < m; i++) {
+	// Now build everything
+	T *atmp = new T[m];   // keep the Eytzinger data in here
+	for (int i = 0; i < q; i++) {
+		atmp[i] = a0[B+(B+1)*i];
 		std::copy_n(a0+(B+1)*i, B, a+m+B*i);
 	}
-	std::copy_n(a0+(B+1)*m, n-(B+1)*m, a+m+B*m);
-
-//	for (int i = 0; i < n; i++) {
-//		cout << a[i] << ",";
-//	}
-//	cout << endl;
+	std::copy_n(a0+(B+1)*q+r, m-q, atmp+q);
+	std::copy_n(a0+(B+1)*q, r, a+m+B*q);
+	copy_data_r(atmp, 0); // make the Eytzinger part
+	delete[] atmp;
 }
 
 template<typename T, typename I, unsigned W>
@@ -135,71 +123,51 @@ template<typename T, typename I, unsigned W>
 I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
 	// Search in the (complete) Eytzinger tree
 	I i = 0;
-	while (i < n) {
-		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
+	for (I d = 0; d <= h; d++) {
+		__builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I height = __builtin_ctz(~(i+1));
-	I path = (i+1)&((1<<height)-1); // check this
+	I j = (i+1) >> __builtin_ffs(~(i+1));
+	j = (j == 0) ? n : j-1;
 
-	const I lo = m + p*B;
+	// Convert i into a rank on the bottom level
+	i = m + (i-m)*B;
 
+	if (i < n) {
+		// searching a partial block - use branch-free binary search
 
-
-
-
-
-
-//	The preceding code is a branch-free implementation of this:
-//	if (i < m) {
-//		const T current = a[i];
-//		p = (p << 1) | (x > current);
-//		j = (x <= current) ? i : j;
-//	} else {
-//		p += bottom_level;
-//	}
-
-//	cout << "Current best is " << a[j] << endl;
-	const I lo = m+p*B;
-	const T *base = a + lo;
-
-//	I hi = std::min(n, lo+B)-1;
-//	cout << "Searching in " << a[lo] << ",...," << a[hi] << endl;
-
-	if (__builtin_expect(lo + B < n, 1)) {
-		// The usual case - searching a block of size B
-		const T *pred = inner_search<B>(base, x);
-		I jp = (*pred < x) + pred - base;
-		j = (jp < B) ? lo + jp : j;
-//		cout << "Full block search returns " << a[j] << endl;
-	} else {
-		// searching partial block
-		I m = n - lo;
-		while (m > 1) {
-			I half = m / 2;
+		const T *base = &a[i];
+		I b = std::min(n - i, B);
+		while (b > 1) {
+			I half = b / 2;
 			const T *current = &base[half];
 			base = (*current < x) ? current : base;
-			m -= half;
+			b -= half;
 		}
 		I ret = (*base < x) + base - a;
-		j = (ret == n) ? j : ret;
-//		cout << "Partial block search returns " << a[j] << endl;
+		j = (ret < n) ? ret : j;
 	}
-	return j;
 
-	// Now start binary search
-//	I lo = m + p*n/m;      // FIXME: Real danger of overflow
-//	I hi = m + (p+1)*n/m;  // FIXME: Real danger of overflow
-//	const T *base = &a[lo];
-//	I n = hi-lo;
-//	while (n > 1) {
-//		I half = n / 2;
-//		const T *ptr = &base[half];
-//		const T current = *ptr;
-//		base = (current < x) ? ptr : base;
-//		n -= half;
+//	if (__builtin_expect(i + B <= n, 1)) {
+//		// searching a full block - use unrolled branch-free binary search
+//		const T *base = &a[i];
+//		const T *pred = branchfree_inner_search<B>(base, x);
+//		I nth = (*pred < x) + pred - base;
+//		j = (nth == B) ? j : i + nth;
+//	} else if (__builtin_expect(i < n, 0)) {
+//		// searching a partial block - use branch-free binary search
+//		const T *base = &a[i];
+//		I b = n - i;
+//		while (b > 1) {
+//			I half = b / 2;
+//			const T *current = &base[half];
+//			base = (*current < x) ? current : base;
+//			b -= half;
+//		}
+//		I ret = (*base < x) + base - a;
+//		j = (ret < n) ? ret : j;
 //	}
-//	return (*base < x) + base - a;
+	return j;
 }
 
 } // namespace fbs

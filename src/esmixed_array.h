@@ -138,14 +138,15 @@ I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
 
 		const T *base = &a[i];
 		I b = std::min(n - i, B);
+		const I c = b;
 		while (b > 1) {
 			I half = b / 2;
 			const T *current = &base[half];
 			base = (*current < x) ? current : base;
 			b -= half;
 		}
-		I ret = (*base < x) + base - a;
-		j = (ret < n) ? ret : j;
+		I nth = (*base < x) + base - &a[i];
+		j = (nth < c) ? nth+i : j;
 	}
 
 //	if (__builtin_expect(i + B <= n, 1)) {

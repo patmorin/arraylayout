@@ -286,7 +286,7 @@ void run_tests(I n, I m) {
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
 	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
 	Tool<esmixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
-	Tool<esmixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
+	Tool<esmixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
 
 //	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 //	if (sizeof(I) > 4 || n <= 100000000)

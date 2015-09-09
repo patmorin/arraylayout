@@ -57,6 +57,8 @@ protected:
 	template<bool prefetch=false>
 	I _search(T x) const;
 
+	I prefetch_search(T x) const { return _search<true>(x); };
+
 public:
 	template<typename ForwardIterator>
 	esmixed_array(ForwardIterator a0, I n0);
@@ -69,14 +71,15 @@ public:
 template<typename T, typename I, unsigned W=64>
 class esmixed_array_pf : public esmixed_array<T,I,W> {
 protected:
-	using esmixed_array<T,I,W>::_search;
+
+	using esmixed_array<T,I,W>::prefetch_search;
 
 public:
 
 	template<typename ForwardIterator>
 	esmixed_array_pf(ForwardIterator a0, I n0) : esmixed_array<T,I,W>(a0, n0) {};
 
-	I search(T x) const { return _search<true>(x); };
+	I search(T x) const { return prefetch_search(x); };
 };
 
 

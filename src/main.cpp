@@ -269,7 +269,7 @@ void run_tests(I n, I m) {
 	T *a = build_and_fill<T,I>(n);
 	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 
-	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "sorted");
+//	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "sorted");
 //	Tool<sorted_array_bf<T,I>,T,I>::run_test1(a, n, m, "sorted_bf");
 //	Tool<sorted_array_bfp<T,I>,T,I>::run_test1(a, n, m, "sorted_bfp");
 //	Tool<sorted_array_stl<T,I>,T,I>::run_test1(a, n, m, "sorted_stl");
@@ -282,8 +282,9 @@ void run_tests(I n, I m) {
 //	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
 //	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
 //	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
+
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
-//
+	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
 	Tool<esmixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
 
 //	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);

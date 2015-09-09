@@ -134,8 +134,6 @@ I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
 	i = m + (i-m)*B;
 
 	if (i < n) {
-		// searching a partial block - use branch-free binary search
-
 		const T *base = &a[i];
 		I b = std::min(n - i, B);
 		const I c = b;
@@ -149,7 +147,8 @@ I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
 		j = (nth < c) ? nth+i : j;
 	}
 
-//	if (__builtin_expect(i + B <= n, 1)) {
+// The following code was significantly slower
+// if (__builtin_expect(i + B <= n, 1)) {
 //		// searching a full block - use unrolled branch-free binary search
 //		const T *base = &a[i];
 //		const T *pred = branchfree_inner_search<B>(base, x);

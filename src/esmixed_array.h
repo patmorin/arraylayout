@@ -54,6 +54,8 @@ protected:
 		return branchfree_inner_search<C - half>((*current < x) ? current : base, x);
 	}
 
+	template<bool prefetch=false>
+	I _search(T x) const;
 
 public:
 	template<typename ForwardIterator>
@@ -61,8 +63,22 @@ public:
 
 	~esmixed_array();
 
-	I search(T x) const;
+	I search(T x) const { return _search(x); };
 };
+
+template<typename T, typename I, unsigned W=64>
+class esmixed_array_pf : public esmixed_array<T,I,W> {
+protected:
+	using esmixed_array<T,I,W>::_search;
+
+public:
+
+	template<typename ForwardIterator>
+	esmixed_array_pf(ForwardIterator a0, I n0) : esmixed_array<T,I,W>(a0, n0) {};
+
+	I search(T x) const { return _search<true>(x); };
+};
+
 
 template<typename T, typename I, unsigned W>
 template<typename ForwardIterator>
@@ -120,11 +136,12 @@ esmixed_array<T,I,W>::~esmixed_array() {
 
 // Branch-free code without or without prefetching
 template<typename T, typename I, unsigned W>
-I __attribute__ ((noinline)) esmixed_array<T,I,W>::search(T x) const {
+template<bool prefetch>
+I __attribute__ ((noinline)) esmixed_array<T,I,W>::_search(T x) const {
 	// Search in the (complete) Eytzinger tree
 	I i = 0;
 	for (I d = 0; d <= h; d++) {
-		__builtin_prefetch(a+(multiplier*i + offset));
+		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
 	I j = (i+1) >> __builtin_ffs(~(i+1));

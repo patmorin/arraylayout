@@ -279,6 +279,24 @@ if __name__ == "__main__":
               2**30, 'figs/mixed-ii', caches)
 
 
+    # mine versus Paul's
+    lines = open('data/bigun.dat').read().splitlines()
+    make_plot(lines, ['esmixed_pf', 'hybrid'],
+              2**30, 'figs/hybrids-i', caches)
+    make_plot(lines, ['esmixed_pf', 'hybrid'],
+              2**21, 'figs/hybrids-ii', caches)
+
+    # mine versus Paul's
+    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf'],
+              2**30, 'figs/race-i', caches)
+    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf'],
+              2**21, 'figs/race-ii', caches)
+
+
+    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf', 'esmixed_pf', 'hybrid'],
+              2**30, 'figs/fullrace-i', caches)
+    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf', 'esmixed_pf', 'hybrid'],
+              2**21, 'figs/fullrace-ii', caches)
 
 
 

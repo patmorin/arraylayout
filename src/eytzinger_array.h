@@ -223,7 +223,7 @@ I __attribute__ ((noinline)) eytzinger_array_bfpm<T,I,aligned>::search(T x) cons
 // branch-free unrolled code with masked prefetching
 template<typename T, typename I, bool aligned>
 I __attribute__ ((noinline)) eytzinger_array_unrolled<T, I, aligned>::search(T x) const {
-	// FIXME: this code is incorrect for n in {2,3,4}
+	// FIXME: this code is incorrect for n < 5
 	I i = 0;
 	unsigned int d = rolled_iterations;
 	while (d-- > 0) {

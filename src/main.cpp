@@ -126,7 +126,7 @@ public:
 
 template<typename T, typename I>
 I fake_array<T,I>::search(const T &x) {
-	return std::max((I)0, std::min(n, (I)(x+1)/2));
+	return std::max((I)0, std::min(n, (I)x/2));
 }
 
 

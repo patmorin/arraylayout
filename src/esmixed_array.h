@@ -4,7 +4,6 @@
  *  Created on: 2015-05-26
  *      Author: morin
  */
-
 #ifndef FBS_ESMIXED_ARRAY_H_
 #define FBS_ESMIXED_ARRAY_H_
 
@@ -21,8 +20,9 @@
 
 namespace fbs {
 
-// An array that has an esmixed layout of a 1/(B+1) sample followed by the
-// remaining data in sorted order
+// An array that starts with a full Eytzinger tree containing roughly n/(B+1)
+// elements followed by the remaining elements in sorted order.  Elements are
+// chosen so that a search in the Eytzinger tree leads to a block of B elements
 template<typename T, typename I, unsigned W=64>
 class esmixed_array : public base_array<T,I> {
 protected:
@@ -150,10 +150,11 @@ I __attribute__ ((noinline)) esmixed_array<T,I,W>::_search(T x) const {
 	I j = (i+1) >> __builtin_ffs(~(i+1));
 	j = (j == 0) ? n : j-1;
 
-	// Convert i into a rank on the bottom level
+	// Make i point to the first element of a block
 	i = m + (i-m)*B;
 
 	if (i < n) {
+		// do branch-free binary search on the block
 		const T *base = &a[i];
 		I b = std::min(n - i, B);
 		const I c = b;

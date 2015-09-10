@@ -1,3 +1,9 @@
+/*
+ * hybrid_array.h
+ *
+ *  Created on: 2015-09-10
+ *      Author: pvk
+ */
 #ifndef FBS_HYBRID_ARRAY_H
 #define FBS_HYBRID_ARRAY_H
 

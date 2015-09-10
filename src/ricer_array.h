@@ -263,7 +263,7 @@ I __attribute__ ((noinline)) ricer_array<T,I,aligned>::_branchfree_search2(T x) 
 	return (j == 0) ? n : j-1;
 }
 
-#define RICE
+//#define RICE
 
 #ifndef RICE
 template<typename T, typename I, bool aligned>

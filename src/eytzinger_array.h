@@ -99,6 +99,47 @@ public:
 };
 
 
+// An Eytzinger array with branch-free searches and prefetching
+template<typename T, typename I, unsigned C=0, bool aligned=false>
+class eytzinger_array_pfft : public eytzinger_array<T,I,aligned> {
+protected:
+	using eytzinger_array<T, I, aligned>::a;
+	using eytzinger_array<T, I, aligned>::n;
+	using eytzinger_array<T, I, aligned>::multiplier;
+	using eytzinger_array<T, I, aligned>::offset;
+	static const I imul = multiplier << C;
+	static const I ioff = imul-1+multiplier/2;
+	I mask;
+
+public:
+	template<typename ForwardIterator>
+	eytzinger_array_pfft(ForwardIterator a0, I n0)
+	: eytzinger_array<T,I,aligned>(a0, n0) {
+		for (mask = 1; mask <= n; mask <<= 1) {}
+		mask--;
+	}
+	I search(T x) const;
+};
+
+
+// Branch-free code with or without prefetching
+template<typename T, typename I, unsigned C, bool aligned>
+I __attribute__ ((noinline)) eytzinger_array_pfft<T,I,C,aligned>::search(T x) const {
+	I i = 0;
+	while (i < n) {
+        //std::cout << i << " => ";
+		for (int t = 0; t < 1<<C; t++) {
+            I pf = (imul*i + ioff + multiplier*t);
+            //std::cout << pf << (t==(1<<C)-1 ? "\n" : ",");
+			__builtin_prefetch(a+(pf&mask));
+		}
+		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+	}
+	I j = (i+1) >> __builtin_ffs(~(i+1));
+	return (j == 0) ? n : j-1;
+}
+
+
 // An Eytzinger array with branch-free searches and masked prefetching
 template<typename T, typename I, bool aligned = false>
 class eytzinger_array_unrolled: public eytzinger_array<T, I, aligned> {

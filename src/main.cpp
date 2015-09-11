@@ -293,6 +293,9 @@ void run_tests(I n, I m) {
 	Tool<eytzinger_array_unrolled<T,I>,T,I>::run_test1(a, n, m, "eytzinger_unrolled");
 	Tool<hybrid_array<T,I,true,true>,T,I>::run_test1(a, n, m, "hybrid");
 
+	Tool<eytzinger_array_pfft<T,I,0,true>,T,I>::run_test1(a, n, m, "fetcher_0");
+	Tool<eytzinger_array_pfft<T,I,1,true>,T,I>::run_test1(a, n, m, "fetcher_1");
+	Tool<eytzinger_array_pfft<T,I,2,true>,T,I>::run_test1(a, n, m, "fetcher_2");
 //	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
 //	if (sizeof(I) > 4 || n <= 100000000)
 //		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");

@@ -34,15 +34,16 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
 
 
 \begin{abstract}
-  We attempt to determine the best order in which to store $n$ comparable
-  data items in an array, $A$, of length $n$ so that we can, for any query
-  value, $x$, quickly find the smallest value in $A$ that is greater
-  than or equal to $x$. In particular, we consider the important case
-  where there are many such queries to the same array, $A$, which resides
-  entirely in RAM.  In addition to the obvious sorted-order we consider
-  the Eytzinger (BFS) layout normally used for heaps, an implicit B-tree
-  layout that generalizes the Eytzinger layout, and the van Emde Boas
-  layout commonly used in the cache-oblivious algorithms literature.
+  We attempt to determine the best order and search algorithm to store
+  $n$ comparable data items in an array, $A$, of length $n$ so that we
+  can, for any query value, $x$, quickly find the smallest value in $A$
+  that is greater than or equal to $x$. In particular, we consider the
+  important case where there are many such queries to the same array,
+  $A$, which resides entirely in RAM.  In addition to the obvious sorted
+  order/binary search combination we consider the Eytzinger (BFS) layout
+  normally used for heaps, an implicit B-tree layout that generalizes
+  the Eytzinger layout, and the van Emde Boas layout commonly used in
+  the cache-oblivious algorithms literature.
 
   After extensive testing and tuning on a wide variety of modern hardware,
   we arrive at the conclusion that, for small values of $n$, sorted
@@ -77,12 +78,25 @@ implementation of binary search in a sorted array was approximately
 three times faster than searching using C++'s \texttt{stl::set} class
 (implemented as a red-black tree).}
 
+
+It would be difficult to overstate the importance of
+algorithms for searching in a static sorted set.
 Every major programming language and environment provides a sorting
 routine, so a sorted array is usually just a function call away. Many
 language also provide a matching binary search implementation.
 For example, in C++, sorting is done with \mintinline{c++}{std::sort()}
-and binary search is implemented in \mintinline{c++}{std::lower_bound()}
+and the binary search algorithm is implemented in \mintinline{c++}{std::lower_bound()}
 and \mintinline{c++}{std::upper_bound()}.
+
+For a single example of how useful sorting/binary
+search is, consider the chromium browser code-base
+which calls \mintinline{c++}{std::lower_bound()} and
+\mintinline{c++}{std::upper_bound()} from 135 different locations
+in a wide variety of contexts, including cookie handling, GUI
+layout, graphics and text rendering, video handling, and certificate
+management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
+that is built and packaged to make Google Chrome, a web browser that is
+now used by more than a billion users \cite{protalinksi:google}.
 
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
@@ -91,18 +105,7 @@ Other array layouts may be able to take advantage of (or be hurt less
 by) modern processor features such as caches, instruction pipelining,
 conditional moves, speculative execution, and prefetching.
 
-It would be difficult to overstate the importance of
-algorithms for searching in a static sorted set.  For a
-single example, consider the chromium browser code-base
-which calls \mintinline{c++}{std::lower_bound()} and
-\mintinline{c++}{std::upper_bound()} from 135 different locations
-in a wide variety of contexts, including cookie handling, GUI
-layout, graphics and text rendering, video handling, and certificate
-management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
-that is built and packaged to make Google Chrome a web browser that is
-now used by more than a billion users \cite{protalinksi:google}.
-
-
+  
 In this experimental paper we consider four different memory layouts and
 accompanying search algorithms.  The following points describe the scope of our study:
 
@@ -122,8 +125,7 @@ accompanying search algorithms.  The following points describe the scope of our 
       layout.\footnote{All four layouts can be constructed in $O(n)$
       time given a sorted array.  Though we don't report construction
       times in the current paper, they are included in the accompanying
-      data sets.  It is worth noting that that, even for the slowest
-      construction algorithm, it is faster to construct a layout for an
+      data sets.  For all layouts it is faster to construct a layout for an
       array of size $10^8$ than it is to perform $2\times10^6$ searches
       on the resulting layout.}
 \end{itemize}
@@ -156,7 +158,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   \item \texttt{Btree} (see \figref{btree}): In this layout, the data is
   viewed as being stored in a complete $(B+1)$-ary tree, so that each
   node---except possibly one leaf---stores $B$ values.  The parameter
-  $B$ is chosen so that $B$ values fit neatly into a single cache line
+  $B$ is chosen so that $B$ data items fit neatly into a single cache line
   and the nodes of this tree are mapped to array locations in the order
   they are encountered in a breadth-first search.
 
@@ -193,7 +195,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
 
 \subsection{Related Work}
 
-Of the four memory layouts/search algorithm pairs we study, the sorted
+Of the four memory layout/search algorithm pairs we study, the sorted
 array combined with binary search is, of course, the most well-known
 and variants of binary search have been studied for more than half a
 century. Knuth \cite[Section~6.2.1]{knuth:art} is a good reference.
@@ -250,10 +252,12 @@ the branch-free binary search code listed in \lstref{bfbs} is
 the fastest algorithm (see \figref{eytzinger-ii}).  For larger
 arrays, the Eytzinger layout, combined with the branch-free
 prefetching search algorithm in \lstref{eytzinger-iii} is the
-fastest general-purpose layout/search algorithm combination
-(see Figures~\ref{fig:eytzinger-i}--\ref{fig:larger}).
-For full experimental data sets on a wide variety of processors,
-interested readers are directed to this project's
+fastest general-purpose layout/search algorithm combination (see
+Figures~\ref{fig:eytzinger-i}--\ref{fig:larger}).\footnote{Warning:
+for consistent performance, the Eytzinger code should
+include a mask as described in \secref{other-machines}.}
+For full experimental data sets on a wide variety of
+processors, interested readers are directed to this project's
 webpage.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
 
 In more detail, our findings, with respect to a single process/thread
@@ -286,11 +290,10 @@ as follows:
    with explicit prefetching.
 
   \item The standard I/O model of computation \cite{aggarwal.vitter:input}
-   is insufficient to explain our results, though a simple extension of
-   this model does explain them.  This model suggests a variant of the
-   Btree search algorithm. Preliminary tests with this extension
-   of the Btree layout and search algorithm show that this model has
-   predictive power.
+   is insufficient to explain our results, though a simple extension
+   of this model does explain them.  This model suggests two variants
+   of our experiments.  Preliminary tests with these variants show that
+   this model has predictive power.
 \end{enumerate}
 
 Our conclusions holds across a wide variety of different processors and
@@ -375,7 +378,7 @@ then the CPU will not execute more than $10^8$ instructions per second;
 it will waste approximately 39/40 cycles waiting on data from RAM.
 
 When the CPU reads a RAM address, the RAM moves a 64 byte cache line
-into the CPU. From the time CPU issues the read request to the time
+into the CPU. From the time the CPU issues the read request to the time
 the last word of this cache-line is available is approximately 13.4ns.
 This quantity is called the \emph{cache-Line (8th-Word) latency}.
 If the processor repeatedly reads cache lines from RAM, this results in a
@@ -433,7 +436,7 @@ As part of modern virtual memory systems, the processor has a
 \emph{translation lookaside buffer (TLB)} that maps virtual memory
 addresses (visible to processes) to physical memory addresses (addresses
 of physical RAM).  Since a TLB is used for every memory access, it is very
-fast, and not very large.  TLBs organizes memory into fixed-size pages.
+fast, and not very large.  The TLB organizes memory into fixed-size pages.
 A process that uses multiple pages of memory will sometimes access a
 page that is not in the TLB. This is costly, and triggers the processor
 to walk the \emph{page table} until it finds the appropriate page and
@@ -449,7 +452,7 @@ a significant factor until the array size exceeded 4GB.
 \subsection{Pipelining, Branch-Prediction, and Predicated Instructions}
 
 Executing an instruction on a processor takes several clock cycles, during
-which the instruction is (1)~fetched, (2)~decoded, an (3)~effective
+which the instruction is (1)~fetched, (2)~decoded, (3)~an effective
 address is read (if necessary), and finally the instruction is
 (4)~executed.  Since the entire process takes several cycles, this
 is arranged in a pipeline so that, for example, one instruction is being
@@ -468,7 +471,7 @@ instruction to fetch.  Where this breaks down is in code that contains
 \emph{conditional jump} instructions. These instructions will possibly
 change the flow of execution based on the result of some previous
 comparison.  In such cases, the CPU does not know in advance whether the
-following instruction will be the one immediately after the conditional
+next instruction will be the one immediately following the conditional
 jump or will be the target of the conditional jump. The CPU has two
 options:
 \begin{enumerate}
@@ -478,8 +481,8 @@ options:
    enters the pipeline until the time the jump condition is tested.
 
   \item Predict whether the jump will occur or not and begin loading
-  the instructions from the jump target, or immediately after the jump,
-  respectively.  In this case, if the prediction is correct, then no
+  the instructions from the jump target or immediately after the jump,
+  respectively.  If the prediction is correct, then no
   time is wasted. If the prediction is incorrect, then once the jump
   condition is finally verified, all instructions placed in the pipeline
   after the conditional jump instruction have to be flushed.
@@ -566,17 +569,19 @@ two ways in which this takes advantage of the cache:
   \item (Spatial locality) Once an individual binary search has reduced
     the search range down to a size less than or equal to $B$, the
     subarray that remains to be searched will occupy at most one or two
-    cache lines. Thus, on average, we expect binary search to incur
-    roughly $\log n -\log(C/B) - \log B + 1 = \log n - \log C + 1$
-    cache misses.
+    cache lines. 
 \end{enumerate}
+
+Thus, on average, we expect binary search to incur roughly $\log n -
+\log(C/B) - \log B + 1 = \log n - \log C + 1$ cache misses. The first
+$\log(C/B)$ comparisons are to cached values and the last $\log B$
+comparisons are all to values in the same cache line.
 
 Some cache analyses of binary search ignore spatial locality.
 For instance, Brodal \etal\ \cite{brodal.fagerberg.ea:cache} write
 ``The [sorted] layout has bad performance, probably because no nodes
 in the top part of the tree share cache lines.'' In theory, however,
-the spatial locality in the small subtrees should make up for this. (See
-\secref{eytzinger-analysis}.)
+the spatial locality in the small subtrees should make up for this.
 
 On the Intel 4790K, whose L3 cache can store 2048K cached values, we
 expect to see a sharp increase in search times when $n$ exceeds $2^{21}$,
@@ -628,7 +633,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
 
 
 \figref{sorted-i} shows the running time of $2\times 10^6$ searches
-for values of $n$ ranging from 1 to $2^{30}$. As the preceding analysis
+for values of $n$ ranging from 1 to $2^{30}$. As the preceding cache analysis
 predicts, there is indeed a sharp increase in slope that occurs at around
 $n=2^{21}$.  To give our results a grounding in reality, this graph
 also shows the running-time of the \mintinline{c++}{stl::lower_bound()}
@@ -677,12 +682,12 @@ When it guesses incorrectly (approximately 50\% of the time), the entire
 pipeline must be flushed and the instructions for the other branch loaded.
 
 \item The number of iterations of the outer loop is hard to predict. The
-loop may terminate early (because \mintinline{c++}{x} was found). Even when
-searching for a value \mintinline{c++}{x} that is not present, unless $n$ has
-the form $2^k-1$, the exact number of iterations is different for different
-values of $x$.  This implies that the branch predictor will frequently
-mispredict termination or non-termination of the loop, incurring the
-cost of another pipeline flush.
+loop may terminate early (because \mintinline{c++}{x} was found). Even
+when searching for a value \mintinline{c++}{x} that is not present,
+unless $n$ has the form $2^k-1$, the exact number of iterations is
+different for different values of \mintinline{c++}{x}.  This implies
+that the branch predictor will frequently mispredict termination or
+non-termination of the loop, incurring the cost of another pipeline flush.
 
 \end{enumerate}
 
@@ -726,7 +731,7 @@ the value of \mintinline{c++}{base} (if \mintinline{c++}{base[half]
 there is no branching within the while loop.  For this reason, we call
 this \emph{branch-free binary search}.
 
-The use of conditional move instructions to replace branching is often a
+The use of conditional move instructions to replace branching is a
 topic of heated debate (see, e.g., \cite{torvalds:cmov}).  Conditional
 move instructions tend to use more clock cycles than traditional
 instructions and, in many cases, branch predictors can achieve prediction
@@ -770,7 +775,7 @@ loop is implemented by Lines~8--15 with the conditional move at Line~12.
 \end{listing}
 
 \Figref{sorted-iii} compares the performance of the \naive\ and
-branch-free implementations of binary search for array sizes $n$
+branch-free implementations of binary search for array sizes 
 ranging from 1 to $2^{16}$.  As expected, the branch-free code is much
 faster. After accounting for the overhead of the testing harness, the
 branch-free search is approximately twice as fast for $n=2^{16}$.
@@ -868,7 +873,7 @@ or disprove this hypothesis.
 \item We ran our code on an Atom 330 processor that we had available. This
    low-power processor was designed to minimize watts-per-instruction
    so it does not do any form of speculative execution, including
-   branch prediction. The results, which are shown, in \figref{sorted-atom}
+   branch prediction. The results, which are shown in \figref{sorted-atom},
    are consistent with our hypothesis.  The branch-free code is faster
    than the branchy code across the full range of values for $n$.
    This is because, on the Atom 330, branches in the branchy code result
@@ -995,7 +1000,7 @@ can think of $u$ as an external node of the virtual tree (that stores
 no data).  To answer a query, we are interested in the last node,
 $w$, on the path to $u$ at which the path proceeded to a left child.
 This corresponds to the position, $r$, of the lowest order 0 bit in the
-binary representation of $i+1$.  What's more by right-shifting $i+1$
+binary representation of $i+1$.  Furthermore, by right-shifting $i+1$
 by $r+1$ positions we obtain an integer $j$ such that:
 
 \begin{enumerate}
@@ -1052,8 +1057,7 @@ be stored int the L2 and L3 caches, respectively.
 However, the performance of the branchy Eytzinger implementation is
 much better than expected for large values of $n$. Indeed, it is much
 faster than the branchy implementation of binary search, and even
-faster than our fastest implementation of binary search: branch-free binary
-search with prefetching.
+faster than our fastest implementation of binary search.
 
 \begin{figure}
    \centering{\includegraphics{figs/eytzinger-i}}
@@ -1536,7 +1540,7 @@ resulting in twice as many cache misses as a Btree layout.
 %in the second part of the array is needed until the Eytzinger search in
 %the first part of the array is complete.
 
-\section{A Theoretical Model and an Engineered Btree}
+\section{A Theoretical Model}
 \seclabel{model}
 
 There is currently no theoretical model of caches or I/O that predicts
@@ -1566,14 +1570,57 @@ prefetching is roughly
 \[
     \max\{L,c\}\log_B n \enspace .
 \]
-This analysis shows that our experimental results do
-have a theoretical explanation.
+(Here we assume that the local computation time for $\log B$ levels of
+Eytzinger search and the local computation time to do binary
+search on a Btree block of size $B$ is the same $c$.)  This analysis
+shows that our experimental results do have a theoretical explanation.
+It also suggests two possible extensions of our experiments.
 
-After modelling it this way, we observe that this model allows a
-\emph{cheat}, in the sense that, for any $k\le W$ one can load $k$
-cache lines in $L+r(k)$ time units, where $r(k)$ is the time it takes
-to issue $k$ prefetch requests.  By doing this, one can simulate a model
-with cache line width $B'=kB$ and latency $L=L+r(k)$.  
+\subsection{Deeper Prefetching in Eytzinger Search}
+
+If there is really an excess of bandwidth so that, for example, $WL >
+2^t\log B$, then the prefetching for the Eytzinger search can be extended
+so, when accessing a virtual node, $v$, in the Eytzinger tree we prefetch
+$v$'s $2^tB$ descendants at distance $t+\log B$ from $v$ using $2^t$
+prefetch instructions.
+
+We implemented and tested this idea and found that, for the 4-byte data
+studied throughout this paper, it did not yield any speedup with $t=1$ and
+was significantly slower with $t=2$.  This agrees with our analysis and
+the latency/bandwidth characteristics of our machine (\secref{bandwidth}).
+On our machine, $WL=3.124$ and, with 4-byte data, $B=16$, so $\log B=4$,
+and the prefetching Eytzinger search has four outstanding cache line
+requests at any given time.  Since $4>3.124$, the Eytzinger search
+algorithm is already saturating the memory bandwidth.  Taking $t=1$
+or $t=2$ attempts to even further saturate the bandwith by having $8$,
+respectively 16, simultaneous cache line requests.
+
+However, since $B$ is the number of data items that fit into a single
+cache line, increasing the size of data items decreases $B$. For example,
+with 16-byte data, $B=4$, and $\log B=2$.  In this case, the branch-free
+Eytzinger search with prefetching is only prefetching two levels in
+advance. By choosing $t=1$ we extend the prefetching to three levels in
+advance and are still only fetching 4 cache lines at any point in time.
+
+\figref{deeper} shows the result of using deeper prefetching for 4-, 8-,
+and 16-byte data.  These results agree with the predictions of the model:
+deeper prefetching is not beneficial for 4-byte data, but does give an
+improvement for 16-byte data.
+
+\begin{figure}
+     \centering{\includegraphics{figs/fetchers-4-i}}
+     \centering{\includegraphics{figs/fetchers-8-i}}
+     \centering{\includegraphics{figs/fetchers-16-i}}
+   \caption{The effects of deeper prefetching in the Eytzinger search algorithm.}
+   \figlabel{deeper}
+\end{figure}
+
+\subsection{The $k(B+1)$-tree}
+
+This model also suggests a \emph{simulation}, in the sense that, for any $k\le
+W$ one can load $k$ cache lines in $L+r(k)$ time units, where $r(k)$
+is the time it takes to issue $k$ prefetch requests.  By doing this, one
+can simulate a model with cache line width $B'=kB$ and latency $L=L+r(k)$.
 
 This immediately raises the question of whether this cheat can be used
 in reality.  To test this, we implemented a $(kB+1)$-tree where, before
@@ -1670,6 +1717,7 @@ Indeed, as the size of individual data items increases, Eytzinger becomes
 a better and better choice.
 
 \subsection{Other Machines}
+\seclabel{other-machines}
 
 With the exception of \figref{sorted-atom}, the results presented here are
 running times on a single machine with a single memory configuration.
@@ -1771,8 +1819,7 @@ RAM are slow, and should be minimized.  A more accurate statement, that
 accounts for our findings, is that accesses to RAM have high latency and
 this latency needs to be mitigated.  This was formalized in \secref{model}
 and the resulting computational model does have some predictive power:
-It lead us to the $(Bk+1)$-tree which is sometimes faster for some
-(enormous and limited) range of values of $n$.
+It lead us to deeper prefetching in the Eytzinger search algorithm and the $(Bk+1)$-tree, which behave more or less as the model predicts.
 
 Practically speaking, this work opens up a whole class of algorithms
 and data structures that may be simpler to implement and faster in

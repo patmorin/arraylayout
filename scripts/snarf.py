@@ -69,6 +69,9 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
               ("eytzinger_bf_a", ("-", None, None, r'aligned branch-free Eytzinger')),
               ("esmixed", ("-", None, None, r'mixed')),
               ("esmixed_pf", ("-", None, None, r'mixed with prefetching')),
+              ("placeholder", ('-', None, None, r'XXXX')),
+              ("fetcher_1", ("-", None, None, r'deeper prefetching (t=1)')),
+              ("fetcher_2", ("-", None, None, r'deeper prefetching (t=2)'))
              ]
     for i in range(1,17):
         mapper.append(("bqtree16_{}".format(i), 
@@ -119,7 +122,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
 
     # Plot everything.
     width,height = 6.8, 3.5
-    if not title: height = 2.6
+    if not title or '-bit' in title: height = 2.6
     plt.figure(figsize=(width,height))
     plt.ioff()
     plt.xscale('log', basex=2)
@@ -157,7 +160,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
             plt.plot([caches[i]]*2, ylim, label="L{} cache size".format(i+1),
                      linestyle=":", color=colours[i], linewidth=1)
 
-    plt.legend(loc='upper left', framealpha=0.3)
+    plt.legend(loc='upper left', framealpha=0.8)
     if filename:
         filename += ".pdf"
         print "Writing {}".format(filename)
@@ -251,10 +254,10 @@ if __name__ == "__main__":
             + open('data/lauteschwein-all-g++.dat').read().splitlines()
     make_plot(lines, ['bqtree16_{}'.format(i) for i in range(2,17)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a', 'bqtree16_1'], 
-              2**30, 'figs/bktrees-i', caches, 'uint32')
+              2**30, 'figs/bktrees-i', [], 'uint32')
     make_plot(lines, ['bqtree16_{}'.format(i) for i in range(6,11)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs/bktrees-ii', caches, 'uint32')
+              2**30, 'figs/bktrees-ii', [], 'uint32')
 
     # using a prefetch mask on the Intel E3-1230
     lines = open('data/mirzakhani.dat').read().splitlines()
@@ -280,16 +283,16 @@ if __name__ == "__main__":
 
 
     # mine versus Paul's
-    lines = open('data/bigun.dat').read().splitlines()
+    lines = open('data/lauteschwein-bigun.dat').read().splitlines()
     make_plot(lines, ['esmixed_pf', 'hybrid'],
               2**30, 'figs/hybrids-i', caches)
     make_plot(lines, ['esmixed_pf', 'hybrid'],
               2**21, 'figs/hybrids-ii', caches)
 
     # mine versus Paul's
-    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf'],
+    make_plot(lines, ['eytzinger_bfpm_a', 'eytzinger_unrolled', 'ricer_pf'],
               2**30, 'figs/race-i', caches)
-    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf'],
+    make_plot(lines, ['sorted_bf', 'eytzinger_bfpm_a', 'eytzinger_unrolled', 'ricer_pf'],
               2**21, 'figs/race-ii', caches)
 
 
@@ -299,5 +302,17 @@ if __name__ == "__main__":
               2**21, 'figs/fullrace-ii', caches)
 
 
+    for s in [4, 8, 16]:
+        lines = open('data/tmp2-{}.dat'.format(s)).read().splitlines()
+        make_plot(lines, ['eytzinger_bfp_a'] + 
+                         ['fetcher_{}'.format(i) for i in [1,2]],
+                  2**30, 'figs/fetchers-{}-i'.format(s), 
+                  [4*x/s for x in caches], 'uint{}'.format(8*s),
+                  r'running time of $2\times10^6$ searches on $n$ {}-bit values'.format(s*8))
+        make_plot(lines, ['eytzinger_bfp_a'] +
+                         ['fetcher_{}'.format(i) for i in [1,2]],
+                  2**23/s, 'figs/fetchers-{}-ii'.format(s), 
+                  [4*x/s for x in caches[:2]], 'uint{}'.format(8*s),
+                  r'running time of $2\times10^6$ searches on $n$ {}-bit values'.format(s*8))
 
 

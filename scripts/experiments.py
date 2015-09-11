@@ -11,8 +11,8 @@ if __name__ == "__main__":
     datafile = datadir + os.path.sep + "alldata.dat"
     open(datafile, "w").close() # clobber the data file
     for ((dt, size), it) in itertools.product(dtypes, itypes):
-        while n*size < 14*2**30:
-            cmd = 'numactl -C 6 ./main {} {} {} {} >> {}'.format(dt, it, int(n), m, datafile)
+        while n*size < 5*2**30:
+            cmd = 'numactl -C 3 ./main {} {} {} {} >> {}'.format(dt, it, int(n), m, datafile)
             print cmd
             os.system(cmd)
             n *= base

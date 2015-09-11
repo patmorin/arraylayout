@@ -29,7 +29,7 @@ protected:
 
 	// We always prefetch multiplier*i + offset
 	static const I multiplier = 64/sizeof(T);
-	static const I offset = multiplier + multiplier/2 - 1;
+	static const I offset = multiplier + multiplier/2;
 
 	template<typename ForwardIterator>
 	ForwardIterator copy_data(ForwardIterator a0, I i);
@@ -108,7 +108,7 @@ protected:
 	using eytzinger_array<T, I, aligned>::multiplier;
 	using eytzinger_array<T, I, aligned>::offset;
 	static const I imul = multiplier << C;
-	static const I ioff = imul-1+multiplier/2;
+	static const I ioff = imul+multiplier/2;
 	I mask;
 
 public:

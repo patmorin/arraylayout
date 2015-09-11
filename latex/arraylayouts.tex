@@ -1324,7 +1324,7 @@ all cases for the branch-free code).  This could fixed by using 16-ary
 trees instead, but then the number of keys stored in a block would be 15,
 which does not align with cache lines.  We tested 16-ary trees and found
 them to be slower than 17-ary trees for all values of $n$.\footnote{A
-third alternative is to store 15 keys in blocks size 16, but this would
+third alternative is to store 15 keys in blocks of size 16, but this would
 be outside the model we consider, in which all data resides in a single
 array of length $n$.}
 
@@ -1560,17 +1560,14 @@ rounds where each round requires loading a cache line (at a cost of $L$)
 and searching that cache line (at a cost of $c$).
 
 On the other hand, if $WL > \log B$, then the memory subsystem can
-handle $\log B$ cache line requests in parallel without any addition
+handle $\log B$ cache line requests in parallel without any additional
 overhead. In this case, then the running-time of Eytzinger search with
 prefetching is roughly
 \[
     \max\{L,c\}\log_B n \enspace .
 \]
-This analysis shows two things: (1)~The experimental results we obtain do
-have a theoretical foundation, but (2)~The speedup (over B-trees) that we
-can get in this model is at most a factor of 2, since this model allows us
-to parallelize only two things: local computation ($c$) and memory latency
-($L$).
+This analysis shows that our experimental results do
+have a theoretical explanation.
 
 After modelling it this way, we observe that this model allows a
 \emph{cheat}, in the sense that, for any $k\le W$ one can load $k$

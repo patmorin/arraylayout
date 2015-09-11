@@ -101,7 +101,7 @@ public:
 
 // An Eytzinger array with branch-free searches and prefetching
 template<typename T, typename I, unsigned C=0, bool aligned=false>
-class eytzinger_array_pfft : public eytzinger_array<T,I,aligned> {
+class eytzinger_array_deeppf : public eytzinger_array<T,I,aligned> {
 protected:
 	using eytzinger_array<T, I, aligned>::a;
 	using eytzinger_array<T, I, aligned>::n;
@@ -113,7 +113,7 @@ protected:
 
 public:
 	template<typename ForwardIterator>
-	eytzinger_array_pfft(ForwardIterator a0, I n0)
+	eytzinger_array_deeppf(ForwardIterator a0, I n0)
 	: eytzinger_array<T,I,aligned>(a0, n0) {
 		for (mask = 1; mask <= n; mask <<= 1) {}
 		mask--;
@@ -124,7 +124,7 @@ public:
 
 // Branch-free code with or without prefetching
 template<typename T, typename I, unsigned C, bool aligned>
-I __attribute__ ((noinline)) eytzinger_array_pfft<T,I,C,aligned>::search(T x) const {
+I __attribute__ ((noinline)) eytzinger_array_deeppf<T,I,C,aligned>::search(T x) const {
 	I i = 0;
 	while (i < n) {
         //std::cout << i << " => ";

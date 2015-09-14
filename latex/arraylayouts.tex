@@ -89,14 +89,13 @@ and the binary search algorithm is implemented in \mintinline{c++}{std::lower_bo
 and \mintinline{c++}{std::upper_bound()}.
 
 For a single example of how useful sorting/binary
-search is, consider the chromium browser code-base
+search is, consider the Chromium browser code-base
 which calls \mintinline{c++}{std::lower_bound()} and
 \mintinline{c++}{std::upper_bound()} from 135 different locations
 in a wide variety of contexts, including cookie handling, GUI
 layout, graphics and text rendering, video handling, and certificate
 management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
-that is built and packaged to make Google Chrome, a web browser that is
-now used by more than a billion users \cite{protalinksi:google}.
+that is built and packaged to make Google Chrome, a web browser that has more than a billion users \cite{protalinksi:google}.
 
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
@@ -156,7 +155,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
 %  at $A[i]$ are stored at $A[2i+1]$ and $A[2i+2]$, respectively.
 
   \item \texttt{Btree} (see \figref{btree}): In this layout, the data is
-  viewed as being stored in a complete $(B+1)$-ary tree, so that each
+  viewed as being stored in a complete $(B+1)$-ary search tree, so that each
   node---except possibly one leaf---stores $B$ values.  The parameter
   $B$ is chosen so that $B$ data items fit neatly into a single cache line
   and the nodes of this tree are mapped to array locations in the order
@@ -176,12 +175,12 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   \item \texttt{vEB} (see \figref{veb}): In this, the \emph{van Emde
   Boas} layout, the data is viewed as being stored in a complete binary
   tree whose height is $h=\lceil\log (n+1)\rceil -1$. This tree is
-  layed out recursively:  If $h=0$, then the single node of the tree
+  laid out recursively:  If $h=0$, then the single node of the tree
   is stored in $A[0]$.  Otherwise, the tree is split into a top-part
-  of height $\lfloor h/2\rfloor$, which is recursively layed out in
+  of height $\lfloor h/2\rfloor$, which is recursively laid out in
   $A[0,\ldots,2^{1+\lfloor{h/2\rfloor}}-2]$.  Attached to the leaves of
   this top tree are up to $2^{1+\lfloor{h/2\rfloor}}$ subtrees, which
-  are each recursively layed out, in left-to-right order, starting at
+  are each recursively laid out, in left-to-right order, starting at
   array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
 
   \begin{figure}
@@ -247,7 +246,7 @@ implementations.
 \subsection{Summary of Results}
 
 For readers only interested in an executive summary, our results
-are the following: For arrays that can be kept in the L2 cache,
+are the following: For arrays small enough to be kept in L2 cache,
 the branch-free binary search code listed in \lstref{bfbs} is
 the fastest algorithm (see \figref{eytzinger-ii}).  For larger
 arrays, the Eytzinger layout, combined with the branch-free
@@ -255,7 +254,7 @@ prefetching search algorithm in \lstref{eytzinger-iii} is the
 fastest general-purpose layout/search algorithm combination (see
 Figures~\ref{fig:eytzinger-i}--\ref{fig:larger}).\footnote{Warning:
 for consistent performance, the Eytzinger code should
-include a mask as described in \secref{other-machines}.}
+use masking as described in \secref{other-machines}.}
 For full experimental data sets on a wide variety of
 processors, interested readers are directed to this project's
 webpage.\footnote{\url{http://cglab.ca/~morin/misc/arraylayout-v2/}}
@@ -319,7 +318,7 @@ red-black trees).
 \subsection{Outline}
 
 The remainder of this paper is organized as follows: \Secref{architecture}
-provides a brief review of processors architecture paying particular
+provides a brief review of modern processor architecture paying particular
 attention to aspects that affect the results in the current paper.
 \Secref{layouts} describes our implementations of the four memory layouts
 and experimental results for these implementations. \Secref{model}
@@ -361,29 +360,30 @@ cycles per second.  This RAM module can transfer 8 bytes per cycle
 from RAM to the CPU, for a (theoretical) peak transfer rate of $8\times
 1.866\times10^9\approx 15$GB/s.
 
-Individual memory transfers, however, incur \emph{latency}.  The
-\emph{(first-word) latency} of this RAM module is approximately 10ns:
-From the time a processor issues a request to read a word of memory
-until that word is available is approximately $10^{-8}$ seconds.
+Individual memory transfers, however, incur \emph{latency}.
+The \emph{(first-word) latency} of this RAM module is approximately
+10ns: From the time a processor issues a request to read a word of
+memory from an open row until that word is available is approximately
+$10^{-8}$ seconds.  If the memory is not in an open row (as occurs when
+this access is far from the previous memory access), latency roughly
+doubles to $2\times 10^{-8}$ seconds.
 
-Observe that, if the CPU repeatedly reads 4 byte quantities from RAM,
-then it receives $10^8$ of these per second, for a transfer rate of
-$4\times 10^8=0.4$GB/s.  Note how far this is below this peak transfer
-rate of 15GB/s.
+Observe that, if the CPU repeatedly reads 4 byte quantities from random
+locations in RAM, then it receives $1/(2\times 10^8)$ of these per second,
+for a transfer rate of $4\times(1/2)\times10^8=0.2$GB/s.  Note how far
+this is below this peak transfer rate of 15GB/s.
 
 This discrepancy is important: If the CPU is executing instructions
 that require the contents of memory locations in RAM, and a subsequent
-instruction cannot begin before the previous instruction completes,
-then the CPU will not execute more than $10^8$ instructions per second;
-it will waste approximately 39/40 cycles waiting on data from RAM.
+instruction cannot begin before the previous instruction completes, then
+the CPU will not execute more than $(1/2)\times 10^8$ instructions per
+second; it will waste approximately 79/80 cycles waiting on data from RAM.
 
-When the CPU reads a RAM address, the RAM moves a 64 byte cache line
-into the CPU. From the time the CPU issues the read request to the time
-the last word of this cache-line is available is approximately 13.4ns.
-This quantity is called the \emph{cache-Line (8th-Word) latency}.
-If the processor repeatedly reads cache lines from RAM, this results in a
-transfer rate of $64 / (13.4\times10^{-9}) \approx 4.8$GB/s.  Observe that
-this is still less than a third of the RAM's peak transfer rate.
+When the CPU reads a RAM address, the RAM moves a 64 byte cache line into
+the CPU.  If the processor repeatedly reads cache lines from RAM, this
+results in a transfer rate of $64 / (2\times10^{-8}) \approx 3.2$GB/s.
+Observe that this is still less than a quarter of the RAM's peak transfer
+rate.
 
 The key point to take from the preceding discussion is the following: In
 order to actually achieve a transfer rate close to the theoretical peak
@@ -528,7 +528,7 @@ where noted otherwise, these results were obtained on the Intel
 the data consists of 4-byte (32-bit) unsigned integers. In each
 case, the data stored in the array is the integer set $\{2i+1:
 i\in\{0,\ldots,n-1\}\}$ and searches are for uniformly randomly chosen
-integers in the set $\{0,\ldots,2n+1\}$.  Therefore roughly half the
+integers in the set $\{0,\ldots,2n\}$.  Therefore roughly half the
 searches were for values in the set and half were for values not in
 the set.  Although the tests reported in this section are for 4-byte
 unsigned integers, the C++ implementations of the layouts and search
@@ -538,11 +538,10 @@ code and scripts used for our experiments are freely available through
 
 \subsection{Sorted}
 
-Searching a sorted array is an especially important special case, since it
-is so widely used. In this subsection we take special care to understand
-the performance of two implementations of binary search on a sorted array.
-Even these two simple implementations of binary search already exhibit
-some unexpected behaviours on modern processors.
+In this subsection we take special care to understand the performance of
+two implementations of binary search on a sorted array.  Even these two
+simple implementations of binary search already exhibit some unexpected
+behaviours on modern processors.
 
 \subsubsection{Cache-Use Analysis}
 
@@ -557,8 +556,7 @@ analyses, we use the following variables:
 \end{itemize}
 
 When we repeatedly execute binary search on the same array, there are
-two ways in which this takes advantage of the cache:
-
+two ways the cache helps:
 \begin{enumerate}
   \item (Frequently accessed values) After a large number of searches,
     we expect to find the most frequently accessed values in the cache.
@@ -568,14 +566,16 @@ two ways in which this takes advantage of the cache:
     of these frequently accessed values.
   \item (Spatial locality) Once an individual binary search has reduced
     the search range down to a size less than or equal to $B$, the
-    subarray that remains to be searched will occupy at most one or two
+    subarray that remains to be searched will occupy one or two
     cache lines. 
 \end{enumerate}
 
-Thus, on average, we expect binary search to incur roughly $\log n -
-\log(C/B) - \log B + 1 = \log n - \log C + 1$ cache misses. The first
+
+Thus, when we run binary search repeatedly on the same array, the first
 $\log(C/B)$ comparisons are to cached values and the last $\log B$
-comparisons are all to values in the same cache line.
+comparisons are all to values in the same cache line.  Thus, on average,
+we expect binary search to incur roughly $\log n - \log(C/B) - \log B +
+1 = \log n - \log C + 1$ cache misses.
 
 Some cache analyses of binary search ignore spatial locality.
 For instance, Brodal \etal\ \cite{brodal.fagerberg.ea:cache} write
@@ -583,7 +583,7 @@ For instance, Brodal \etal\ \cite{brodal.fagerberg.ea:cache} write
 in the top part of the tree share cache lines.'' In theory, however,
 the spatial locality in the small subtrees should make up for this.
 
-On the Intel 4790K, whose L3 cache can store 2048K cached values, we
+On the Intel 4790K, whose 8MB L3 cache can store 2048K cached values, we
 expect to see a sharp increase in search times when $n$ exceeds $2^{21}$,
 with each additional level of binary search incurring another L3 cache
 miss and access to RAM.  When we plot search time on a vertical axis
@@ -668,7 +668,7 @@ additional L2 cache miss and an access to the L3 cache.
 \subsubsection{Branch-Free Binary Search}
 
 Readers with experience in micro-optimizing code will see that, for
-modern desktop processors, the code in \lstref{nbs} can be improved
+modern desktop processors, the code in \lstref{nbs} can be optimized
 substantially.  There are two problems with this code:
 
 \begin{enumerate}
@@ -1185,12 +1185,15 @@ the while loop.
 \subsubsection{A Mixed Eytzinger/Sorted Layout}
 
 We conclude this section with a discussion of a mixed layout suggested by
-the cache-use analyses of binary and Eytzinger search. One can build an
-array in which the first part contains values $x_0,\ldots x_{2^{h}-2}$ stored
-using the Eytzinger layout and the second
-part of the array contains values $y_0,\ldots,y_{n-2^h}$ in sorted order.
-Here, the value of $h$ is the minimum integer such that $2^{h}-1 + B2^h
-\ge n$ and the values in the first part of the array are chosen so that
+the cache-use analyses of binary and Eytzinger search.  Conceptually, this
+layout implements a binary search tree (laid out as an Eytzinger array)
+whose leaves each contain blocks of $B$ values (stored in sorted order).
+
+More specifically, the first part of the array contains values $x_0,\ldots
+x_{2^{h}-2}$ stored using the Eytzinger layout and the second part of
+the array contains values $y_0,\ldots,y_{n-2^h}$ in sorted order.  Here,
+the value of $h$ is the minimum integer such that $2^{h}-1 + B2^h \ge n$
+and the values in the first part of the array are chosen so that
 \[
     y_0<\cdots<y_{B-1} < x_0 < y_{B}<\cdots<y_{2B-1} < x_1 < \cdots
 \]
@@ -1219,12 +1222,13 @@ both implementations are branch-free and neither use prefetching.)
    \figlabel{mixed-i}
 \end{figure}
 
-However, this mixed layout is unable to beat the branch-free Eytzinger
-search with explicit prefetching. This is true even when the mixed layout
-uses prefetching in the Eytzinger part of its search (which has the
-side-effect of prefetching the correct block for the second part of the
-search). \Figref{mixed-ii} compares branch-free Eytzinger with prefetching
-and a prefetching version of the mixed layout.  The two layouts are virtually indistinguishable with respect to performance. 
+However, this mixed layout is unable to beat branch-free Eytzinger
+search with explicit prefetching. This is true even when the mixed
+layout uses prefetching in the Eytzinger part of its search (which has
+the side-effect of prefetching the correct block for the second part
+of the search). \Figref{mixed-ii} compares branch-free Eytzinger with
+prefetching and a prefetching version of the mixed layout.  The two
+layouts are virtually indistinguishable with respect to performance.
 
 \begin{figure}
    \begin{center}
@@ -1244,7 +1248,7 @@ and a prefetching version of the mixed layout.  The two layouts are virtually in
 
 Recall that the $(B+1)$-tree layout simulates search on a $(B+1)$-ary
 search tree, in which each node stores $B$ values.  The nodes of this
-$(B+1)$-ary tree are layed out in the order they are encountered in
+$(B+1)$-ary tree are laid out in the order they are encountered in
 a breadth-first search.  The Eytzinger layout is a special
 case of the Btree layout in which $B=1$. As with the Eytzinger layout, there
 are formulas to find the children of a node: For $j\in\{0,\ldots,B\}$, the
@@ -1502,7 +1506,7 @@ resulting in twice as many cache misses as a Btree layout.
 %
 %\subsection{A B-Tree Eytzinger Layout}
 %
-%We implemented a version of B-trees in which each node was layed out as an
+%We implemented a version of B-trees in which each node was laid out as an
 %Eytzinger array.  The idea behind this implementation was to account for
 %the fact that loading a cache line is a not an atomic operation. Except
 %for the first word requested, the words in a cache line are loaded in
@@ -1528,7 +1532,7 @@ resulting in twice as many cache misses as a Btree layout.
 %reducing the number of cache misses to $\log n -\log C - \log B$ by
 %treating the first (roughly) $n/(B+1)$ elements of the array as an index
 %into (roughly) $n/(B+1)$ blocks each of size $B$. The first part of the
-% array was then layed out as an Eytzinger array and the second part was
+% array was then laid out as an Eytzinger array and the second part was
 % stored in sorted order.
 %
 %A search in this hybrid layout involved a search in the Eytzinger array
@@ -1588,12 +1592,11 @@ We implemented and tested this idea and found that, for the 4-byte data
 studied throughout this paper, it did not yield any speedup with $t=1$ and
 was significantly slower with $t=2$.  This agrees with our analysis and
 the latency/bandwidth characteristics of our machine (\secref{bandwidth}).
-On our machine, $WL=3.124$ and, with 4-byte data, $B=16$, so $\log B=4$,
-and the prefetching Eytzinger search has four outstanding cache line
-requests at any given time.  Since $4>3.124$, the Eytzinger search
-algorithm is already saturating the memory bandwidth.  Taking $t=1$
-or $t=2$ attempts to even further saturate the bandwith by having $8$,
-respectively 16, simultaneous cache line requests.
+On our machine, $WL\approx 4.7$ and, with 4-byte data, $B=16$, so
+$\log B=4$.  Thus, the Eytzinger search algorithm continuously has 4
+memory requests in the memory pipeline so it is close to saturating the
+memory bandwidth already.  Taking $t=1$ or $t=2$ completely saturates
+the memory bandwith by having $8$, respectively 16, concurrent memory requests.
 
 However, since $B$ is the number of data items that fit into a single
 cache line, increasing the size of data items decreases $B$. For example,
@@ -1617,13 +1620,15 @@ improvement for 16-byte data.
 
 \subsection{The $k(B+1)$-tree}
 
-This model also suggests a \emph{simulation}, in the sense that, for any $k\le
-W$ one can load $k$ cache lines in $L+r(k)$ time units, where $r(k)$
-is the time it takes to issue $k$ prefetch requests.  By doing this, one
-can simulate a model with cache line width $B'=kB$ and latency $L=L+r(k)$.
+Our extended I/O model also suggests a \emph{simulation}, in the sense
+that, for any $k\le W$ one can load $k$ cache lines in $L+r(k)$ time
+units, where $r(k)$ is the time it takes to issue $k$ prefetch requests.
+By doing this, one can simulate a model with cache line width $B'=kB$
+and latency $L=L+r(k)$.
 
-This immediately raises the question of whether this cheat can be used
-in reality.  To test this, we implemented a $(kB+1)$-tree where, before
+This immediately raises the question of whether this simulation leads to 
+a useful data structure.
+To test this, we implemented a $(kB+1)$-tree where, before
 searching within a node, we first issue $k$ prefetch commands to load the
 $k$ cache lines used by that node.  \Figref{bktree} shows the results of
 implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$ 
@@ -1686,9 +1691,11 @@ the creation of the first thread until (after) the last thread completes.
 These graphs show that, although the performance gap narrows, the
 Eytzinger layout continues to outperform the other layouts even with four
 threads simultaneously searching the array.  With eight threads and very
-large values of $n$ the two become equally matched.  We did not test more
-than eight threads since this seems unrealistic; the Intel 4790K has only
-4 hyperthreaded cores, which appear to the operating system as 8 CPUs.
+large values of $n$ the two become equally matched.  We did not test
+more than eight threads since this seems unrealistic; the Intel 4790K
+has only 4 hyperthreaded cores, which appear to the operating system as
+8 CPUs. It does not make sense to run more than 8 computation-intensive
+threads simultaneously.
 
 
 \subsection{Larger Data Items}
@@ -1893,12 +1900,12 @@ However, for $n=2^{30}$, branch-free binary search is about 45\% slower.
 %by all the even indices (this is called an \emph{unshuffle} operation
 %\cite[Section~7]{ellis.markov:in-situ}). We can then recurse on the first
 %half of the array. This takes linear time and, at the end of this process,
-%the array is layed out in Eytzinger order.  Generalizing this algorithm
+%the array is laid out in Eytzinger order.  Generalizing this algorithm
 %to the case where $n$ is not a power of two seems non-trivial.
 
 \section*{Acknowledgements}
 
-We are grateful to  Gerth Brodal, Rolf Fagerberg, and Rico Jakob who
+We are grateful to  Gerth Brodal, Rolf Fagerberg, and Riko Jacob who
 kindly made their source code available to us. However, for a variety
 of reasons, most of which have to do with the 12 years that have elapsed
 since it was written, we found it impossible to use as a starting point

@@ -67,6 +67,9 @@ public:
 	I search(T x) const { return unrolled_branchy_search(x);	};
 };
 
+/*
+ * The naive implementation of a Btree array
+ */
 template<unsigned B, typename T, typename I, bool aligned=false>
 class btree_array_naive : public btree_array<B,T,I,aligned> {
 protected:
@@ -78,6 +81,9 @@ public:
 	I search(T x) const { return naive_search(x);	};
 };
 
+/*
+ * A branch-free implementation of the Btree array
+ */
 template<unsigned B, typename T, typename I, bool aligned=false>
 class btree_array_bf : public btree_array<B,T,I,aligned> {
 protected:
@@ -89,6 +95,9 @@ public:
 	I search(T x) const { return branchfree_search(x);	};
 };
 
+/*
+ * A branch-free implementation of the btree array with some prefetching
+ */
 template<unsigned B, typename T, typename I, bool aligned=false>
 class btree_array_bfp : public btree_array<B,T,I,aligned> {
 protected:
@@ -99,7 +108,6 @@ public:
 		: btree_array<B,T,I,aligned>(a0, n0) {};
 	I search(T x) const { return branchfree_prefetch_search(x);	};
 };
-
 
 
 template<unsigned B, typename T, typename I, bool aligned>
@@ -237,214 +245,6 @@ I __attribute__ ((noinline)) btree_array<B,T,I,aligned>::unrolled_branchfree_sea
 	}
 	return j;
 }
-
-
-
-
-
-
-//=====================================================================
-// The following was an experiment with implementing a BTree in which
-// the nodes were layed out as Eytzinger arrays. The idea was to
-// mitigate the fact that the fourth-word latency is greater than the
-// first-word latency.  This didn't provide any real benefit, except on
-// the Atom 330 which uses (super-slow) SDRAM.
-//====================================================================
-template<unsigned B, typename T, typename I>
-class btree_eytzinger_array : public btree_array<B,T,I> {
-protected:
-	using btree_array<B,T,I>::a;
-	using btree_array<B,T,I>::n;
-	using btree_array<B,T,I>::child;
-
-	T* copy_eytz_data(T *b0, T *b, unsigned i);
-	void eytz_block(I i);
-
-public:
-	template<typename ForwardIterator>
-	btree_eytzinger_array(ForwardIterator a0, I n0)
-		: btree_array<B,T,I>(a0, n0) {
-		for (I i = 0; i+B <= n; i += B) {
-			eytz_block(i);
-		}
-	};
-	I search(T x);
-};
-
-template<unsigned B, typename T, typename I>
-T* btree_eytzinger_array<B,T,I>::copy_eytz_data(T *b0, T *b, unsigned i) {
-	if (i >= B) return b0;
-
-	// visit left child
-	b0 = copy_eytz_data(b0, b, 2*i+1);
-
-	// put data at the root
-	b[i] = *b0++;
-
-	// visit right child
-	b0 = copy_eytz_data(b0, b, 2*i+2);
-
-	return b0;
-}
-
-// Layout the btree block starting at a+i in an Eytzinger order
-template<unsigned B, typename T, typename I>
-void btree_eytzinger_array<B,T,I>::eytz_block(I i) {
-	T buf[B];
-	copy_eytz_data(a+i, buf, 0);
-	std::copy_n(buf, B, a+i);
-}
-
-// Search in block, which is layed out in Eytzinger order and has
-// size B.
-template<unsigned B, typename T, unsigned i, unsigned j>
-inline unsigned inner_eytzinger_search(T *block, T x) {
-	if (i >= B) return j;
-    if (x < block[i]) {
-    	inner_eytzinger_search<B,T,2*i+1,i>(block, x);
-    } else if (x > block[i]) {
-    	inner_eytzinger_search<B,T,2*i+2,j>(block, x);
-    } else {
-    	return i;
-    }
-}
-
-template<unsigned B, typename T, typename I>
-I __attribute__ ((noinline)) btree_eytzinger_array<B,T,I>::search(T x) {
-	I j = n;
-	I i = 0;
-	static const unsigned unwinder[] =
-	{8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 16};
-
-	// Search on complete b-tree blocks
-	while (i+B <= n) {
-		T *b = &a[i];
-		unsigned t = 0, j1 = B;
-		for (int _ = 0; _ < 4; _++) {
-			T current = b[t];
-			I left = 2*t + 1;
-			I right = 2*t + 2;
-			j1 = (x <= current) ? t : j1;
-			t = (x <= current) ? left : right;
-		}
-		j1 = (t == B-1) ? (x <= b[t] ? t : j1) : j1;
-		j = j1 < B ? i+j1 : j;
-		i = child(unwinder[j1], i);
-	}
-
-	// Search last (partial) block if necessary
-	if (__builtin_expect(i <= n, 0)) {
-		I lo = i;
-		I hi = n;
-		while (lo < hi) {
-			I m = (lo + hi) / 2;
-			if (x < a[m]) {
-				hi = m;
-				j = m;
-			} else if (x > a[m]) {
-				lo = m+1;
-			} else {
-				return m;
-			}
-		}
-	}
-	return j;
-}
-
-
-
-template<unsigned D, unsigned Q, typename T, typename I>
-class bqtree_array : public btree_array<D*Q,T,I,true> {
-protected:
-	using btree_array<D*Q,T,I,true>::a;
-	using btree_array<D*Q,T,I,true>::n;
-	using btree_array<D*Q,T,I,true>::child;
-
-	template<unsigned int C>
-	static const T* branchfree_inner_search(const T *base, const T x) {
-		if (C <= 1) return base;
-		const unsigned int half = C / 2;
-		const T *current = &base[half];
-		return branchfree_inner_search<C - half>((*current < x) ? current : base, x);
-	}
-
-
-public:
-	template<typename ForwardIterator>
-	bqtree_array(ForwardIterator a0, I n0)
-		: btree_array<D*Q,T,I,true>(a0, n0) {};
-
-	I unrolled_branchfree_search(T x) const;
-	I naive_search(T x) const;
-	I search(T x) const { return unrolled_branchfree_search(x); };
-};
-
-
-// naive search
-template<unsigned D, unsigned Q, typename T, typename I>
-I __attribute__ ((noinline)) bqtree_array<D,Q,T,I>::naive_search(T x) const {
-	I j = n;
-	I i = 0;
-	while (i < n) {
-		for (int t = 0; t < Q; t++)
-			__builtin_prefetch(a+i+t*D);
-		I lo = i;
-		I hi = std::min(i+D*Q, n);
-		while (lo < hi) {
-			I m = (lo + hi) / 2;
-			if (x < a[m]) {
-				hi = m;
-				j = hi;
-			} else if (x > a[m]) {
-				lo = m+1;
-			} else {
-				return m;
-			}
-		}
-		i = child((unsigned)(hi-i), i);
-	}
-	return j;
-}
-
-
-template<unsigned D, unsigned Q, typename T, typename I>
-I __attribute__ ((noinline)) bqtree_array<D,Q,T,I>::unrolled_branchfree_search(T x) const {
-	I j = n;
-	I i = 0;
-	while (i + D*Q <= n) {
-		for (int t = 0; t < Q; t++)
-			__builtin_prefetch(a+i+t*D);
-		const T *base = &a[i];
-		const T *pred = branchfree_inner_search<D*Q>(base, x);
-		unsigned int nth = (*pred < x) + pred - base;
-		{
-			/* nth == D*Q iff x > all values in block. */
-			const T current = base[nth % (D*Q)];
-			I next = i + nth;
-			j = (current >= x) ? next : j;
-		}
-		i = child(nth, i);
-	}
-	if (__builtin_expect(i < n, 0)) {
-		// last (partial) block
-		const T *base = &a[i];
-		I m = n - i;
-		while (m > 1) {
-			I half = m / 2;
-			const T *current = &base[half];
-
-			base = (*current < x) ? current : base;
-			m -= half;
-		}
-
-		I ret = (*base < x) + base - a;
-		return (ret == n) ? j : ret;
-	}
-	return j;
-}
-
-
-
 
 } // namespace fbs
 #endif /* FBS_BTREE_ARRAY_H_ */

@@ -21,6 +21,7 @@
 
 namespace fbs {
 
+// The base class for all our Eytzinger array layouts
 template<typename T, typename I, bool aligned=false>
 class eytzinger_array : public base_array<T,I> {
 protected:
@@ -122,15 +123,13 @@ public:
 };
 
 
-// Branch-free code with or without prefetching
+// Branch-free code with deep prefetching
 template<typename T, typename I, unsigned C, bool aligned>
 I __attribute__ ((noinline)) eytzinger_array_deeppf<T,I,C,aligned>::search(T x) const {
 	I i = 0;
 	while (i < n) {
-        //std::cout << i << " => ";
 		for (int t = 0; t < 1<<C; t++) {
             I pf = (imul*i + ioff + multiplier*t);
-            //std::cout << pf << (t==(1<<C)-1 ? "\n" : ",");
 			__builtin_prefetch(a+(pf&mask));
 		}
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
@@ -261,7 +260,7 @@ I __attribute__ ((noinline)) eytzinger_array_bfpm<T,I,aligned>::search(T x) cons
 }
 
 
-// branch-free unrolled code with masked prefetching
+// branch-free unrolled code
 template<typename T, typename I, bool aligned>
 I __attribute__ ((noinline)) eytzinger_array_unrolled<T, I, aligned>::search(T x) const {
 	// FIXME: this code is incorrect for n < 5

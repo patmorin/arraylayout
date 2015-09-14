@@ -1,8 +1,12 @@
 /*
- * main.cpp
+ * main-mt.cpp
  *
  *  Created on: 2015-04-24
  *      Author: morin
+ *  About:
+ *  	This is just a giant copy of main.cpp with some small modifications
+ *  	to do multithreaded tests.  If anyone cared about maitainability this
+ *  	would get merged into main.cpp.
  */
 
 #include <chrono>
@@ -16,12 +20,8 @@
 #include "eytzinger_array.h"
 #include "sorted_array.h"
 #include "btree_array.h"
-//#include "esmixed_array.h"
-
-// #include "xorshift.h"
 
 using namespace fbs;
-
 
 
 // This class represents a number (type T) with some auxilliary data
@@ -218,57 +218,6 @@ struct Tool<Array, fake_number<std::uint32_t,S>, I> {
 		run_test1_b<Array, fake_number<std::uint32_t,S>, I, std::uniform_int_distribution<std::uint32_t> >(a, n, m, nthreads, name);
 	}
 };
-
-// I came close, but could never get this to work
-//template<typename Array, typename T, typename I>
-//struct Tool<Array, T, I,
-//      typename std::enable_if<std::is_integral<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
-//	}
-//};
-//
-//template<typename Array, typename T, typename I>
-//struct Tool<Array, T, I,
-//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//	}
-//};
-//
-//template<typename Array, typename I>
-//struct Tool<Array, fake_number<std::uint32_t,16>, I,
-//      typename std::enable_if<std::is_integral<std::uint32_t>::value>::type> {
-//	static void run_test1(fake_number<std::uint32_t,16> *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, fake_number<std::uint32_t,16>, I,
-//		std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
-//	}
-//};
-//template<typename Array, typename T, unsigned S, typename I>
-//struct Tool<Array, fake_number<T,S>, I,
-//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, fake_number<T,S>, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//	}
-//};
-
-
-// This actually did work, but not with the fake_number class
-//// Use this template for other types
-//template<typename Array, typename T, typename I>
-//void run_test1(T *a, I n, I m, const std::string &name,
-//		typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
-//	run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
-//}
-//
-//
-//
-//// Use this template for floating-point types.
-//template<typename Array, typename T, typename I>
-//void run_test1(T *a, I n, I m, const std::string &name,
-//		typename std::enable_if<std::is_floating_point<T>::value>::type* = 0) {
-//	run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//}
 
 
 // The cache line width (in bytes)

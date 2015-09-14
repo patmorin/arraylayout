@@ -1,13 +1,12 @@
 version=0.1
 CC=g++
 CFLAGS=-std=c++11 -Wall -O4 -march=native 
-#CC=clang++-3.6
 
 all: main cacher
 
 distrib: arraylayout.tgz
 
-mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h esmixed_array.h
+mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h mixed_array.h bktree_array.h
 
 main : $(mainfiles)
 	$(CC) $(CFLAGS) main.cpp -o main
@@ -21,12 +20,12 @@ main-debug : $(mainfiles)
 cacher : cacher.cpp 
 	g++ -std=c++11 -Wall -O4 cacher.cpp -o cacher
 
-arraylayout.tgz : $(mainfiles) cacher.cpp Makefile README
+arraylayout-$(VERSION).tgz : $(mainfiles) cacher.cpp Makefile README
 	$(eval dirname := arraylayout-$(version))
 	rm -rf $(dirname)
 	mkdir $(dirname)
 	cp $^ $(dirname)/
-	tar czvf arraylayout.tgz $(dirname)
+	tar czvf arraylayout-$(VERSION).tgz $(dirname)
 
 clean :
 	rm -f main cacher main-debug
@@ -99,14 +98,5 @@ run_data.tgz : $(datadir) $(datafiles)
 
 clean-data :
 	rm -rf $(datadir) run_data.tgz
-
-plots : data
-	./make_plots.sh
-	#python ./relative.py
-	gnuplot "plotter.gp"
-	gnuplot "cacher.gp"
-
-$(datadir)/index.html : plots
-	./make_html.sh > $@
 
 

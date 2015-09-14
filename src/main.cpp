@@ -14,15 +14,10 @@
 #include "eytzinger_array.h"
 #include "sorted_array.h"
 #include "btree_array.h"
-#include "esmixed_array.h"
-#include "ricer_array.h"
-#include "hybrid_array.h"
-
-// #include "xorshift.h"
+#include "bktree_array.h"
+#include "mixed_array.h"
 
 using namespace fbs;
-
-
 
 // This class represents a number (type T) with some auxilliary data
 template<typename T, unsigned S>
@@ -48,6 +43,7 @@ public:
 	};
 };
 
+// Make fake_numbers to respond correctly to is_integral and is_floating_point
 namespace std {
 template<typename T, unsigned S>
 struct is_integral<fake_number<T,S>> {
@@ -100,7 +96,9 @@ const char *type_name<double>() {
 }
 
 
-// This is a fake sorted array class that doesn't store anything
+// This is a fake sorted array class that doesn't store anything. Instead,
+// it relies on the array only storing 1,3,5,...,2*n-1 to answer queries in
+// constant time
 template<typename T, typename I>
 class fake_array  {
 protected:
@@ -126,7 +124,7 @@ public:
 
 template<typename T, typename I>
 I fake_array<T,I>::search(const T &x) {
-	return std::max((I)0, std::min(n, (I)x/2));
+	return std::min(n, (I)x/2);
 }
 
 
@@ -210,57 +208,6 @@ struct Tool<Array, fake_number<std::uint64_t,S>, I> {
 	}
 };
 
-// I came close, but could never get this to work
-//template<typename Array, typename T, typename I>
-//struct Tool<Array, T, I,
-//      typename std::enable_if<std::is_integral<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
-//	}
-//};
-//
-//template<typename Array, typename T, typename I>
-//struct Tool<Array, T, I,
-//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//	}
-//};
-//
-//template<typename Array, typename I>
-//struct Tool<Array, fake_number<std::uint32_t,16>, I,
-//      typename std::enable_if<std::is_integral<std::uint32_t>::value>::type> {
-//	static void run_test1(fake_number<std::uint32_t,16> *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, fake_number<std::uint32_t,16>, I,
-//		std::uniform_int_distribution<std::uint32_t> >(a, n, m, name);
-//	}
-//};
-//template<typename Array, typename T, unsigned S, typename I>
-//struct Tool<Array, fake_number<T,S>, I,
-//      typename std::enable_if<std::is_floating_point<T>::value>::type> {
-//	static void run_test1(T *a, I n, I m, const std::string &name) {
-//		run_test1_b<Array, fake_number<T,S>, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//	}
-//};
-
-
-// This actually did work, but not with the fake_number class
-//// Use this template for other types
-//template<typename Array, typename T, typename I>
-//void run_test1(T *a, I n, I m, const std::string &name,
-//		typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
-//	run_test1_b<Array, T, I, std::uniform_int_distribution<T> >(a, n, m, name);
-//}
-//
-//
-//
-//// Use this template for floating-point types.
-//template<typename Array, typename T, typename I>
-//void run_test1(T *a, I n, I m, const std::string &name,
-//		typename std::enable_if<std::is_floating_point<T>::value>::type* = 0) {
-//	run_test1_b<Array, T, I, std::uniform_real_distribution<T> >(a, n, m, name);
-//}
-
 
 // The cache line width (in bytes)
 static const unsigned CACHE_LINE_WIDTH = 64;
@@ -287,24 +234,23 @@ void run_tests(I n, I m) {
 
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
 	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
-	Tool<esmixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
-	Tool<esmixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
-	Tool<ricer_array_unrolled_pf<T,I>,T,I>::run_test1(a, n, m, "ricer_pf");
+	Tool<mixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
+	Tool<mixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
 	Tool<eytzinger_array_unrolled<T,I>,T,I>::run_test1(a, n, m, "eytzinger_unrolled");
-	Tool<hybrid_array<T,I,true,true>,T,I>::run_test1(a, n, m, "hybrid");
 
 	Tool<eytzinger_array_deeppf<T,I,0,true>,T,I>::run_test1(a, n, m, "fetcher_0");
 	Tool<eytzinger_array_deeppf<T,I,1,true>,T,I>::run_test1(a, n, m, "fetcher_1");
 	Tool<eytzinger_array_deeppf<T,I,2,true>,T,I>::run_test1(a, n, m, "fetcher_2");
-//	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-//	if (sizeof(I) > 4 || n <= 100000000)
+
+	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
+	//if (sizeof(I) > 4 || n <= 100000000)
 //		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
-//	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive");
+	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive");
 //	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
 //	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
 //
-//	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
-//	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
+	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
+	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
 //	Tool<btree_array_bfp<B/2,T,I>,T,I>::run_test1(a, n, m, "btree8_bfp");
 //	Tool<btree_array_bfp<B/4,T,I>,T,I>::run_test1(a, n, m, "btree4_bfp");
 //
@@ -320,7 +266,7 @@ void run_tests(I n, I m) {
 //	//Tool<bqtree_array<B,3,T,I>,T,I>::run_test1(a, n, m, "bqtree16_3");
 //	Tool<bqtree_array<B,4,T,I>,T,I>::run_test1(a, n, m, "bqtree16_4");
 //	//Tool<bqtree_array<B,5,T,I>,T,I>::run_test1(a, n, m, "bqtree16_5");
-//	Tool<bqtree_array<B,6,T,I>,T,I>::run_test1(a, n, m, "bqtree16_6");
+	Tool<bktree_array<B,6,T,I>,T,I>::run_test1(a, n, m, "bqtree16_6");
 //	//Tool<bqtree_array<B,7,T,I>,T,I>::run_test1(a, n, m, "bqtree16_7");
 //	//Tool<bqtree_array<B,8,T,I>,T,I>::run_test1(a, n, m, "bqtree16_8");
 //	//Tool<bqtree_array<B,9,T,I>,T,I>::run_test1(a, n, m, "bqtree16_9");

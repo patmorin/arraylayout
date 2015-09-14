@@ -117,7 +117,7 @@ ForwardIterator btree_array<B,T,I,aligned>::copy_data(ForwardIterator a0, I i) {
 
 	for (unsigned c = 0; c <= B; c++) {
 		// visit c'th child
-		a0 = copy_data(a0, child(c,i));
+		a0 = copy_data(a0, child(c, i));
 		if (c < B && i+c < n) {
 			a[i+c] = *a0++;
 		}

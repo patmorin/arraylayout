@@ -51,7 +51,7 @@ urlcolor=linkblue} \setlength{\parskip}{1ex}
   For larger values of $n$, we arrive at the surprising conclusion that
   the Eytzinger layout is usually the fastest.  The latter conclusion is
   unexpected and goes counter to earlier experimental work by Brodal,
-  Fagerberg, and Jakob (SODA~2003), who concluded that both the B-tree
+  Fagerberg, and Jacob (SODA~2003), who concluded that both the B-tree
   and van Emde Boas layouts were faster than the Eytzinger layout for
   large values of $n$.
 \end{abstract}
@@ -78,7 +78,6 @@ implementation of binary search in a sorted array was approximately
 three times faster than searching using C++'s \texttt{stl::set} class
 (implemented as a red-black tree).}
 
-
 It would be difficult to overstate the importance of
 algorithms for searching in a static sorted set.
 Every major programming language and environment provides a sorting
@@ -88,14 +87,22 @@ For example, in C++, sorting is done with \mintinline{c++}{std::sort()}
 and the binary search algorithm is implemented in \mintinline{c++}{std::lower_bound()}
 and \mintinline{c++}{std::upper_bound()}.
 
-For a single example of how useful sorting/binary
-search is, consider the Chromium browser code-base
-which calls \mintinline{c++}{std::lower_bound()} and
+It is not difficult to find abundant and important examples of the user of binary search on sorted sets. Consider these two:
+
+\begin{enumerate}
+\item The Chromium browser code-base
+calls \mintinline{c++}{std::lower_bound()} and
 \mintinline{c++}{std::upper_bound()} from 135 different locations
 in a wide variety of contexts, including cookie handling, GUI
 layout, graphics and text rendering, video handling, and certificate
 management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
 that is built and packaged to make Google Chrome, a web browser that has more than a billion users \cite{protalinksi:google}.
+
+\item Repeated binary searches in a few sorted arrays
+represent approximately 10\% of the computation time for the AppNexus
+real-time ad bidding engine. This engine runs continuously on 1500 machines
+and sees 80\% of traffic on the internet.
+\end{enumerate}
 
 However, sorted order is just one possible layout that can be used to
 store data in an array. Other layouts are also possible and---combined
@@ -117,8 +124,9 @@ accompanying search algorithms.  The following points describe the scope of our 
       for any value $x$. In case $x$ is greater than any value in the
       array, the search algorithm returns the index $n$.
 
-\item We study real (wall-clock) execution time, not CPU time, cache
-      misses, other types of efficiency, or other proxies for real time.
+\item We study real (wall-clock) execution time, not instruction counts,
+      branch mispredictions, cache misses, other types of efficiency,
+      or other proxies for real time.
 
 \item We ignore the time required to construct the array
       layout.\footnote{All four layouts can be constructed in $O(n)$
@@ -204,10 +212,13 @@ its nodes in breadth-first order goes back half a millenium to Eytzinger
 \cite{eytzinger:thesaurus}. In more modern times, this method was proposed by
 Williams for an implementation of binary heaps \cite{williams:algorithm}.
 
-The implicit Btree layouts we study are a marriage of the Eytzinger layout
-mentioned above and complete $(B+1)$-ary trees. This layout
+The implicit Btree layouts we study are a marriage of the Eytzinger
+layout mentioned above and complete $(B+1)$-ary trees. This layout
 was studied by Jones \cite{jones:empirical} and LaMarca and Ladner
 \cite{lamarca.ladner:influence} in the context of implementing heaps.
+Niewiadomski and Amaral \cite{niewiadomski.amaral:chopping} consider
+an implicit $k$-ary heap implementation in which each node is itself
+represented using hte Eytzinger layout.
 
 The vEB layout was proposed by Prokop
 \cite[Section~10.2]{prokop:cache-oblivious} because it has the advantage
@@ -221,7 +232,7 @@ be obtained with a B-tree using an optimal choice of $B$.
 %matrix operations \cite{X}.
 
 The work most closely related to ours is that of Brodal, Fagerberg,
-and Jakob \cite{brodal.fagerberg.ea:cache}. As part of their work on
+and Jacob \cite{brodal.fagerberg.ea:cache}. As part of their work on
 cache-oblivious search trees, they present experimental results for
 all four of the layouts we study here.  Based on their experiments,
 they reach the following conclusions:
@@ -298,7 +309,7 @@ as follows:
 Our conclusions holds across a wide variety of different processors and
 also hold in a setting in which multiple threads are performing repeated
 searches on a single array.  Our conclusions mostly agree with those of
-Brodal, Fagerberg and Jakob for small values of $n$, but are completely
+Brodal, Fagerberg and Jacob for small values of $n$, but are completely
 different for large values of $n$.  The reason for the differences is
 that there are a number of processor architecture considerations---beyond
 caching---that affect the relative performance of these layouts.
@@ -348,9 +359,10 @@ CPU runs at frequency of 4GHz, or $4\times10^9$ cycles per second.
 This CPU can execute roughly $4\times 10^{9}$ instructions per
 second.\footnote{This is only a very rough approximation of the
 truth; different instructions have different latencies and throughput
-\cite{fog:instruction}.  Ideal code such as dense linear algebra
-can sustain 3--4 instructions per cycle, but .5--1.2 instructions per cycle
-is normal for typical business code such as online transaction processing.}
+\cite{fog:instruction}.  Ideal code such as dense linear algebra can
+sustain 3--4 instructions per cycle, but 0.7 instructions per cycle is
+normal for typical business code such as online transaction processing
+\cite{tozun.pandis.ea:from}.}
 
 %\url{https://gmplib.org/~tege/x86-timing.pdf}
 
@@ -1629,13 +1641,15 @@ units, where $r(k)$ is the time it takes to issue $k$ prefetch requests.
 By doing this, one can simulate a model with cache line width $B'=kB$
 and latency $L=L+r(k)$.
 
-This immediately raises the question of whether this simulation leads to 
-a useful data structure.
-To test this, we implemented a $(kB+1)$-tree where, before
-searching within a node, we first issue $k$ prefetch commands to load the
-$k$ cache lines used by that node.  \Figref{bktree} shows the results of
-implementing this for all $k\in\{1,\ldots,16\}$. The best choices of $k$ 
-on this machine seem to be $k\in\{6,7,8,9,10\}$.
+This immediately raises the question of whether this simulation leads to
+a useful data structure.  To test this, we implemented a $(kB+1)$-tree
+where, before searching within a node, we first issue $k$ prefetch
+commands to load the $k$ cache lines used by that node.  This idea of
+using prefetching to get extra-wide nodes ``almost for free'' is the
+essential idea used to speed up searches in Chen \etal's prefetching
+B$^+$-tree \cite{chen.gibbons.ea:improving}.  \Figref{bktree} shows
+the results of implementing this for all $k\in\{1,\ldots,16\}$. The best
+choices of $k$ on this machine seem to be $k\in\{6,7,8,9,10\}$.
 
 \begin{figure}
    \centering{\includegraphics{figs/bktrees-i}}
@@ -1643,11 +1657,11 @@ on this machine seem to be $k\in\{6,7,8,9,10\}$.
    \figlabel{bktree}
 \end{figure}
 
-These results show that one can, indeed, speedup the Btree layout for
-some sufficiently large values of $n$ by using this technique.  This offers
+These results show that one can, indeed, speedup the Btree layout for some
+sufficiently large values of $n$ by using this technique.  This offers
 some validation of the extension of the I/O model proposed above.
 For some choices of $k$ and some values of $n$, this yields a layout
-that is faster than the Eytzinger layout. 
+that is faster than the Eytzinger layout.
 
 Unfortunately, the $(Bk+1)$-tree requires more parameter-tuning than the
 Eytzinger layout and only beats the Eytzinger layout for a limited range
@@ -1829,7 +1843,8 @@ RAM are slow, and should be minimized.  A more accurate statement, that
 accounts for our findings, is that accesses to RAM have high latency and
 this latency needs to be mitigated.  This was formalized in \secref{model}
 and the resulting computational model does have some predictive power:
-It lead us to deeper prefetching in the Eytzinger search algorithm and the $(Bk+1)$-tree, which behave more or less as the model predicts.
+It lead us to deeper prefetching in the Eytzinger search algorithm and
+the $(Bk+1)$-tree, which behave more or less as the model predicts.
 
 Practically speaking, this work opens up a whole class of algorithms
 and data structures that may be simpler to implement and faster in
@@ -1840,10 +1855,15 @@ practice.  This raises our first open question:
   other problems?
 \end{op}
 
-An obvious candidate to consider in the context of \opref{other-problems}
-is the problem of sorting where the heap-sort algorithm
-\cite{floyd:algorithm,williams:algorithm}, which already uses the
-Eytzinger layout, is an obvious starting point.
+An obvious candidate to consider in the context of
+\opref{other-problems} is the problem of sorting where the
+heap-sort algorithm \cite{floyd:algorithm,williams:algorithm},
+which already uses the Eytzinger layout, is an obvious starting
+point. Scouring the internet, we have only been able to find one
+implementation, due to Piotr Tarsa, of heap-sort that makes use of
+prefetching, and it only prefetches one level deep.\footnote{See
+the files labelled \url{sortalgo/sortheap*cascading*.hpp} in
+\url{https://github.com/tarsa/SortingAlgorithmsBenchmark/}}
 
 \subsection{For Big Data, Branchy Code can be a Good Prefetcher}
 

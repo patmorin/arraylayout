@@ -16,6 +16,7 @@
 #include "btree_array.h"
 #include "bktree_array.h"
 #include "mixed_array.h"
+#include "mixed_array2.h"
 
 using namespace fbs;
 
@@ -235,7 +236,9 @@ void run_tests(I n, I m) {
 	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
 	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
 	Tool<mixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
+	Tool<mixed_array2<T,I>,T,I>::run_test1(a, n, m, "esmixed2");
 	Tool<mixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
+	Tool<mixed_array2_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed2_pf");
 	Tool<eytzinger_array_unrolled<T,I>,T,I>::run_test1(a, n, m, "eytzinger_unrolled");
 
 	Tool<eytzinger_array_deeppf<T,I,0,true>,T,I>::run_test1(a, n, m, "fetcher_0");

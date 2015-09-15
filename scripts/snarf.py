@@ -282,26 +282,6 @@ if __name__ == "__main__":
               2**30, 'figs/mixed-ii', caches)
 
 
-    # mine versus Paul's
-    lines = open('data/lauteschwein-bigun.dat').read().splitlines()
-    make_plot(lines, ['esmixed_pf', 'hybrid'],
-              2**30, 'figs/hybrids-i', caches)
-    make_plot(lines, ['esmixed_pf', 'hybrid'],
-              2**21, 'figs/hybrids-ii', caches)
-
-    # mine versus Paul's
-    make_plot(lines, ['eytzinger_bfpm_a', 'eytzinger_unrolled', 'ricer_pf'],
-              2**30, 'figs/race-i', caches)
-    make_plot(lines, ['sorted_bf', 'eytzinger_bfpm_a', 'eytzinger_unrolled', 'ricer_pf'],
-              2**21, 'figs/race-ii', caches)
-
-
-    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf', 'esmixed_pf', 'hybrid'],
-              2**30, 'figs/fullrace-i', caches)
-    make_plot(lines, ['eytzinger_bfpm_a', 'ricer_pf', 'esmixed_pf', 'hybrid'],
-              2**21, 'figs/fullrace-ii', caches)
-
-
     for s in [4, 8, 16]:
         lines = open('data/tmp2-{}.dat'.format(s)).read().splitlines()
         make_plot(lines, ['eytzinger_bfp_a'] + 

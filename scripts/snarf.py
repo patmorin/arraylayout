@@ -282,6 +282,14 @@ if __name__ == "__main__":
               2**30, 'figs/mixed-ii', caches)
 
 
+    # Eytzinger versus mixed
+    lines = open('run_data/alldata.dat').read().splitlines()    
+    make_plot(lines, ['eytzinger_bfpm_a', 'esmixed_pf', 'esmixed2_pf', 'bqtree16_6'],
+              2**30, 'figs/blech-i', caches)
+    make_plot(lines, ['eytzinger_bfpm_a', 'esmixed_pf', 'esmixed2_pf', 'bqtree16_6'],
+              2**21, 'figs/blech-ii', caches)
+
+
     for s in [4, 8, 16]:
         lines = open('data/tmp2-{}.dat'.format(s)).read().splitlines()
         make_plot(lines, ['eytzinger_bfp_a'] + 

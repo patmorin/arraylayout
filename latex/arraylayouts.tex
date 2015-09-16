@@ -94,8 +94,8 @@ calls \mintinline{c++}{std::lower_bound()} and
 \mintinline{c++}{std::upper_bound()} from 135 different locations
 in a wide variety of contexts, including cookie handling, GUI
 layout, graphics and text rendering, video handling, and certificate
-management.\footnote{\url{https://goo.gl/zpSdXo}} This is the source code
-that is built and packaged to make Google Chrome, a web browser that has more than a billion users \cite{protalinksi:google}.
+management.\footnote{\url{https://goo.gl/zpSdXo}} This code
+is built and packaged to make Google Chrome, a web browser that has more than a billion users \cite{protalinksi:google}.
 
 \item Repeated binary searches in a few sorted arrays
 represent approximately 10\% of the computation time for the AppNexus
@@ -508,7 +508,7 @@ accurate predictions.  Branch predictors work well when the condition
 is highly predictable so that, e.g., the conditional jump condition is
 almost always taken or almost always not taken.
 
-Most modern processors use some form of two-level adaptive predictor
+Most modern processors use some form of two-level adaptive branch-predictor
 \cite{yeh.patt:two-level} that can even handle second-order statistics,
 such as conditional jumps that implement loops with a fixed number of
 iterations. In this case, they can detect conditions such as ``this

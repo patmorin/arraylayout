@@ -19,7 +19,7 @@ To run an experiment on your own (linux) machine (with g++ installed):
     make main
     ./main uint32 uint32 100000000 10000000
 
-This will test the cost of performing ten million searches in an array of one hundred million integers.  You'd better have at least 80MB of free RAM, which you can check with
+This will test the cost of performing ten million searches in an array of one hundred million integers.  You'd better have at least 800MB of free RAM, which you can check with
 
     free -h
 

@@ -6,8 +6,9 @@ all: main cacher
 
 distrib: arraylayout.tgz
 
-mainfiles = main.cpp main-mt.cpp base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h mixed_array.h bktree_array.h
+headerfiles = base_array.h veb_array.h eytzinger_array.h sorted_array.h btree_array.h mixed_array.h bktree_array.h
 
+mainfiles = main.cpp main-mt.cpp $(headerfiles)
 main : $(mainfiles)
 	$(CC) $(CFLAGS) main.cpp -o main
 
@@ -19,6 +20,9 @@ main-debug : $(mainfiles)
 
 cacher : cacher.cpp 
 	g++ -std=c++11 -Wall -O4 cacher.cpp -o cacher
+
+example: example.cpp $(headerfiles)
+	g++ -std=c++11 -Wall example.cpp -o example
 
 arraylayout-$(VERSION).tgz : $(mainfiles) cacher.cpp Makefile README
 	$(eval dirname := arraylayout-$(version))

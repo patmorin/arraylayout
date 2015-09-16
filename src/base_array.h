@@ -31,6 +31,7 @@ public:
 #endif
 		return a[i];
 	}
+	const T operator[](I i) { return get_data(i); }
 };
 
 } // namespace fbs

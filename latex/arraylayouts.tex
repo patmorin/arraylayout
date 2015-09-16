@@ -1854,15 +1854,14 @@ practice.  This raises our first open question:
   other problems?
 \end{op}
 
-An obvious candidate to consider in the context of
-\opref{other-problems} is the problem of sorting where the
-heap-sort algorithm \cite{floyd:algorithm,williams:algorithm},
-which already uses the Eytzinger layout, is an obvious starting
-point. Scouring the internet, we have only been able to find one
-implementation, due to Piotr Tarsa, of heap-sort that makes use of
-prefetching, and it only prefetches one level deep.\footnote{See
-the files labelled \url{sortalgo/sortheap*cascading*.hpp} in
-\url{https://github.com/tarsa/SortingAlgorithmsBenchmark/}}
+An obvious candidate to consider in the context of \opref{other-problems}
+is the problem of sorting where the heap-sort algorithm
+\cite{floyd:algorithm,williams:algorithm}, which already uses the
+Eytzinger layout, is an obvious starting point. Scouring the internet,
+we have only been able to find one implementation, due to Piotr Tarsa,
+of heap-sort that experiments with prefetching.\footnote{See the
+file \url{sortalgo/binaryheapsortaheadsimplevarianta.hpp}
+in \url{https://github.com/tarsa/SortingAlgorithmsBenchmark/}}
 
 \subsection{For Big Data, Branchy Code can be a Good Prefetcher}
 

@@ -150,14 +150,14 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                  linestyle=ls,
                  marker=mrk,
                  linewidth=[2,.6][alg.startswith('bqtree')], 
-                 markersize=2.5)
+                 markersize=1.5)
 
     if caches:
         ylim = plt.ylim()
         plt.ylim(ymax=ylim[1])
         for i in range(len(caches)):
             plt.plot([caches[i]]*2, ylim, label="L{} cache size".format(i+1),
-                     linestyle=":", color=colours[i], linewidth=1)
+                     linestyle=":", color=colours[i], linewidth=.8)
 
     plt.legend(loc='upper left', framealpha=0.8)
     if filename:
@@ -184,7 +184,12 @@ if __name__ == "__main__":
     make_plot(lines, ['sorted_bf'], 2**21, 'slidefigs/sorted-iv', caches[:2])
     make_plot(lines, ['sorted_bf'], maxn, 'slidefigs/sorted-v', caches)
     make_plot(lines, ['sorted', 'sorted_bf'], maxn, 'slidefigs/sorted-vi', caches)
+    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], 2**21, 'slidefigs/sorted-vii', caches[:2])
+    make_plot(lines, ['sorted', 'sorted_bf', 'sorted_bfp'], maxn, 'slidefigs/sorted-viii', caches)
 
+
+    make_plot(lines, ['sorted_bfp', 'btree16_bf_a'], maxn, 'slidefigs/btree-i', caches)
+    make_plot(lines, ['sorted_bfp', 'btree16_bf_a'], 2**21, 'slidefigs/btree-ii', caches[:2])
 #    # Plots of binary search on Intel 4790K
 #    make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs/sorted-i', caches)
 #

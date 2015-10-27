@@ -2,6 +2,15 @@
 \usepackage{xmpmulti}
 \usepackage{comp2402}
 
+%\usepackage[T1]{fontenc}
+%\usepackage[sfdefault,black]{merriweather} %% Option 'black' gives heavier bold face 
+%
+%
+
+%\usepackage{libris}
+%\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
+%\usepackage[T1]{fontenc}
+%
 % For source code:
 \usepackage{minted}
 \usepackage{mdframed}
@@ -159,7 +168,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
    \vspace{-1em}
    \begin{itemize}
      \item<3->Guess wrong and we have to flush the whole pipeline!
-     \item<4->Nehalem architecture: pipeline is 20--24 cycles long
+     \item<4->May take 20--24 cycles!
    \end{itemize}
 \end{frame}
 
@@ -282,16 +291,65 @@ I sorted_array<T,I>::branchy_search(T x) {
      \includegraphics[scale=0.5]{graphs/sorted-vi}
 \end{tabular}
 \begin{itemize}
-  \item<+-> Branch-prediction is wrong $1/2$ the time
+  \item<+-> Branch-prediction is wrong $50\%$ the time
      \begin{itemize}
        \item<+-> Causes costly pipeline flush
      \end{itemize}
-  \item<+-> Branch-prediction is right $1/2$ the time
+  \item<+-> Branch-prediction is right $50\%$ the time
       \begin{itemize}
        \item<+-> Puts memory subsystem to work loading from memory
      \end{itemize}
   \item<+->RAM latency $\approx100$ cycles, pipeline latency $\approx 20$ cycles
 \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Branch-Free Binary Search with Prefetching}
+   \framesubtitle{The best of both worlds}
+
+   {\tiny
+   \begin{minted}{c++}
+template<typename T, typename I>
+I sorted_array<T,I>::_branchfree_search(T x) const {
+    const T *base = a;
+    I n = this->n;
+    while (n > 1) {
+        I half = n / 2;
+        __builtin_prefetch(base + half/2, 0, 0);
+        __builtin_prefetch(base + half + half/2, 0, 0);
+        base = (base[half] < x) ? base+half : base;
+        n -= half;
+    }
+    return (*base < x) + base - a;
+}
+   \end{minted}
+   }
+   \includegraphics[width=.5\textwidth]{graphs/sorted-vii}
+   \includegraphics[width=.5\textwidth]{graphs/sorted-viii}
+
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{The Story So Far}
+
+   \begin{itemize}
+      \item<+->Long processor pipelines require branch prediction
+               for performance
+      \begin{itemize}
+         \item<+->Branch mispredictions are expensive (20-25 cycles)
+         \item<+->Branches can sometimes be avoided using 
+                  \mintinline{nasm}{cmov}
+      \end{itemize}
+      \item<+->Memory is a hierarchy
+      \begin{itemize}
+         \item<+->L1, L2, L3, RAM\only<+->{, Disk}\only<+->{, Cloud}%
+            \only<+->{,\ldots}
+         \item<+->Memory subsystem \emph{prefetches} as soon as it can
+         \item<+->We can prefetch explicitly
+      \end{itemize}
+      \item<+->Long pipelines and memory hierarchy interact in surprising
+               ways
+   \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -303,9 +361,110 @@ I sorted_array<T,I>::branchy_search(T x) {
         \item<+-> 64 bytes wide
       \end{itemize}
       \item<+-> Accessing a single word of RAM loads an entire line
-         into the cache hierarchy
-      \item<+-> Why?  Program is likely to access a nearby word soon,
-         and it will already be in the cache
+         into the cache hierarchy ($B$ items)
+   \end{itemize}
+   \begin{center}
+      \only<1-2>{\includegraphics{figs/cache-lines-1}}%
+      \only<3->{\includegraphics{figs/cache-lines-2}}
+   \end{center}
+   \begin{itemize}
+        \item<+->Accessing a single item costs as much as accessing a whole cache line
+   \end{itemize}
+\end{frame}
+
+\begin{frame}
+   \frametitle{Binary Search is Bad for Locality}
+   \framesubtitle{Actually, sorted order is bad}
+
+   \begin{itemize}
+      \item<+->Binary search loads a lot of data that it never looks at
+   \end{itemize}
+   \begin{center}
+      \mi{figs/binary-search-bad}%
+   \end{center}
+   \begin{itemize}
+      \item<11->Loads $\log n - \log B$ cache lines
+      \item<12->Example: $n =2^{30}$, $B=16$, so $\log n - \log B=26$
+   \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+   \frametitle{B-Trees}
+
+   \begin{itemize}
+      \item<+->Use a $(B+1)$-ary search tree
+      \item<+->Stores $B$ items per node (node fits neatly into cache line)
+   \end{itemize}
+   \begin{center}
+      \includegraphics[width=.98\textwidth]{figs/btree}
+   \end{center}
+   \begin{itemize}
+      \item<+->Lay nodes out into an array
+   \end{itemize}
+\end{frame}
+ 
+
+\begin{frame}
+   \frametitle{B-Tree Search}
+
+   \begin{center}
+      \mi{figs/btree-search}
+   \end{center}
+   \begin{itemize}
+      \item<13->Accesses $\lceil\log_{B+1} n\rceil=\left\lceil\frac{\log n}{\log(B+1)}\right\rceil$ cache lines
+      \item<14->Does binary search within each cache line: $\lceil\log(B+1)\rceil$ comparisons
+      \item<15->Example: $n=2^{30}$, $B=16$, $\lceil\log_{B+1} n\rceil = 8$
+      \item<16->Compared to 26 cache lines with binary search
+   \end{itemize}
+\end{frame}
+
+\begin{frame}
+   \frametitle{B-Tree Search}
+   \framesubtitle{Performance}
+ 
+   \begin{center}
+      \only<1>{\includegraphics[height=.6\textheight]{graphs/btree-i} \\ Good!}
+      \only<2>{\includegraphics[height=.6\textheight]{graphs/btree-ii} \\ Bad!}
+   \end{center}
+\end{frame}
+
+\begin{frame}
+   \frametitle{B-Tree Search Problems}
+   \framesubtitle{Why are B-Trees so slow?}
+    
+   \begin{itemize}
+      \item<+->Internal binary search has $B+1$ possible outcomes:
+      \begin{itemize}
+        \item<+->Example: $B=16$, 
+                  $\lceil\log(B+1)\rceil = \lceil 4.08\rceil = 5$
+      \end{itemize}
+      \item<+->Big increase in search time for each new level 
+      \begin{itemize}
+        \item<+->Example: $n=2^{10}$, $B=16$, 
+                  $\lceil\log_{B+1}n\rceil = \lceil 2.44\rceil = 3$
+        \item<+->$3\times 5 = 15$ comparisons (versus 11 for binary search)
+      \end{itemize}
+   \end{itemize}
+   \begin{center}
+      \includegraphics[height=.6\textheight]{graphs/btree-ii}
+   \end{center}
+\end{frame}
+
+\begin{frame}
+   \frametitle{Beating B-Trees}
+
+   Things we know:
+   \begin{enumerate}[<+->]
+      \item Branch misprediction is costly
+      \item Memory is chunked into 64 byte cache lines
+      \item Memory subsystem can prefetch at the same time we compute
+      \item B-Tree problem: When $B$ is a power of 2, $B+1$ is not
+   \end{enumerate}
+   \begin{itemize}
+      \item<+->B-Trees take advantage of 1 \& 2.
+      \item<+->B-Trees don't take advantage of 3.
+      \item<+->4 is not true if we take $B=1$.
    \end{itemize}
 
 \end{frame}

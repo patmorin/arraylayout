@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70005" creator="Ipe 7.1.4">
-<info created="D:20151027135022" modified="D:20151027135733"/>
+<info created="D:20151027135022" modified="D:20151029102205"/>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -259,7 +259,8 @@ h
 <view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu" active="mu"/>
 <view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu" active="nu"/>
 <view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi" active="xi"/>
-<view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron" active="omicron"/>
+<view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi" active="xi"/>
+<view layers="alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi" active="xi"/>
 <path layer="theta" matrix="1 0 0 1 -47.903 0" stroke="black" fill="pink">
 256 640 m
 256 635.2 l

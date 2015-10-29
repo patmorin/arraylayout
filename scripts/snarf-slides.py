@@ -190,6 +190,10 @@ if __name__ == "__main__":
 
     make_plot(lines, ['sorted_bfp', 'btree16_bf_a'], maxn, 'slidefigs/btree-i', caches)
     make_plot(lines, ['sorted_bfp', 'btree16_bf_a'], 2**21, 'slidefigs/btree-ii', caches[:2])
+
+    make_plot(lines, ['sorted_bfp', 'btree16_bf_a', 'eytzinger_bfp_a'], maxn, 'slidefigs/eytzinger-i', caches)
+    make_plot(lines, ['sorted_bfp', 'btree16_bf_a', 'eytzinger_bfp_a'], 2**21, 'slidefigs/eytzinger-ii', caches[:2])
+
 #    # Plots of binary search on Intel 4790K
 #    make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs/sorted-i', caches)
 #

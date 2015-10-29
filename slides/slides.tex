@@ -77,6 +77,7 @@
   \frametitle{Binary Search}
   \framesubtitle{Branchy Code}
 
+{\small
 \begin{minted}{c++}
 template<typename T, typename I>
 I sorted_array<T,I>::branchy_search(T x) const {
@@ -94,6 +95,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
     return hi;
 }
 \end{minted}
+}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -345,7 +347,8 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
          \item<+->L1, L2, L3, RAM\only<+->{, Disk}\only<+->{, Cloud}%
             \only<+->{,\ldots}
          \item<+->Memory subsystem \emph{prefetches} as soon as it can
-         \item<+->We can prefetch explicitly
+         \item<+->We can prefetch explicitly (using \mintinline{c++}{__builtin_prefetch})
+         \item<+->We can prefetch implicitly (using branchy code)
       \end{itemize}
       \item<+->Long pipelines and memory hierarchy interact in surprising
                ways
@@ -358,17 +361,22 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \begin{itemize}
       \item<+-> RAM and caches are organized into \emph{lines}
       \begin{itemize}
-        \item<+-> 64 bytes wide
+        \item<+-> 64 bytes wide, can store
+        \begin{itemize}
+        \item<+-> 16 32-bit quantities (\mintinline{c++}{int}/\mintinline{c++}{int32_t}/\mintinline{c++}{float})
+        \item<+-> 8 64-bit quantities (\mintinline{c++}{long long}/\mintinline{c++}{int64_t}/\mintinline{c++}{double})
+        \item<+-> 4 128-bit quantities (\mintinline{c++}{int128_t}/\mintinline{c++}{quad})
+        \end{itemize}
       \end{itemize}
       \item<+-> Accessing a single word of RAM loads an entire line
          into the cache hierarchy ($B$ items)
    \end{itemize}
    \begin{center}
-      \only<1-2>{\includegraphics{figs/cache-lines-1}}%
-      \only<3->{\includegraphics{figs/cache-lines-2}}
+      \only<1-5>{\includegraphics{figs/cache-lines-1}}%
+      \only<6->{\includegraphics{figs/cache-lines-2}}
    \end{center}
    \begin{itemize}
-        \item<+->Accessing a single item costs as much as accessing a whole cache line
+        \item<+->Accessing a single item from RAM costs nearly as much as accessing a whole cache line
    \end{itemize}
 \end{frame}
 
@@ -383,21 +391,29 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
       \mi{figs/binary-search-bad}%
    \end{center}
    \begin{itemize}
-      \item<11->Loads $\log n - \log B$ cache lines
-      \item<12->Example: $n =2^{30}$, $B=16$, so $\log n - \log B=26$
+      \item<13->Loads $\log n - \log B$ cache lines
+      \item<14->Example: $n =2^{30}$, $B=16$
+      \begin{itemize}
+          \item<15->$\log n - \log B=26$
+          \item<16->Binary search inspects 30 values in 26 different cache lines
+      \end{itemize}
+      \item<17->To do better we have to use something other than sorted order
    \end{itemize}
 \end{frame}
 
 
 \begin{frame}
    \frametitle{B-Trees}
+   \framesubtitle{Bayer and McCreight 1972}
 
    \begin{itemize}
       \item<+->Use a $(B+1)$-ary search tree
       \item<+->Stores $B$ items per node (node fits neatly into cache line)
    \end{itemize}
    \begin{center}
-      \includegraphics[width=.98\textwidth]{figs/btree}
+      \only<+>{\includegraphics[width=.8\textwidth]{figs/btree-1}}
+      \only<+>{\includegraphics[width=.8\textwidth]{figs/btree-2}}
+      \only<+->{\includegraphics[width=.8\textwidth]{figs/btree-3}}
    \end{center}
    \begin{itemize}
       \item<+->Lay nodes out into an array
@@ -414,19 +430,36 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \begin{itemize}
       \item<13->Accesses $\lceil\log_{B+1} n\rceil=\left\lceil\frac{\log n}{\log(B+1)}\right\rceil$ cache lines
       \item<14->Does binary search within each cache line: $\lceil\log(B+1)\rceil$ comparisons
-      \item<15->Example: $n=2^{30}$, $B=16$, $\lceil\log_{B+1} n\rceil = 8$
-      \item<16->Compared to 26 cache lines with binary search
+      \item<15->Example: $n=2^{30}$, $B=16$
+      \begin{itemize}
+         \item<16->$\lceil\log_{B+1} n\rceil = 8$ cache lines per search
+         \item<17->Compared to 26 cache lines with binary search
+      \end{itemize}
+      \item<18->B-trees are \emph{optimal}${\color{cured}^\star}$
    \end{itemize}
 \end{frame}
 
 \begin{frame}
    \frametitle{B-Tree Search}
    \framesubtitle{Performance}
- 
-   \begin{center}
-      \only<1>{\includegraphics[height=.6\textheight]{graphs/btree-i} \\ Good!}
-      \only<2>{\includegraphics[height=.6\textheight]{graphs/btree-ii} \\ Bad!}
-   \end{center}
+   \only<+>{
+      \begin{center}
+         \includegraphics[height=.6\textheight]{graphs/btree-i} 
+            \newline Good!
+      \end{center}
+   }
+   \only<+>{
+     \begin{tabular}{m{.2\textwidth}m{.75\textwidth}}
+        \begin{center}
+           \includegraphics[width=.2\textwidth]{graphs/btree-i} 
+             \newline Good!
+        \end{center} &
+        \begin{center}
+           \includegraphics[width=.73\textwidth]{graphs/btree-ii} 
+             \newline Bad!
+        \end{center}
+     \end{tabular}
+   }
 \end{frame}
 
 \begin{frame}
@@ -436,38 +469,187 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \begin{itemize}
       \item<+->Internal binary search has $B+1$ possible outcomes:
       \begin{itemize}
-        \item<+->Example: $B=16$, 
-                  $\lceil\log(B+1)\rceil = \lceil 4.08\rceil = 5$
+        \item<+->For $B=16$, 
+                  $\lceil\log(B+1)\rceil = \lceil 4.08\rceil = 5$ comparisons per node
       \end{itemize}
-      \item<+->Big increase in search time for each new level 
+      \item<+->Big jump in search time for each new level 
       \begin{itemize}
-        \item<+->Example: $n=2^{10}$, $B=16$, 
-                  $\lceil\log_{B+1}n\rceil = \lceil 2.44\rceil = 3$
-        \item<+->$3\times 5 = 15$ comparisons (versus 11 for binary search)
+        \item<+->For $n=2^{10}$, $B=16$, 
+                  $\lceil\log_{B+1}n\rceil = \lceil 2.44\rceil = 3$ levels
+        \item<+->$3\times 5 = 15$ comparisons (versus 10 for binary search)
       \end{itemize}
    \end{itemize}
    \begin{center}
-      \includegraphics[height=.6\textheight]{graphs/btree-ii}
+      \includegraphics[height=.45\textheight]{graphs/btree-ii}
    \end{center}
 \end{frame}
 
 \begin{frame}
    \frametitle{Beating B-Trees}
 
-   Things we know:
+   \only<+->{Things we know:}
    \begin{enumerate}[<+->]
       \item Branch misprediction is costly
       \item Memory is chunked into 64 byte cache lines
       \item Memory subsystem can prefetch at the same time we compute
-      \item B-Tree problem: When $B$ is a power of 2, $B+1$ is not
    \end{enumerate}
-   \begin{itemize}
-      \item<+->B-Trees take advantage of 1 \& 2.
-      \item<+->B-Trees don't take advantage of 3.
-      \item<+->4 is not true if we take $B=1$.
+   \begin{itemize}[<+->]
+      \item B-Trees take advantage of 1 \& 2.
+      \item B-Trees don't take advantage of 3.
+      \item B-Tree problem: When $B$ is a power of 2, $B+1$ is not
+      \begin{itemize}[<+->]
+        \item Except if $B=1$
+      \end{itemize}
+      \item Can a 1-Tree beat a B-tree?
    \end{itemize}
-
 \end{frame}
+
+\begin{frame}
+   \frametitle{The Eytzinger Layout}
+   \framesubtitle{A.K.A. 1-trees}
+  
+   \begin{center}
+      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-1}}
+      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-2}}
+      \only<+->{\includegraphics[width=.85\textwidth]{figs/eytzinger-3}}
+   \end{center} 
+   \begin{itemize}
+     \item Children of $i$ are at $2i+1$ and $2i+2$.
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Branch-Free Eytzinger Search}
+
+{\small 
+\begin{minted}{c++}
+template<typename T, typename I>
+I eytzinger_array<T,I>::_branchfree_search(T x) const {
+    I i = 0;
+    while (i < n) {
+        i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+    }
+    I j = (i+1) >> __builtin_ffs(~(i+1));
+    return (j == 0) ? n : j-1;
+}
+\end{minted} 
+}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Branch-Free Eytzinger Search}
+
+{\tiny
+\begin{minted}{nasm}
+    .cfi_startproc
+    movq    8(%rdi), %rax
+    xorl    %edx, %edx
+    jmp     .L58
+.L61:                            ; top of while loop
+    movq    (%rdi), %rcx
+    leaq    1(%rdx,%rdx), %r8
+    leaq    2(%rdx,%rdx), %r9
+    cmpl    %esi, (%rcx,%rdx,4)
+    movq    %r8, %rdx
+    cmovb   %r9, %rdx
+.L58:
+    cmpq    %rax, %rdx
+    jb      .L61                 ; jump to top of while loop
+    leal    1(%rdx), %ecx
+    movl    $-1, %esi
+    notl    %ecx
+    bsfl    %ecx, %ecx
+    cmove   %esi, %ecx
+    addq    $1, %rdx
+    addl    $1, %ecx
+    shrq    %cl, %rdx
+    leaq    -1(%rdx), %rcx
+    testq   %rdx, %rdx
+    cmovne  %rcx, %rax
+    ret
+    .cfi_endproc
+\end{minted}
+}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Eytzinger Search}
+\framesubtitle{Can we make it cache-friendly?}
+
+\begin{center}
+   \only<1>{\includegraphics[width=.9\textwidth]{figs/eytzinger-cache-1}}%
+   \only<2>{\includegraphics[width=.9\textwidth]{figs/eytzinger-cache-2}}%
+   \only<3->{\includegraphics[width=.9\textwidth]{figs/eytzinger-cache-3}}%
+\end{center}
+\begin{itemize}
+   \item<4-> All 16 great-great granchdildren of $i$ are in the same cache line
+   \item<5-> We can prefetch them 4 levels before they're needed
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Branch-Free Eytzinger Search with Prefetching}
+
+{\small 
+\begin{minted}{c++}
+template<typename T, typename I>
+I eytzinger_array<T,I>::_branchfree_search(T x) const {
+    I i = 0;
+    while (i < n) {
+        __builtin_prefetch(a+(multiplier*i + offset));
+        i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
+    }
+    I j = (i+1) >> __builtin_ffs(~(i+1));
+    return (j == 0) ? n : j-1;
+}
+\end{minted} 
+}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Eytzinger Performance}
+
+  \begin{center}
+    \only<+>{\includegraphics{graphs/eytzinger-i}}
+    \only<+->{\includegraphics{graphs/eytzinger-ii}}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Eytzinger versus B-Tree}
+
+  \begin{center}
+    \includegraphics[width=.9\textwidth]{figs/timeline}
+  \end{center}
+  \vspace{-1em}
+  \begin{itemize}[<2->]
+     \item Eytzinger is using more \emph{bandwidth} to get less \emph{latency} 
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Conclusion}
+
+  \begin{itemize}[<+->]
+    \item If you \emph{really} care about performance, you should know
+       about arcitecture
+    \begin{itemize}[<+->]
+     \item instructions
+     \item cache hierarchy
+     \item prefetching
+        
+    \end{itemize}
+    
+  \end{itemize}
+\end{frame}
+
+
+
+
+
 
 \end{document}
 

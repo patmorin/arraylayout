@@ -42,7 +42,7 @@ markers = [ "o", "s", "p", "*", "H" ]
 
 def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
               title=r'running time of $2\times 10^6$ searches on $n$ values',
-              ylabel='running time (s)'):
+              ylabel='running time (s)', crazy=False):
 
     mapper = [("sorted", ("-", None, None, r'branchy binary search')),
               ("sorted_stl", ("-", None, None, r'\texttt{std::lower\_bound}')),
@@ -124,13 +124,17 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     if not title or '-bit' in title: height = 2.6
     plt.figure(figsize=(width,height))
     plt.ioff()
-    plt.xscale('log', basex=2)
     plt.xlabel('$n$')
     plt.ylabel(ylabel)
     if title: plt.title(title)
 
-    
-    plt.xlim(1, xmax)
+    if (crazy): 
+        #plt.xscale('log', basex=2)
+        plt.ylim(ymax=ymax*1.2)
+        plt.xlim(2**21-500,2**21+500)
+    else:
+        plt.xscale('log', basex=2)
+        plt.xlim(1, xmax)
     idx = 0
     for alg in algs:
         if alg in mapper:
@@ -152,6 +156,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                  linewidth=[2,.6][alg.startswith('bqtree')], 
                  markersize=1.5)
 
+    plt.ylim(ymin=0)
     if caches:
         ylim = plt.ylim()
         plt.ylim(ymax=ylim[1])
@@ -194,6 +199,11 @@ if __name__ == "__main__":
     make_plot(lines, ['sorted_bfp', 'btree16_bf_a', 'eytzinger_bfp_a'], maxn, 'slidefigs/eytzinger-i', caches)
     make_plot(lines, ['sorted_bfp', 'btree16_bf_a', 'eytzinger_bfp_a'], 2**21, 'slidefigs/eytzinger-ii', caches[:2])
 
+    lines = open('data/alldata-aliasing.dat').read().splitlines()
+    make_plot(lines, ['sorted_bf'], maxn, 
+              'slidefigs/aliasing', [], 'uint32', 
+              r'running time of $2\times 10^6$ searches on $n$ values',
+              'running time (s)', True)
 #    # Plots of binary search on Intel 4790K
 #    make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs/sorted-i', caches)
 #

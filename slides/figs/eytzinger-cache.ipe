@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70005" creator="Ipe 7.1.4">
-<info created="D:20150708132008" modified="D:20151029093903"/>
-<preamble>\renewcommand{\familydefault}{\sfdefault}</preamble>
+<info created="D:20150708132008" modified="D:20151102162801"/>
+<preamble>\usepackage[cm]{sfmath}
+\renewcommand{\familydefault}{\sfdefault}</preamble>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -419,15 +420,15 @@ h
 208 600.207 m
 224 583.793 l
 </path>
-<text matrix="1 0 0 1 112 160" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="3.432" height="6.571" depth="0" halign="center" valign="center">$i$</text>
-<text matrix="1 0 0 1 48 128" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$2i+1$</text>
-<text matrix="1 0 0 1 176 128" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$2i+2$</text>
-<text matrix="1 0 0 1 16 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$4i+3$</text>
-<text matrix="1 0 0 1 80 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$4i+4$</text>
-<text matrix="1 0 0 1 144 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$4i+5$</text>
-<text matrix="1 0 0 1 208 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="center" valign="center">$4i+6$</text>
-<text matrix="1 0 0 1 0 64" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.571" height="6.571" depth="0.83" halign="right" valign="center">$8i+7$</text>
-<text matrix="1 0 0 1 224 64" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="30.553" height="6.571" depth="0.83" valign="center">$8i+14$</text>
+<text matrix="1 0 0 1 112 160" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="3.348" height="6.768" depth="0" halign="center" valign="center">$i$</text>
+<text matrix="1 0 0 1 48 128" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$2i+1$</text>
+<text matrix="1 0 0 1 176 128" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$2i+2$</text>
+<text matrix="1 0 0 1 16 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$4i+3$</text>
+<text matrix="1 0 0 1 80 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$4i+4$</text>
+<text matrix="1 0 0 1 144 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$4i+5$</text>
+<text matrix="1 0 0 1 208 96" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="center" valign="center">$4i+6$</text>
+<text matrix="1 0 0 1 0 64" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="25.487" height="6.768" depth="0.83" halign="right" valign="center">$8i+7$</text>
+<text matrix="1 0 0 1 224 64" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="30.469" height="6.768" depth="0.83" valign="center">$8i+14$</text>
 <group matrix="1 0 0 1 8 0">
 <group matrix="1 0 0 1 32 -96">
 <use name="mark/disk(sx)" pos="80 647.793" size="normal" stroke="white"/>
@@ -622,8 +623,8 @@ h
 352 568.207 m
 360 551.793 l
 </path>
-<text matrix="1 0 0 1 -20.0004 16.3616" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="35.534" height="6.571" depth="0.83" halign="right" valign="center">$16i+15$</text>
-<text matrix="1 0 0 1 244.047 16.3616" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="35.534" height="6.571" depth="0.83" valign="center">$16i+30$</text>
+<text matrix="1 0 0 1 -20.0004 16.3616" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="35.45" height="6.768" depth="0.83" halign="right" valign="center">$16i+15$</text>
+<text matrix="1 0 0 1 244.047 16.3616" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="35.45" height="6.768" depth="0.83" valign="center">$16i+30$</text>
 <path layer="beta" stroke="black">
 128 528 m
 128 535.138 l
@@ -636,7 +637,7 @@ h
 128 528 m
 128 535.138 l
 </path>
-<text matrix="1 0 0 1 -16 5" transformations="translations" pos="272 512" stroke="black" type="label" width="115.598" height="7.473" depth="2.49" halign="center" valign="baseline">one cache line (for $B=16$)</text>
+<text matrix="1 0 0 1 -16 5" transformations="translations" pos="272 512" stroke="black" type="label" width="115.009" height="7.473" depth="2.49" halign="center" valign="baseline">one cache line (for $B=16$)</text>
 <path layer="gamma" matrix="1 0 0 1 -16 0" stroke="black">
 128 528 m
 128 535.138 l

@@ -22,7 +22,7 @@
 \newcommand{\mi}[1]{\multiinclude[<+>][start=1,format=pdf]{#1}}
 
 \title{Computer Architecture Through Binary Searching}
-\author{Pat Morin}
+\author{Pat Morin \\ (Joint Work with Paul Khuong)}
 \date{Carleton University}
 
 
@@ -35,6 +35,33 @@
     \includegraphics[height=1in]{images/binary-search}
     \includegraphics[height=1in]{images/nehalem-block}
   }
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Binary Search}
+  \framesubtitle{Who Cares?}
+
+  \begin{itemize}[<+->]
+    \item Chromium Code Base (Google Chrome)
+    \begin{itemize}
+       \item \mintinline{c++}{std::upper_bound} called from 135 different locations
+       \item Cookie handling, GUI layout, graphics and text rendering, video handling, and certificate management
+       \item More than 1,000,000,000 users
+    \end{itemize}
+    \item AppNexus real-time ad bidding engine
+    \begin{itemize}
+       \item Running 24/7 on 1500 machines
+       \item 4,000,000 requests per second
+       \item 10\% of CPU time spent on binary searching a few arrays
+       \item 118,000,000 watt hours per year
+    \end{itemize}
+    \item Isn't binary search already as fast as it can be?
+    \begin{itemize}
+       \item No
+    \end{itemize}
+
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -71,6 +98,7 @@
   \end{center}
 
 \end{frame}
+
 
 
 \begin{frame}[fragile]
@@ -114,7 +142,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \end{frame}
 
 \begin{frame}
-  \frametitle{Binary Search: Experiments}
+  \frametitle{Branchy Binary Search: Experiments}
   \begin{center}
     \includegraphics{graphs/sorted-i}
   \end{center}
@@ -162,6 +190,18 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \end{frame}
 
 \begin{frame}
+   \frametitle{Binary Search is Optimal}
+
+   \begin{itemize}[<+->]
+     \item You may have heard that binary search is optimal
+     \begin{itemize}
+        \item It does the fewest number of comparisons possible $\log_2(n+1)$
+     \end{itemize}
+     \item But are comparisons really the most expensive thing we do?
+   \end{itemize}
+\end{frame}
+
+\begin{frame}
    \frametitle{The Instruction Pipeline}
 
    \begin{center}
@@ -173,6 +213,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
      \item<4->May take 20--24 cycles!
    \end{itemize}
 \end{frame}
+
 
 \begin{frame}[fragile]
    \frametitle{Branch-Free Binary Search}
@@ -217,7 +258,7 @@ I sorted_array<T,I>::branchfree_search(T x) const {
   cmovb   %rdi, %rax          ; set base = &base[half] if x > base[half]
   subq    %rcx, %rdx          ; n = n - half
   cmpq    $1, %rdx            ; compare n and 1
-  ja      .L3                   ; keep going if n > 1
+  ja      .L3                 ; keep going if n > 1
 .L2:
   cmpl    %esi, (%rax)        ; compare x to *base
   sbbq    %rdx, %rdx          ; set dx to 00..00 or 11...11
@@ -237,6 +278,20 @@ I sorted_array<T,I>::branchfree_search(T x) const {
    \begin{center}
      \includegraphics{graphs/sorted-ii}
    \end{center}
+\end{frame}
+
+
+\begin{frame}
+   \frametitle{Binary Search is Optimal}
+
+   \begin{itemize}[<+->]
+     \item Binary search is optimal 
+     \begin{itemize}
+       \item It does the fewest number of comparisons possible
+       \item Branch-free version makes no branch mispredictions
+     \end{itemize}
+     \item Anything else we need to worry about?
+   \end{itemize}
 \end{frame}
 
 
@@ -262,7 +317,7 @@ I sorted_array<T,I>::branchfree_search(T x) const {
      \only<+>{\includegraphics{graphs/sorted-iii}}%
      \only<+>{\includegraphics{graphs/sorted-iv}}%
      \only<+>{\includegraphics{graphs/sorted-v}}%
-     \only<+->{\includegraphics[scale=0.85]{graphs/sorted-vi}\\[-2ex]{Wait, what?}}
+     \only<+>{\includegraphics{graphs/sorted-vi}}%
    \end{center}
 \end{frame}
 
@@ -332,6 +387,19 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
 \end{frame}
 
 \begin{frame}[fragile]
+   \frametitle{With and Without Prefetching}
+
+   \begin{center}
+      \only<+->{\includegraphics[width=.98\textwidth]{figs/timeline-binary-search}}
+   \end{center}
+   \begin{itemize}[<+->]
+     \item Processor and memory subsystem work in \emph{parallel}
+     \item Memory subsystem has its own pipeline
+   \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
    \frametitle{The Story So Far}
 
    \begin{itemize}
@@ -355,6 +423,20 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \end{itemize}
 \end{frame}
 
+
+\begin{frame}
+   \frametitle{Binary Search is Optimal}
+
+   \begin{itemize}
+     \item<+-> Binary search is optimal 
+     \begin{itemize}
+       \item It does the fewest number of comparisons possible
+       \item Branch-free version makes no branch mispredictions
+     \end{itemize}
+     \item<+-> Its interaction with the cache is non-optimal
+   \end{itemize}
+\end{frame}
+
 \begin{frame}
    \frametitle{Cache Lines}
 
@@ -363,17 +445,17 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
       \begin{itemize}
         \item<+-> 64 bytes wide, can store
         \begin{itemize}
-        \item<+-> 16 32-bit quantities (\mintinline{c++}{int}/\mintinline{c++}{int32_t}/\mintinline{c++}{float})
-        \item<+-> 8 64-bit quantities (\mintinline{c++}{long long}/\mintinline{c++}{int64_t}/\mintinline{c++}{double})
-        \item<+-> 4 128-bit quantities (\mintinline{c++}{int128_t}/\mintinline{c++}{quad})
+        \item 16 32-bit quantities (\mintinline{c++}{int}/\mintinline{c++}{int32_t}/\mintinline{c++}{float})
+        \item 8 64-bit quantities (\mintinline{c++}{long long}/\mintinline{c++}{int64_t}/\mintinline{c++}{double})
+        \item 4 128-bit quantities (\mintinline{c++}{int128_t}/\mintinline{c++}{quad})
         \end{itemize}
       \end{itemize}
       \item<+-> Accessing a single word of RAM loads an entire line
          into the cache hierarchy ($B$ items)
    \end{itemize}
    \begin{center}
-      \only<1-5>{\includegraphics{figs/cache-lines-1}}%
-      \only<6->{\includegraphics{figs/cache-lines-2}}
+      \only<1-3>{\includegraphics{figs/cache-lines-1}}%
+      \only<4->{\includegraphics{figs/cache-lines-2}}
    \end{center}
    \begin{itemize}
         \item<+->Accessing a single item from RAM costs nearly as much as accessing a whole cache line
@@ -397,7 +479,7 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
           \item<15->$\log n - \log B=26$
           \item<16->Binary search inspects 30 values in 26 different cache lines
       \end{itemize}
-      \item<17->To do better we have to use something other than sorted order
+      \item<17->To do better we need a different layout (not sorted)
    \end{itemize}
 \end{frame}
 
@@ -411,9 +493,10 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
       \item<+->Stores $B$ items per node (node fits neatly into cache line)
    \end{itemize}
    \begin{center}
-      \only<+>{\includegraphics[width=.8\textwidth]{figs/btree-1}}
-      \only<+>{\includegraphics[width=.8\textwidth]{figs/btree-2}}
-      \only<+->{\includegraphics[width=.8\textwidth]{figs/btree-3}}
+      \only<1-2>{\includegraphics[width=.8\textwidth]{figs/btree-1}}%
+      \only<3>{\includegraphics[width=.8\textwidth]{figs/btree-2}}%
+      \only<4>{\includegraphics[width=.8\textwidth]{figs/btree-3}}%
+      \only<5->{\includegraphics[width=.8\textwidth]{figs/btree-4}}%
    \end{center}
    \begin{itemize}
       \item<+->Lay nodes out into an array
@@ -435,7 +518,6 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
          \item<16->$\lceil\log_{B+1} n\rceil = 8$ cache lines per search
          \item<17->Compared to 26 cache lines with binary search
       \end{itemize}
-      \item<18->B-trees are \emph{optimal}${\color{cured}^\star}$
    \end{itemize}
 \end{frame}
 
@@ -484,8 +566,29 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \end{center}
 \end{frame}
 
+
 \begin{frame}
-   \frametitle{Beating B-Trees}
+   \frametitle{B-Trees and Binary Search are Optimal}
+
+   \begin{itemize}[<+->]
+     \item Binary search is optimal 
+     \begin{itemize}
+       \item It does the fewest number of comparisons possible
+       \item Branch-free version makes no branch mispredictions
+       \item But not cache-friendly
+     \end{itemize}
+     \item B-Trees are optimal
+     \begin{itemize}
+       \item They access the fewest number of cache lines possible
+       \item But do more comparisons than necessary
+       \item Search code is more complicated
+     \end{itemize}
+     \item What next?
+   \end{itemize}
+\end{frame}
+
+\begin{frame}
+   \frametitle{Beating B-Trees and Binary Search}
 
    \only<+->{Things we know:}
    \begin{enumerate}[<+->]
@@ -635,14 +738,25 @@ I eytzinger_array<T,I>::_branchfree_search(T x) const {
 
   \begin{itemize}[<+->]
     \item If you \emph{really} care about performance, you should know
-       about arcitecture
+       about computer architecture:
+  \begin{tabular}{@{}m{.4\textwidth}m{.4\textwidth}}
     \begin{itemize}[<+->]
-     \item instructions
+     \item processor pipeline
+     \item branch (mis-)prediction
+     \item predicated instructions
      \item cache hierarchy
      \item prefetching
-        
+     \item cache-line aliasing 
     \end{itemize}
-    
+    &
+    \includegraphics[width=.4\textwidth]{graphs/aliasing}
+  \end{tabular}
+  \item And that's just for \emph{binary search}, for real applications:
+    \begin{itemize}[<+->]
+     \item GPU
+     \item disk/file I/O
+     \item network performance
+    \end{itemize}
   \end{itemize}
 \end{frame}
 

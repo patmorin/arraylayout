@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70005" creator="Ipe 7.1.4">
-<info created="D:20150708132008" modified="D:20151029112402"/>
+<info created="D:20150708132008" modified="D:20151102155824"/>
 <preamble>\renewcommand{\familydefault}{\sfdefault}</preamble>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
@@ -240,10 +240,12 @@ h
 <layer name="alpha"/>
 <layer name="beta"/>
 <layer name="gamma"/>
+<layer name="delta"/>
 <view layers="alpha" active="alpha"/>
-<view layers="alpha beta" active="beta"/>
-<view layers="alpha beta gamma" active="gamma"/>
-<path layer="alpha" matrix="1 0 0 1 72 64" stroke="black" fill="myblue3">
+<view layers="alpha delta" active="delta"/>
+<view layers="alpha beta delta" active="beta"/>
+<view layers="alpha beta gamma delta" active="gamma"/>
+<path layer="delta" matrix="1 0 0 1 72 64" stroke="black" fill="myblue3">
 128 544 m
 128 528 l
 144 528 l
@@ -363,7 +365,7 @@ h
 h
 </path>
 <text matrix="1 0 0 1 352 -40" transformations="translations" pos="80 640" stroke="myblue3" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">10</text>
-<path matrix="1 0 0 1 32 144" stroke="black" fill="myblue2">
+<path layer="alpha" matrix="1 0 0 1 32 144" stroke="black" fill="myblue2">
 128 544 m
 128 528 l
 144 528 l

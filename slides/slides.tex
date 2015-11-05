@@ -40,7 +40,7 @@
 
 \begin{frame}
   \frametitle{Binary Search}
-  \framesubtitle{Who Cares?}
+  \framesubtitle{Two Motivating Examples}
 
   \begin{itemize}[<+->]
     \item Chromium Code Base (Google Chrome)
@@ -56,11 +56,6 @@
        \item 10\% of CPU time spent on binary searching a few arrays
        \item 118,000,000 watt hours per year
     \end{itemize}
-    \item Isn't binary search already as fast as it can be?
-    \begin{itemize}
-       \item No
-    \end{itemize}
-
   \end{itemize}
 \end{frame}
 
@@ -94,7 +89,7 @@
   \framesubtitle{The Classic Data Structure/Query Algorithm}
 
   \begin{center}
-    \includegraphics[width=.9\textwidth]{images/binary-search}
+    \mi{figs/binary-search-example}
   \end{center}
 
 \end{frame}
@@ -129,15 +124,11 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \begin{frame}[fragile]
   \frametitle{Binary Search: Analysis}
 
-  \begin{itemize}
-    \item<+->Each iteration of binary search either:
-    \begin{itemize}
-      \item<+->terminates (because \mintinline{c++}{x==a[m]})
-      \item<+->terminates (because \mintinline{c++}{lo==hi})
-      \item<+->Reduces \mintinline{c++}{hi-lo} by a factor of 2
-    \end{itemize}
-    \item<+->Binary search terminates after at most $\log_2 n$ iterations
-    \item<+->Doubling the size of the array adds only one more iteration
+  \begin{itemize}[<+->]
+    \item Each iteration terminates or 
+      reduces \mintinline{c++}{hi-lo} by a factor of 2
+    \item At most $\log_2 n$ iterations
+    \item Doubling the size of the array adds only one more iteration
   \end{itemize}
 \end{frame}
 
@@ -194,9 +185,7 @@ I sorted_array<T,I>::branchy_search(T x) const {
 
    \begin{itemize}[<+->]
      \item You may have heard that binary search is optimal
-     \begin{itemize}
-        \item It does the fewest number of comparisons possible $\log_2(n+1)$
-     \end{itemize}
+     \item It does the fewest number of comparisons possible
      \item But are comparisons really the most expensive thing we do?
    \end{itemize}
 \end{frame}
@@ -209,8 +198,19 @@ I sorted_array<T,I>::branchy_search(T x) const {
    \end{center}
    \vspace{-1em}
    \begin{itemize}
-     \item<3->Guess wrong and we have to flush the whole pipeline!
-     \item<4->May take 20--24 cycles!
+     \item<4->Guess wrong and we have to flush the whole pipeline!
+     \item<5->May take 20--24 cycles!
+   \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+   \frametitle{Branch-Free Binary Search}
+
+   \begin{itemize}[<+->]
+       \item On random searches, branchy binary search will guess 
+                wrong nearly 50\% of the time.
+       \item Eliminate branching with conditional moves (\texttt{\color{blue}cmov})
    \end{itemize}
 \end{frame}
 
@@ -218,12 +218,6 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \begin{frame}[fragile]
    \frametitle{Branch-Free Binary Search}
    \framesubtitle{C++ Code}
-
-   \begin{itemize}
-       \item On random searches, branchy binary search will guess 
-                wrong nearly 50\% of the time.
-       \item Eliminate branching with conditional moves (\texttt{\color{blue}cmov})
-   \end{itemize}
 \begin{minted}{c++}
 I sorted_array<T,I>::branchfree_search(T x) const {
   const T *base = a;
@@ -432,6 +426,7 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
      \begin{itemize}
        \item It does the fewest number of comparisons possible
        \item Branch-free version makes no branch mispredictions
+       \item Branch-free prefetching version reduces makes no branch mispredictions
      \end{itemize}
      \item<+-> Its interaction with the cache is non-optimal
    \end{itemize}

@@ -1,4 +1,4 @@
-\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\documentclass[xcolor=dvipsnames]{beamer}
 \usepackage{xmpmulti}
 \usepackage{comp2402}
 
@@ -203,8 +203,8 @@ I sorted_array<T,I>::branchy_search(T x) const {
    \frametitle{The Instruction Pipeline}
 
    \begin{center}
-      \includegraphics[height=.5\textheight]{images/micro3c}
-      \multiinclude[<+>][start=1,format=pdf,graphics={width=.6\textwidth}]{figs/pipeline}
+      \includegraphics[width=.3\textwidth]{images/micro3c}
+      \multiinclude[<+>][start=1,format=pdf,graphics={width=.7\textwidth}]{figs/pipeline}
    \end{center}
    \vspace{-1em}
    \begin{itemize}
@@ -288,8 +288,8 @@ I sorted_array<T,I>::branchfree_search(T x) const {
 \begin{frame}
    \frametitle{Binary Search is Optimal}
 
-   \begin{itemize}[<+->]
-     \item Binary search is optimal 
+   \begin{itemize}
+     \item Binary search is ``optimal''
      \begin{itemize}
        \item It does the fewest number of comparisons possible
        \item Branch-free version makes no branch mispredictions
@@ -352,15 +352,15 @@ I sorted_array<T,I>::branchy_search(T x) {
      \includegraphics[scale=0.5]{graphs/sorted-vi}
 \end{tabular}
 \begin{itemize}
-  \item<+-> Branch-prediction is wrong $50\%$ the time
+  \item Branch-prediction is wrong $50\%$ the time
      \begin{itemize}
-       \item<+-> Causes costly pipeline flush
+       \item Causes costly pipeline flush
      \end{itemize}
-  \item<+-> Branch-prediction is right $50\%$ the time
+  \item Branch-prediction is right $50\%$ the time
       \begin{itemize}
-       \item<+-> Puts memory subsystem to work loading from memory
+       \item Puts memory subsystem to work loading from memory
      \end{itemize}
-  \item<+->RAM latency $\approx100$ cycles, pipeline latency $\approx 20$ cycles
+  \item RAM latency $\approx100$ cycles, pipeline latency $\approx 20$ cycles
 \end{itemize}
 \end{frame}
 
@@ -575,20 +575,20 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
 \begin{frame}
    \frametitle{B-Trees and Binary Search are Optimal}
 
-   \begin{itemize}[<+->]
-     \item Binary search is optimal 
+   \begin{itemize}
+     \item<+-> Binary search is ``optimal''
      \begin{itemize}
        \item It does the fewest number of comparisons possible
        \item Branch-free version makes no branch mispredictions
-       \item But not cache-friendly
+       \item But not cache-friendly!
      \end{itemize}
-     \item B-Trees are optimal
+     \item<+-> B-Trees are ``optimal''
      \begin{itemize}
        \item They access the fewest number of cache lines possible
-       \item But do more comparisons than necessary
-       \item Search code is more complicated
+       \item But do more comparisons than necessary!
+       \item Search code is more complicated!
      \end{itemize}
-     \item What next?
+     \item<+-> What next?
    \end{itemize}
 \end{frame}
 
@@ -766,6 +766,17 @@ I eytzinger_array<T,I>::_branchfree_search(T x) const {
 \end{frame}
 
 
+\begin{frame}
+   \frametitle{Thank You}
+
+
+   \begin{center}
+   {\Huge Thank You!} \\ [1em]
+   You can read more at\\ \url{http://arxiv.org/abs/1509.05053}
+   \end{center}
+   
+
+\end{frame}
 
 
 

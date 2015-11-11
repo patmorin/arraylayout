@@ -120,7 +120,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                     data[alg].append((n, search_time))
 
     # Plot everything.
-    width,height = 4.5, 2.75 
+    width,height = 6,2.5 
     if not title or '-bit' in title: height = 2.6
     plt.figure(figsize=(width,height))
     plt.ioff()

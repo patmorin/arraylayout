@@ -1,4 +1,4 @@
-\documentclass[xcolor=dvipsnames]{beamer}
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
 \usepackage{xmpmulti}
 \usepackage{comp2402}
 
@@ -16,6 +16,10 @@
 \usepackage{mdframed}
 \surroundwithmdframed{minted}
 
+
+
+%\setbeamercovered{transparent}
+
 % For aligning tables
 \usepackage{array}
 
@@ -23,7 +27,7 @@
 
 \title{Computer Architecture Through Binary Searching}
 \author{Pat Morin \\ (Joint Work with Paul Khuong)}
-\date{Carleton University}
+\date{Carleton University \\ AppNexus}
 
 
 \begin{document}
@@ -39,23 +43,25 @@
 
 
 \begin{frame}
+  \setbeamercovered{transparent}
   \frametitle{Binary Search}
   \framesubtitle{Two Motivating Examples}
 
-  \begin{itemize}[<+->]
-    \item Chromium Code Base (Google Chrome)
+  \begin{itemize}
+    \item<+-> Chromium Code Base (Google Chrome)
     \begin{itemize}
        \item \mintinline{c++}{std::upper_bound} called from 135 different locations
        \item Cookie handling, GUI layout, graphics and text rendering, video handling, and certificate management
        \item More than 1,000,000,000 users
     \end{itemize}
-    \item AppNexus real-time ad bidding engine
+    \item<+->AppNexus real-time ad bidding engine
     \begin{itemize}
        \item Running 24/7 on 1500 machines
        \item 4,000,000 requests per second
        \item 10\% of CPU time spent on binary searching a few arrays
        \item 118,000,000 watt hours per year
     \end{itemize}
+    \item<+->Plus thousands of other examples
   \end{itemize}
 \end{frame}
 
@@ -91,6 +97,9 @@
   \begin{center}
     \mi{figs/binary-search-example}
   \end{center}
+  \begin{itemize}[<10->]
+    \item Finds 8 or finds where 8 should be
+  \end{itemize}
 
 \end{frame}
 
@@ -124,10 +133,10 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \begin{frame}[fragile]
   \frametitle{Binary Search: Analysis}
 
-  \begin{itemize}[<+->]
+  \begin{itemize}
     \item Each iteration terminates or 
       reduces \mintinline{c++}{hi-lo} by a factor of 2
-    \item At most $\log_2 n$ iterations
+    \item $\therefore$ at most $\log_2 n$ iterations
     \item Doubling the size of the array adds only one more iteration
   \end{itemize}
 \end{frame}
@@ -183,8 +192,8 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \begin{frame}
    \frametitle{Binary Search is Optimal}
 
-   \begin{itemize}[<+->]
-     \item You may have heard that binary search is optimal
+   \begin{itemize}
+     \item Binary search is ``optimal''
      \item It does the fewest number of comparisons possible
      \item But are comparisons really the most expensive thing we do?
    \end{itemize}
@@ -194,7 +203,8 @@ I sorted_array<T,I>::branchy_search(T x) const {
    \frametitle{The Instruction Pipeline}
 
    \begin{center}
-      \mi{figs/pipeline}
+      \includegraphics[height=.5\textheight]{images/micro3c}
+      \multiinclude[<+>][start=1,format=pdf,graphics={width=.6\textwidth}]{figs/pipeline}
    \end{center}
    \vspace{-1em}
    \begin{itemize}
@@ -207,10 +217,10 @@ I sorted_array<T,I>::branchy_search(T x) const {
 \begin{frame}
    \frametitle{Branch-Free Binary Search}
 
-   \begin{itemize}[<+->]
-       \item On random searches, branchy binary search will guess 
+   \begin{itemize}
+       \item Branchy binary search will guess 
                 wrong nearly 50\% of the time.
-       \item Eliminate branching with conditional moves (\texttt{\color{blue}cmov})
+       \item Solution: Eliminate branching with conditional moves (\texttt{\color{blue}cmov})
    \end{itemize}
 \end{frame}
 

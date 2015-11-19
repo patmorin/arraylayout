@@ -402,6 +402,15 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \title{Array Layouts for Comparison-Based Searching}
+  \titlepage
+  \centerline{
+    \includegraphics[height=1in]{images/nehalemdie}
+    \includegraphics[height=1in]{images/binary-search}
+    \includegraphics[height=1in]{images/nehalem-block}
+  }
+\end{frame}
 
 \begin{frame}[fragile]
    \frametitle{The Story So Far}
@@ -410,7 +419,7 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
       \item<+->Long processor pipelines require branch prediction
                for performance
       \begin{itemize}
-         \item<+->Branch mispredictions are expensive (20-25 cycles)
+         \item<+->Branch mispredictions are expensive (20--25 cycles)
          \item<+->Branches can sometimes be avoided using 
                   \mintinline{nasm}{cmov}
       \end{itemize}
@@ -431,14 +440,15 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
 \begin{frame}
    \frametitle{Binary Search is Optimal}
 
-   \begin{itemize}
-     \item<+-> Binary search is optimal 
+   \begin{itemize}[<+->]
+     \item Binary search is optimal 
      \begin{itemize}
        \item It does the fewest number of comparisons possible
        \item Branch-free version makes no branch mispredictions
-       \item Branch-free prefetching version reduces makes no branch mispredictions
+       \item Branch-free prefetching version makes no branch mispredictions\\
+        \centerline{\includegraphics[width=.5\textwidth]{graphs/sorted-viii}}
      \end{itemize}
-     \item<+-> Its interaction with the cache is non-optimal
+     \item Its interaction with the cache is non-optimal
    \end{itemize}
 \end{frame}
 
@@ -553,22 +563,25 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \frametitle{B-Tree Search Problems}
    \framesubtitle{Why are B-Trees so slow?}
     
-   \begin{itemize}
-      \item<+->Internal binary search has $B+1$ possible outcomes:
+   \begin{itemize}[<+->]
+      \item Internal binary search has $B+1$ possible outcomes:
       \begin{itemize}
-        \item<+->For $B=16$, 
+        \item For $B=16$, 
                   $\lceil\log(B+1)\rceil = \lceil 4.08\rceil = 5$ comparisons per node
       \end{itemize}
-      \item<+->Big jump in search time for each new level 
+      \item Big jump in search time for each new level 
       \begin{itemize}
-        \item<+->For $n=2^{10}$, $B=16$, 
+        \item Example: $n=2^{10}$, $B=16$, 
                   $\lceil\log_{B+1}n\rceil = \lceil 2.44\rceil = 3$ levels
-        \item<+->$3\times 5 = 15$ comparisons (versus 10 for binary search)
+        \item $3\times 5 = 15$ comparisons (versus 10 for binary search)
       \end{itemize}
+      \item B-tree code is long, complicated, requires extra bookkeeping
    \end{itemize}
-   \begin{center}
-      \includegraphics[height=.45\textheight]{graphs/btree-ii}
-   \end{center}
+   \begin{tabular}{m{.45\textwidth}m{.45\textwidth}}
+      \includegraphics[width=.45\textwidth]{graphs/btree-ii}
+     & \includegraphics[width=.45\textwidth]{figs/btree-4}
+   \end{tabular}
+   
 \end{frame}
 
 
@@ -604,11 +617,11 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \begin{itemize}[<+->]
       \item B-Trees take advantage of 1 \& 2.
       \item B-Trees don't take advantage of 3.
-      \item B-Tree problem: When $B$ is a power of 2, $B+1$ is not
-      \begin{itemize}[<+->]
-        \item Except if $B=1$
+      \item B-Tree problems:
+      \begin{itemize}
+          \item When $B$ is a power of 2, $B+1$ is not
+          \item Extra bookkeeping during search is expensive
       \end{itemize}
-      \item Can a 1-Tree beat a B-tree?
    \end{itemize}
 \end{frame}
 
@@ -617,9 +630,10 @@ I sorted_array<T,I>::_branchfree_search(T x) const {
    \framesubtitle{A.K.A. 1-trees}
   
    \begin{center}
-      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-1}}
-      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-2}}
-      \only<+->{\includegraphics[width=.85\textwidth]{figs/eytzinger-3}}
+      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-1}}%
+      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-2}}%
+      \only<+>{\includegraphics[width=.85\textwidth]{figs/eytzinger-3}}%
+      \only<+->{\includegraphics[width=.85\textwidth]{figs/eytzinger-4}}
    \end{center} 
    \begin{itemize}
      \item Children of $i$ are at $2i+1$ and $2i+2$.

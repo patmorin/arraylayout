@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70005" creator="Ipe 7.1.4">
-<info created="D:20150708132008" modified="D:20151029113134"/>
+<info created="D:20150708132008" modified="D:20151118154205"/>
 <preamble>\renewcommand{\familydefault}{\sfdefault}</preamble>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
@@ -240,9 +240,11 @@ h
 <layer name="alpha"/>
 <layer name="beta"/>
 <layer name="gamma"/>
+<layer name="delta"/>
 <view layers="alpha" active="alpha"/>
 <view layers="alpha beta" active="beta"/>
 <view layers="alpha beta gamma" active="gamma"/>
+<view layers="alpha beta gamma delta" active="delta"/>
 <path layer="gamma" stroke="violet" pen="ultrafat">
 96 560 m
 128 560
@@ -650,5 +652,23 @@ h
 328 552 l
 h
 </path>
+<text layer="delta" matrix="1 0 0 1 0 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">1</text>
+<text matrix="1 0 0 1 16 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">2</text>
+<text matrix="1 0 0 1 32 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">3</text>
+<text matrix="1 0 0 1 48 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">4</text>
+<text matrix="1 0 0 1 64 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">5</text>
+<text matrix="1 0 0 1 80 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">6</text>
+<text matrix="1 0 0 1 96 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">7</text>
+<text matrix="1 0 0 1 112 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">8</text>
+<text matrix="1 0 0 1 128 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="4.981" height="6.531" depth="0" halign="center" valign="center">9</text>
+<text matrix="1 0 0 1 144 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">10</text>
+<text matrix="1 0 0 1 160 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">11</text>
+<text matrix="1 0 0 1 176 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">12</text>
+<text matrix="1 0 0 1 192 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">13</text>
+<text matrix="1 0 0 1 208 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">14</text>
+<text matrix="1 0 0 1 224 -16" transformations="translations" pos="128 528" stroke="darkgray" type="label" width="9.963" height="6.531" depth="0" halign="center" valign="center">15</text>
+<text matrix="1 0 0 1 307 -138" transformations="translations" pos="64 704" stroke="black" type="minipage" width="96" height="18.112" depth="13.16" valign="top">26 \\
+$26+1=\mathtt{{\color{gray}1}1011}$\\
+$\mathtt{110-1}=\mathtt{10}$</text>
 </page>
 </ipe>

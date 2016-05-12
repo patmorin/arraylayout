@@ -128,7 +128,7 @@ I fake_array<T,I>::search(const T &x) {
 }
 
 
-// Build an array of size n and fill it with 0, 2, 4,...,2n-2
+// Build an array of size n and fill it with 1, 3, 5,...,2n-1
 template<class T, class I>
 T *build_and_fill(I n) {
 	T *a = new T[n];

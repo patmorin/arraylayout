@@ -52,11 +52,13 @@ urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
   we arrive at the conclusion that, for small values of $n$, sorted
   order, combined with a good implementation of binary search is best.
   For larger values of $n$, we arrive at the surprising conclusion that
-  the Eytzinger layout is usually the fastest.  The latter conclusion is
+  the Eytzinger layout is usually the fastest. The latter conclusion is
   unexpected and goes counter to earlier experimental work by Brodal,
   Fagerberg, and Jacob (SODA~2003), who concluded that both the B-tree
   and van Emde Boas layouts were faster than the Eytzinger layout for
-  large values of $n$.
+  large values of $n$.  Our fastest C++ implementations, when compiled,
+  use conditional moves to avoid branch mispredictions and prefetching
+  to reduce cache latency.
 \end{abstract}
 
 \end{titlepage}
@@ -255,6 +257,22 @@ Between these two extremes, there is an interval where their vEB
 implementation spends its time catching up to the sorted and Eytzinger
 implementations.
 
+Sanders and Winkel \cite{sanders.winkel:super} describe a sorting
+algorithm \emph{Super Scalar Sample Sort} that requires a subroutine
+for locating values within a sorted sample of the input.  They do this
+efficiently by storing the sample using the Eytzinger layout and show
+that locating values within this sample can be done using branch-free code
+(one of the tools we make use of in our implementations).
+
+Sanders and Winkel's implementation of search in the Eytzinger layout is
+similar to some of ours, in that it uses branch free instructions, but
+it does not use explicity prefetching (which our code does).  In their
+application, the sample array is small ($k=256$) so that it fits into even
+the smallest (fastest) caches, so it does not need to use prefetching.
+Their application also performs batched searches in which a large number
+of elements are being located in this relatively small sample array.
+They use loop unrolling or software pipelining so that several of these
+searches can proceed in parallel.
 
 \subsection{Summary of Results}
 
@@ -315,6 +333,29 @@ Brodal, Fagerberg and Jacob for small values of $n$, but are completely
 different for large values of $n$.  The reason for the differences is
 that there are a number of processor architecture considerations---beyond
 caching---that affect the relative performance of these layouts.
+
+Our Conclusion~1 above supports the choice of a branch-free implementation
+of the search algorithm in Sanders and Winkel's Super Scalar Sample Sort,
+though our Conclusion~2 suggests that a good branch-free implementation
+of a binary search in a sorted array would do slightly better. See,
+for example, our \figref{eytzinger-iii} at the value $n=2^8$.
+However, this change would have little impact on the overall
+running-time of Super Scalar Sample Sort, since this part of the
+algorithm accounts for only a minor proportion of total execution time
+\cite[Figure~3]{sanders.winkel:super}. 
+
+Note that we have been unable to directly compare our implementations
+to those of Brodal, Fagerberg and Jacob. Although they have kindly
+made their implementations available to us, we have been unable to use
+their code for several reasons: (1)~their code assume 32-bit processor
+architectures and fails on 64-bit machines so would require modifications
+for most of our test machines; (2)~their code is C that is generated
+by a Perl script. This allows them to do many things with C code (that
+can now be done with C++ facilities, especially templates) but makes it
+very difficult for us to make even simple changes to their code while
+maintaining any confidence that the resulting C code will be correct
+and not drastically different, performance-wise, from their original
+implementation.
 
 It was only through careful and controlled experimentation with
 different implementations of each of the search algorithms that
@@ -417,10 +458,19 @@ location is loaded into all levels of the CPU cache.  Subsequent accesses
 to memory locations in that cache line then occur with less latency
 since they can use the data in the CPU caches.
 
-The Intel 4790K has a 32KB L1 data cache (per core), a 256KB L2 cache (per
-core), and an 8MB L3 cache (shared among 4 cores).  Each of these cache
-levels is successively slower, in terms of both latency and bandwidth,
-than the previous level, with L1 being the fastest and L3 being the slowest;
+Further complicating matters is the fact that not all caches are fully
+associative.  In a $c$-way associative cache, any memory address, $a$,
+can only live in one of $c$ cache lines, and in almost all architectures,
+these cache lines are completely determined by $\lfloor a/B\rfloor
+\bmod c$.  Since $B$ and $c$ are typically powers of 2, this corresponds
+to $\log c$ bits of $a$ beginning at the $\log B$th least significant
+bit of $a$.
+
+The Intel 4790K has a 32KB 8-way associative L1 data cache (per core),
+a 256KB 8-way associative L2 cache (per core), and an 8MB 16-way
+associative L3 cache (shared among 4 cores).  Each of these cache levels
+is successively slower, in terms of both latency and bandwidth, than
+the previous level, with L1 being the fastest and L3 being the slowest;
 but still much faster than RAM.
 
 \subsection{The Prefetcher}
@@ -553,6 +603,10 @@ algorithms are generic and can be used for any type of data. All of the
 code and scripts used for our experiments are freely available through
 \texttt{github}.\footnote{\url{http://dx.doi.org/10.5281/zenodo.31047}}
 
+Our tests were run under Ubuntu Linux 14.04 with a 3.13 Linux kernel. The
+compiler used was \mintinline{sh}{gcc} version 4.8.4 with the command line \\
+\mintinline{sh}{g++ -std=c++11 -Wall -O4 -march=native}.
+
 \subsection{Sorted}
 
 In this subsection we take special care to understand the performance of
@@ -599,6 +653,13 @@ For instance, Brodal \etal\ \cite{brodal.fagerberg.ea:cache} write
 ``The [sorted] layout has bad performance, probably because no nodes
 in the top part of the tree share cache lines.'' In theory, however,
 the spatial locality in the small subtrees should make up for this.
+
+Another often neglected effect is that of cache associativity, which
+can adversely effect binary search when the the array length is a large
+power of 2.  In a $c$-way associative cache, the top $\log (n/C)$ levels
+of the implicit search tree must all share the same $c$ cache lines.
+If $\log (n/C) > c$, this effectively means that the cache effectively
+has size only $c$.  
 
 On the Intel 4790K, whose 8MB L3 cache can store 2048K cached values, we
 expect to see a sharp increase in search times when $n$ exceeds $2^{21}$,
@@ -691,20 +752,20 @@ substantially.  There are two problems with this code:
 \begin{enumerate}
 
 \item Inside the code is a three-way \mintinline{c++}{if} statement whose
-execution path is highly unpredictable. Each of the first two branches
+execution path is highly unpredictable. Each of the first two code blocks
 has a close to $50\%$ chance of being executed.  The branch-predictor of
-a pipelined processor is forced to guess which of these branches will
-occur and load the instructions from this branch into the pipelline.
+a pipelined processor is forced to guess which of these blocks will
+occur and load the instructions from this block into the pipeline.
 When it guesses incorrectly (approximately 50\% of the time), the entire
 pipeline must be flushed and the instructions for the other branch loaded.
 
 \item The number of iterations of the outer loop is hard to predict. The
 loop may terminate early (because \mintinline{c++}{x} was found). Even
-when searching for a value \mintinline{c++}{x} that is not present,
-unless $n$ has the form $2^k-1$, the exact number of iterations is
-different for different values of \mintinline{c++}{x}.  This implies
-that the branch predictor will frequently mispredict termination or
-non-termination of the loop, incurring the cost of another pipeline flush.
+when searching for a value \mintinline{c++}{x} that is not present, unless
+$n$ has the form $2^k-1$, the exact number of iterations is different for
+different values of \mintinline{c++}{x}.  This implies that the branch
+predictor will frequently mispredict termination or non-termination of
+the loop, incurring the cost of another pipeline flush per search.
 
 \end{enumerate}
 

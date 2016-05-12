@@ -853,10 +853,15 @@ loop is implemented by Lines~8--15 with the conditional move at Line~12.
 \end{listing}
 
 \Figref{sorted-iii} compares the performance of the \naive\ and
-branch-free implementations of binary search for array sizes 
-ranging from 1 to $2^{16}$.  As expected, the branch-free code is much
-faster. After accounting for the overhead of the testing harness, the
-branch-free search is approximately twice as fast for $n=2^{16}$.
+branch-free implementations of binary search for array sizes ranging from
+1 to $2^{16}$.  As expected, the branch-free code is much faster. After
+accounting for the overhead of the testing harness, the branch-free
+search is approximately twice as fast for $n=2^{16}$.  Running the two
+using the \mintinline{sh}{perf} performance monitoring tool explains
+why.  With $2\times 10^6$ searches on an array of length
+$n=60,000$, the branchy code executes $101\times 10^3$ branches and
+mispredicts $17\%$ of these.  The branch-free code executes $57\times
+10^3$ and mispredicts only $0.05\%$ of these.
 
 \begin{figure}
    \centering{\includegraphics{figs/sorted-iii}}
@@ -947,6 +952,12 @@ or disprove this hypothesis.
    two cache lines when only one will be used.  Nevertheless it is faster
    because the memory bandwidth is more than twice the cache line width
    divided by the memory latency.
+
+   Again, we confirmed this using \mintinline{sh}{perf}.  With $n=10^8$,
+   the branchy code performs $16.3\times 10^6$ L3 cache accesses for
+   $2\times 10^6$ searches.  The branch-code performs only
+   $8.4\times 10^6$ L3 cache accesses for the same test.  This difference is caused by speculative execution.CONTINUE HERE
+
 
 \item We ran our code on an Atom 330 processor that we had available. This
    low-power processor was designed to minimize watts-per-instruction

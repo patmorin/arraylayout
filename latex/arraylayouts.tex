@@ -603,10 +603,17 @@ algorithms are generic and can be used for any type of data. All of the
 code and scripts used for our experiments are freely available through
 \texttt{github}.\footnote{\url{http://dx.doi.org/10.5281/zenodo.31047}}
 
-Our tests were run under Ubuntu Linux 14.04 with a 3.13 Linux kernel. The
-compiler used was \mintinline{sh}{gcc} version 4.8.4 with the command line \\
-\mintinline{sh}{g++ -std=c++11 -Wall -O4 -march=native}.
-
+Our tests were run under Ubuntu Linux 14.04 with a 3.13 Linux kernel.
+The compiler used was \mintinline{sh}{gcc} version 4.8.4 with the command
+line arguments \\
+\centerline{  \mintinline{sh}{-std=c++11 -Wall -O4 -march=native} \enspace . }
+In all our plots, the array lengths, $n$, are truncated integer powers
+of $b=10^{1/10}$.  The base $b$ was chosen to provide an even distribution
+of points when plotted on a logarithmic scale and to avoid array lengths
+that are powers of 2, which can lead to cache line aliasing caused by
+limited associativity.  The tests shown here were run with 4K TLB pages.
+Running the same tests with 2M and 1G pages produces the same conclusions.
+ 
 \subsection{Sorted}
 
 In this subsection we take special care to understand the performance of
@@ -918,6 +925,16 @@ or disprove this hypothesis.
   completed because it is still waiting on the results of the previous
   comparison, so execution stalls at this point.
 
+\item We measured L3 cache accesses using
+   \mintinline{sh}{perf}.\footnote{For this, we used the command
+   \mintinline{sh}{perf stat -e r4f2e} to obtain the number of lowest
+   level cache references \cite[Table~18-1]{intel:system}.} With $n=10^8$,
+   the branchy code performs $16.3\times 10^6$ L3 cache accesses for
+   $2\times 10^6$ searches.  The branch-free code performs only $8.4\times
+   10^6$ L3 cache accesses for the same test. This difference is caused
+   by speculative execution in the branchy code; each mispredicted branch
+   loads a memory location that is not loaded by the branch-free code.
+
 \item Another possible explanation for our results is that the hardware
    prefetcher is, for some reason, better able to handle the branchy
    code than the branch-free code.  This seems unlikely, since the memory
@@ -952,12 +969,6 @@ or disprove this hypothesis.
    two cache lines when only one will be used.  Nevertheless it is faster
    because the memory bandwidth is more than twice the cache line width
    divided by the memory latency.
-
-   Again, we confirmed this using \mintinline{sh}{perf}.  With $n=10^8$,
-   the branchy code performs $16.3\times 10^6$ L3 cache accesses for
-   $2\times 10^6$ searches.  The branch-code performs only
-   $8.4\times 10^6$ L3 cache accesses for the same test.  This difference is caused by speculative execution.CONTINUE HERE
-
 
 \item We ran our code on an Atom 330 processor that we had available. This
    low-power processor was designed to minimize watts-per-instruction
@@ -997,7 +1008,8 @@ these top-level elements are all restricted to use $O(c)$ cache lines.
 This problem is observed in the experimental results of Brodal \etal\
 \cite[Section~4.2]{brodal.fagerberg.ea:cache} and examined in detail
 by the first author \cite{khuong:binary}, who also suggests efficient
-workarounds.
+workarounds. Our own experiments mostly sidestep this issue by our choice
+of array lengths.
 
 \subsection{Eytzinger}
 
@@ -1241,7 +1253,15 @@ in advance.
 \figref{eytzinger-iii} compares Eytzinger search with binary search for
 small values of $n$ ($n\le 2^{16}$).  At this scale
 the branch-free Eytzinger code is very close, but not quite as fast
-as the best binary search implementations.  Something else evident in
+as the best binary search implementations.  
+
+\begin{figure}
+   \centering{\includegraphics{figs/eytzinger-iii}}
+   \caption{Eytzinger versus binary search for small values of $n$.}
+   \figlabel{eytzinger-iii}
+\end{figure}
+
+Something else evident in
 \figref{eytzinger-ii} is a ``bumpiness'' of the Eytzinger running-times
 as a function of $n$.  This bumpiness is caused by branch mispredictions
 during the execution of the while loop.  The search times are especially
@@ -1254,14 +1274,10 @@ other hand, when $n$ is far from a power of 2, the number of iterations
 is either $h$ or $h-1$, each with non-negligible probability, and the
 branch predictor is unable to accurately predict the final iteration of
 the while loop.
-
-\begin{figure}
-   \centering{\includegraphics{figs/eytzinger-iii}}
-   \caption{Eytzinger versus binary search for small values of $n$.}
-   \figlabel{eytzinger-iii}
-\end{figure}
-
-
+For example, measuring with \mintinline{sh}{perf} when $n=2^{11}$ or
+$n=2^{12}$, we find that the branch-free Eytzinger search has a branch-misprediction
+rate of $0.04\%$ when performing $2\times 10^{7}$ searches.  When
+$n=(2^{11}+2^{12})/2$, the branch misprediction rate is $1.45\%$.
 
 \begin{lesson}
   For the Eytzinger layout, branch-free search with explicit prefetching

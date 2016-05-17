@@ -219,64 +219,66 @@ void run_tests(I n, I m) {
 	Tool<fake_array<T,I>,T,I>::run_test1(a, n, m, "fake");
 
 	Tool<sorted_array<T,I>,T,I>::run_test1(a, n, m, "sorted");
-	Tool<sorted_array_bf<T,I>,T,I>::run_test1(a, n, m, "sorted_bf");
-	Tool<sorted_array_bfp<T,I>,T,I>::run_test1(a, n, m, "sorted_bfp");
-	Tool<sorted_array_stl<T,I>,T,I>::run_test1(a, n, m, "sorted_stl");
-
-	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
-	Tool<veb2_array<T,I>,T,I>::run_test1(a, n, m, "veb2");
-	Tool<veb2_array<T,I,true>,T,I>::run_test1(a, n, m, "veb2e");
-
-	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
-	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
-	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
-	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
-
-	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
-	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
-	Tool<mixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
-	Tool<mixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
-	Tool<eytzinger_array_unrolled<T,I>,T,I>::run_test1(a, n, m, "eytzinger_unrolled");
-
-	Tool<eytzinger_array_deeppf<T,I,0,true>,T,I>::run_test1(a, n, m, "fetcher_0");
-	Tool<eytzinger_array_deeppf<T,I,1,true>,T,I>::run_test1(a, n, m, "fetcher_1");
-	Tool<eytzinger_array_deeppf<T,I,2,true>,T,I>::run_test1(a, n, m, "fetcher_2");
-
+//	Tool<sorted_array_bf<T,I>,T,I>::run_test1(a, n, m, "sorted_bf");
+//	Tool<sorted_array_bfp<T,I>,T,I>::run_test1(a, n, m, "sorted_bfp");
+//	Tool<sorted_array_stl<T,I>,T,I>::run_test1(a, n, m, "sorted_stl");
+//
+//	Tool<veb_array<T,I>,T,I>::run_test1(a, n, m, "veb");
+//	Tool<veb2_array<T,I>,T,I>::run_test1(a, n, m, "veb2");
+//	Tool<veb2_array<T,I,true>,T,I>::run_test1(a, n, m, "veb2e");
+//
+//	Tool<eytzinger_array<T,I>,T,I>::run_test1(a, n, m, "eytzinger_branchy");
+//	Tool<eytzinger_array_bf<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bf");
+//	Tool<eytzinger_array_bfp<T,I>,T,I>::run_test1(a, n, m, "eytzinger_bfp");
+//	Tool<eytzinger_array_bf<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bf_a");
+//
+//	Tool<eytzinger_array_bfp<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfp_a");
+//	Tool<eytzinger_array_bfpm<T,I,true>,T,I>::run_test1(a, n, m, "eytzinger_bfpm_a");
+//	Tool<mixed_array<T,I>,T,I>::run_test1(a, n, m, "esmixed");
+//	Tool<mixed_array_pf<T,I>,T,I>::run_test1(a, n, m, "esmixed_pf");
+//	Tool<eytzinger_array_unrolled<T,I>,T,I>::run_test1(a, n, m, "eytzinger_unrolled");
+//
+//	Tool<eytzinger_array_deeppf<T,I,0,true>,T,I>::run_test1(a, n, m, "fetcher_0");
+//	Tool<eytzinger_array_deeppf<T,I,1,true>,T,I>::run_test1(a, n, m, "fetcher_1");
+//	Tool<eytzinger_array_deeppf<T,I,2,true>,T,I>::run_test1(a, n, m, "fetcher_2");
+//
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-	if (sizeof(I) > 4 || n <= 100000000)
-		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
-	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive");
-	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
-	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
+	Tool<btree_array_avx2<B,T,I,true>,T,I>::run_test1(a, n, m, "btree_avx2");
 
-	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
-	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
-	Tool<btree_array_bfp<B/2,T,I>,T,I>::run_test1(a, n, m, "btree8_bfp");
-	Tool<btree_array_bfp<B/4,T,I>,T,I>::run_test1(a, n, m, "btree4_bfp");
-
-	if (sizeof(I) > 4 || n <= 100000000)
-		Tool<btree_array<2*B,T,I,true>,T,I>::run_test1(a, n, m, "btree32_a");
-	Tool<btree_array_naive<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_naive_a");
-	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
-	Tool<btree_array<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_a");
-
-	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");
-	Tool<bktree_array<B,1,T,I>,T,I>::run_test1(a, n, m, "bqtree16_1");
-	Tool<bktree_array<B,2,T,I>,T,I>::run_test1(a, n, m, "bqtree16_2");
-	Tool<bktree_array<B,3,T,I>,T,I>::run_test1(a, n, m, "bqtree16_3");
-	Tool<bktree_array<B,4,T,I>,T,I>::run_test1(a, n, m, "bqtree16_4");
-	Tool<bktree_array<B,5,T,I>,T,I>::run_test1(a, n, m, "bqtree16_5");
-	Tool<bktree_array<B,6,T,I>,T,I>::run_test1(a, n, m, "bqtree16_6");
-	Tool<bktree_array<B,7,T,I>,T,I>::run_test1(a, n, m, "bqtree16_7");
-	Tool<bktree_array<B,8,T,I>,T,I>::run_test1(a, n, m, "bqtree16_8");
-	Tool<bktree_array<B,9,T,I>,T,I>::run_test1(a, n, m, "bqtree16_9");
-	Tool<bktree_array<B,10,T,I>,T,I>::run_test1(a, n, m, "bqtree16_10");
-	Tool<bktree_array<B,11,T,I>,T,I>::run_test1(a, n, m, "bqtree16_11");
-	Tool<bktree_array<B,12,T,I>,T,I>::run_test1(a, n, m, "bqtree16_12");
-	Tool<bktree_array<B,13,T,I>,T,I>::run_test1(a, n, m, "bqtree16_13");
-	Tool<bktree_array<B,14,T,I>,T,I>::run_test1(a, n, m, "bqtree16_14");
-	Tool<bktree_array<B,15,T,I>,T,I>::run_test1(a, n, m, "bqtree16_15");
-	Tool<bktree_array<B,16,T,I>,T,I>::run_test1(a, n, m, "bqtree16_16");
+//	if (sizeof(I) > 4 || n <= 100000000)
+//		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
+//	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive");
+//	Tool<btree_array<B,T,I>,T,I>::run_test1(a, n, m, "btree16");
+//	Tool<btree_array<B/2,T,I>,T,I>::run_test1(a, n, m, "btree4");
+//
+//	Tool<btree_array_bf<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bf");
+//	Tool<btree_array_bfp<B,T,I>,T,I>::run_test1(a, n, m, "btree16_bfp");
+//	Tool<btree_array_bfp<B/2,T,I>,T,I>::run_test1(a, n, m, "btree8_bfp");
+//	Tool<btree_array_bfp<B/4,T,I>,T,I>::run_test1(a, n, m, "btree4_bfp");
+//
+//	if (sizeof(I) > 4 || n <= 100000000)
+//		Tool<btree_array<2*B,T,I,true>,T,I>::run_test1(a, n, m, "btree32_a");
+//	Tool<btree_array_naive<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_naive_a");
+//	Tool<btree_array<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_a");
+//	Tool<btree_array<B/2,T,I,true>,T,I>::run_test1(a, n, m, "btree8_a");
+//
+//	Tool<btree_array_bf<B,T,I,true>,T,I>::run_test1(a, n, m, "btree16_bf_a");
+//	Tool<bktree_array<B,1,T,I>,T,I>::run_test1(a, n, m, "bqtree16_1");
+//	Tool<bktree_array<B,2,T,I>,T,I>::run_test1(a, n, m, "bqtree16_2");
+//	Tool<bktree_array<B,3,T,I>,T,I>::run_test1(a, n, m, "bqtree16_3");
+//	Tool<bktree_array<B,4,T,I>,T,I>::run_test1(a, n, m, "bqtree16_4");
+//	Tool<bktree_array<B,5,T,I>,T,I>::run_test1(a, n, m, "bqtree16_5");
+//	Tool<bktree_array<B,6,T,I>,T,I>::run_test1(a, n, m, "bqtree16_6");
+//	Tool<bktree_array<B,7,T,I>,T,I>::run_test1(a, n, m, "bqtree16_7");
+//	Tool<bktree_array<B,8,T,I>,T,I>::run_test1(a, n, m, "bqtree16_8");
+//	Tool<bktree_array<B,9,T,I>,T,I>::run_test1(a, n, m, "bqtree16_9");
+//	Tool<bktree_array<B,10,T,I>,T,I>::run_test1(a, n, m, "bqtree16_10");
+//	Tool<bktree_array<B,11,T,I>,T,I>::run_test1(a, n, m, "bqtree16_11");
+//	Tool<bktree_array<B,12,T,I>,T,I>::run_test1(a, n, m, "bqtree16_12");
+//	Tool<bktree_array<B,13,T,I>,T,I>::run_test1(a, n, m, "bqtree16_13");
+//	Tool<bktree_array<B,14,T,I>,T,I>::run_test1(a, n, m, "bqtree16_14");
+//	Tool<bktree_array<B,15,T,I>,T,I>::run_test1(a, n, m, "bqtree16_15");
+//	Tool<bktree_array<B,16,T,I>,T,I>::run_test1(a, n, m, "bqtree16_16");
 
 
 	delete[] a;

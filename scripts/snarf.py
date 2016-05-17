@@ -222,6 +222,12 @@ if __name__ == "__main__":
     make_plot(lines, ['btree16_bf_a', 'eytzinger_bfp_a', 
                       'veb', 'veb2'], maxn, 'figs/veb-i', caches)
 
+    # plots of btree sizes on 4790k
+    lines = open('data/lauteschwein-btrees-g++.dat').read().splitlines()
+    sizes = [2, 4, 8, 24, 32, 40, 48, 56, 64, 16]
+    make_plot(lines, ['btree{}'.format(b) for b in sizes], maxn, 'figs/btrees',
+          [])
+
     # 64 bit results
     lines = open('data/lauteschwein-all64-g++.dat').read().splitlines()
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted_bfp'], 

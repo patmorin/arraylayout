@@ -95,63 +95,6 @@ public:
 	I search(T x) const { return branchfree_search(x);	};
 };
 
-// A version of a Btree that uses AVX2 instructions for the inner loops
-template<unsigned B, typename T, typename I, bool aligned=false>
-class btree_array_avx2 : public btree_array<B,T,I,aligned> {
-protected:
-	using btree_array<B,T,I,aligned>::child;
-	using btree_array<B,T,I,aligned>::n;
-	using btree_array<B,T,I,aligned>::a;
-public:
-	template<typename ForwardIterator>
-	btree_array_avx2(ForwardIterator a0, I n0)
-		: btree_array<B,T,I,aligned>(a0, n0) {};
-	I search(T x) const;
-};
-
-template<unsigned B, typename T, typename I, bool aligned>
-I __attribute__ ((noinline)) btree_array_avx2<B,T,I,aligned>::search(T x) const {
-    //std::cout << "x = " << x << std::endl;
-	I j = n;
-	I i = 0;
-	while (i + B <= n) {
-		I lo = i;
-		I hi = i+B;
-        I t = hi;
-		while (lo < hi) {
-			I m = (lo + hi) / 2;
-			//std::cout << a[m] << std::endl;
-			if (x < a[m]) {
-				hi = m;
-				t = m;
-                j = m;
-			} else if (x > a[m]) {
-				lo = m+1;
-			} else {
-				return m;
-			}
-		}
-		i = child((unsigned)(t-i), i);
-	}
-	if (__builtin_expect(i <= n, 0)) {
-		// Now we're in the last block
-		I lo = i;
-		I hi = n;
-		while (lo < hi) {
-			I m = (lo + hi) / 2;
-			if (x < a[m]) {
-				hi = m;
-				j = m;
-			} else if (x > a[m]) {
-				lo = m+1;
-			} else {
-				return m;
-			}
-		}
-	}
-	return j;
-}
-
 /*
  * A branch-free implementation of the btree array with some prefetching
  */

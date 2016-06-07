@@ -28,8 +28,8 @@ urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
     and Pat Morin\footnote{Carleton University, \email{morin@scs.carleton.ca}}}
 
 
-%\usepackage{lineno}
-%\linenumbers
+\usepackage{lineno}
+\linenumbers
 
 \begin{document}
 \begin{titlepage}
@@ -1715,7 +1715,7 @@ and searching that cache line (at a cost of $c$).
 
 On the other hand, if $WL > \log B$, then the memory subsystem can
 handle $\log B$ cache line requests in parallel without any additional
-overhead. In this case, then the running-time of Eytzinger search with
+overhead. In this case, the running-time of Eytzinger search with
 prefetching is roughly
 \[
     \max\{L,c\}\log_B n \enspace .

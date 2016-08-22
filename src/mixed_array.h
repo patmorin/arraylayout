@@ -119,17 +119,30 @@ mixed_array<T,I,W>::mixed_array(ForwardIterator a0, I n0) {
 	// Figure out how much is at the leaves
 	I q = (n - m)/B; // the number of full leaves
 	I r = (n - m)%B; // number of items in the last partial leaf
+    //std::cout << "n = " << n << ", B = " << B << ", m = " << m << ", q = " << q 
+    //         << ", r = " << r << std::endl;
 
-	// Now build everything
-	T *atmp = new T[m];   // keep the Eytzinger data in here
-	for (int i = 0; i < q; i++) {
+	// Copy the Eytzinger part 
+	T *atmp = new T[m]; 
+    for (I i = 0; i < q; i++) {
 		atmp[i] = a0[B+(B+1)*i];
+		//std::cout << "atmp[" << i << "]=" << atmp[i] << std::endl;
+    }
+    for (I i = q; i < m; i++ ) {
+        atmp[i] = a0[B*q+r+i];
+		//std::cout << "atmp[" << i << "]=" << atmp[i] << std::endl;
+    }
+    // Copy the full leaves
+	for (I i = 0; i < q; i++) {
 		std::copy_n(a0+(B+1)*i, B, a+m+B*i);
 	}
-	std::copy_n(a0+(B+1)*q+r, m-q, atmp+q);
-	std::copy_n(a0+(B+1)*q, r, a+m+B*q);
-	copy_data_r(atmp, 0); // make the Eytzinger part
+	std::copy_n(a0+(B+1)*q, r, a+m+B*q); // Copy the partial leaf
+	copy_data_r(atmp, 0); // build the Eytzinger part
 	delete[] atmp;
+    //for (int i = 0; i < n; i++) {
+    //    std::cout << a[i] << ",";
+    //}
+    //std::cout << std::endl;
 }
 
 template<typename T, typename I, unsigned W>

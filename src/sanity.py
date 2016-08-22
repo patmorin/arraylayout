@@ -8,7 +8,7 @@ from math import log
 dtypes=['uint32', 'uint64', 'uint128']
 itypes=['uint32', 'uint64']
 b = 10**(1/10)
-ns = range(1, 1000)
+ns = list(range(1, 1000))
 ns += [int(1000+b**i) for i in range(int(log(10**7, b)))]
 tick = len(dtypes)*len(itypes)*len(ns) // 70
 errors = 0

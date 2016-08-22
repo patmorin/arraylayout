@@ -139,7 +139,8 @@ I __attribute__ ((noinline)) eytzinger_array_deeppf<T,I,C,aligned>::search(T x) 
 }
 
 
-// An Eytzinger array with branch-free searches and masked prefetching
+// An Eytzinger array with loop unrolling
+// WARNING: This fails for small arrays
 template<typename T, typename I, bool aligned = false>
 class eytzinger_array_unrolled: public eytzinger_array<T, I, aligned> {
 protected:

@@ -49,31 +49,31 @@ Using the preceding script will generate PDF figures in the scripts/figs-2
 directory.  These have the following relationships to figures in the
 paper:
 
-sorted-i -> Fig. 4
-sorted-ii -> Fig. 5
-sorted-iii -> Fig. 6
-sorted-iv -> Fig. 7
-sorted-v -> Fig. 8
-Fig. 9 (specific hardware)
-eytzinger-i -> Fig. 10
-eytzinger-ii -> Fig. 11
-eytzinger-iii -> Fig. 12
-mixed-i -> Fig. 13
-mixed-ii -> Fig. 14
-btree-i -> Fig. 16
-btree-ii -> Fig. 17
-veb-i -> Fig. 18
-fetchers-4-i -> Fig. 19 (top)
-fetchers-8-i -> Fig. 19 (middle)
-fetchers-16-i -> Fig. 19 (bottom)
-bktrees-i -> Fig. 20
-threads2 -> Fig. 21 (top)
-threads4 -> Fig. 21 (middle)
-threads8 -> Fig. 21 (bottom)
-64bit -> Fig. 22
-128bit -> Fig. 22
-Fig. 23 (specific hardware)
-masking-iii -> Fig. 24 (top)
-masking-iv -> Fig. 24 (bottom)
-
+    sorted-i -> Fig. 4
+    sorted-ii -> Fig. 5
+    sorted-iii -> Fig. 6
+    sorted-iv -> Fig. 7
+    sorted-v -> Fig. 8
+    Fig. 9 (specific hardware)
+    eytzinger-i -> Fig. 10
+    eytzinger-ii -> Fig. 11
+    eytzinger-iii -> Fig. 12
+    mixed-i -> Fig. 13
+    mixed-ii -> Fig. 14
+    btree-i -> Fig. 16
+    btree-ii -> Fig. 17
+    veb-i -> Fig. 18
+    fetchers-4-i -> Fig. 19 (top)
+    fetchers-8-i -> Fig. 19 (middle)
+    fetchers-16-i -> Fig. 19 (bottom)
+    bktrees-i -> Fig. 20
+    threads2 -> Fig. 21 (top)
+    threads4 -> Fig. 21 (middle)
+    threads8 -> Fig. 21 (bottom)
+    64bit -> Fig. 22
+    128bit -> Fig. 22
+    Fig. 23 (specific hardware)
+    masking-iii -> Fig. 24 (top)
+    masking-iv -> Fig. 24 (bottom)
+    
 

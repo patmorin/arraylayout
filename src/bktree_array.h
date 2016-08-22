@@ -43,7 +43,7 @@ I __attribute__ ((noinline)) bktree_array<B,K,T,I>::search(T x) const {
 	I j = n;
 	I i = 0;
 	while (i + B*K <= n) {
-		for (int t = 0; t < K; t++)
+		for (unsigned t = 0; t < K; t++)
 			__builtin_prefetch(a+i+t*B);
 		const T *base = &a[i];
 		const T *pred = branchfree_inner_search<B*K>(base, x);

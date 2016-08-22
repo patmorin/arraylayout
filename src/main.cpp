@@ -118,7 +118,7 @@ public:
 			throw std::out_of_range(ss.str());
 		}
 #endif
-		return (T)(2*i+1);
+		return (T)(2*i + 1);
 	}
 };
 
@@ -128,7 +128,7 @@ I fake_array<T,I>::search(const T &x) {
 }
 
 
-// Build an array of size n and fill it with 0, 2, 4,...,2n-2
+// Build an array of size n and fill it with 1, 3, 5,...,2n-1
 template<class T, class I>
 T *build_and_fill(I n) {
 	T *a = new T[n];
@@ -243,7 +243,6 @@ void run_tests(I n, I m) {
 	Tool<eytzinger_array_deeppf<T,I,2,true>,T,I>::run_test1(a, n, m, "fetcher_2");
 
 	const unsigned B = CACHE_LINE_WIDTH/sizeof(T);
-
 	if (sizeof(I) > 4 || n <= 100000000)
 		Tool<btree_array<2*B,T,I>,T,I>::run_test1(a, n, m, "btree32");
 	Tool<btree_array_naive<B,T,I>,T,I>::run_test1(a, n, m, "btree16_naive");
@@ -278,6 +277,7 @@ void run_tests(I n, I m) {
 	Tool<bktree_array<B,14,T,I>,T,I>::run_test1(a, n, m, "bqtree16_14");
 	Tool<bktree_array<B,15,T,I>,T,I>::run_test1(a, n, m, "bqtree16_15");
 	Tool<bktree_array<B,16,T,I>,T,I>::run_test1(a, n, m, "bqtree16_16");
+
 
 	delete[] a;
 }

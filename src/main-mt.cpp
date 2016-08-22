@@ -120,17 +120,17 @@ public:
 			throw std::out_of_range(ss.str());
 		}
 #endif
-		return (T)(2*i);
+		return (T)(2*i + 1);
 	}
 };
 
 template<typename T, typename I>
 I fake_array<T,I>::search(const T &x) {
-	return std::max((I)0, std::min(n, (I)(x+1)/2));
+	return std::min(n, (I)x/2);
 }
 
 
-// Build an array of size n and fill it with 0, 2, 4,...,2n-2
+// Build an array of size n and fill it with 1, 3, 5,...,2n-1
 template<class T, class I>
 T *build_and_fill(I n) {
 	T *a = new T[n];

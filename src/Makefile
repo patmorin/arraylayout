@@ -32,7 +32,7 @@ arraylayout-$(VERSION).tgz : $(mainfiles) cacher.cpp Makefile README.md
 	tar czvf arraylayout-$(VERSION).tgz $(dirname)
 
 clean :
-	rm -f main cacher main-debug
+	rm -f main main-mt cacher main-debug
 
 # This is all stuff for doing the test battery
 datadir = run_data

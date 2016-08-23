@@ -5,7 +5,6 @@ import re
 from collections import defaultdict
 import matplotlib as mpl
 
-
 # Use TeX to render output
 #from matplotlib import rc
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -168,7 +167,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     plt.legend(loc='upper left', framealpha=0.8)
     if filename:
         filename += ".pdf"
-        print "Writing {}".format(filename)
+        print("Writing {}".format(filename))
         plt.savefig(filename, format='pdf', bbox_inches='tight')
     else:
         plt.show()
@@ -178,16 +177,16 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
 def get_caches():
     """Use lscpu to determine cache sizes"""
     caches = [0]*3
-    output = subprocess.check_output('lscpu')
+    output = subprocess.check_output('lscpu').decode("utf-8")
     for line in output.splitlines():
         m = re.match(r'L(\w+) cache:\s*(\d+)K$', line)
         if m:
             if m.group(1) == '1d':
-                caches[0] = 1024*int(m.group(2))//4
+                caches[0] = 1024*int(m.group(2))
             elif m.group(1) == '2':
-                caches[1] = 1024*int(m.group(2))//4
+                caches[1] = 1024*int(m.group(2))
             elif m.group(1) == '3':
-                caches[2] = 1024*int(m.group(2))//4
+                caches[2] = 1024*int(m.group(2))
     return [caches, None][caches == [0]*3]
 	
     
@@ -197,11 +196,9 @@ if __name__ == "__main__":
 
     # Figure out the cache sizes
     caches = get_caches()
-    print("detected cache sizes: " + 
-          ", ".join(["{}K".format(x//256) for x in caches]) +
-          "(" +
-          ", ".join(["{}uint32".format(x) for x in caches]) +
-          ")")
+    print("detected cache sizes: " 
+           + ", ".join(["{}K".format(x//1024) for x in caches]))
+    caches = [x//4 for x in caches] # Change unit to 4-bytes
 
     maxn = 2**30
 

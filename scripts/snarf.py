@@ -163,7 +163,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     plt.legend(loc='upper left', framealpha=0.8)
     if filename:
         filename += ".pdf"
-        print "Writing {}".format(filename)
+        print("Writing {}".format(filename))
         plt.savefig(filename, format='pdf', bbox_inches='tight')
     else:
         plt.show()

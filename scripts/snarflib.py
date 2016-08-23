@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
               title=r'running time of $2\times 10^6$ searches on $n$ values',
               ylabel='running time (s)'):
+
     # Some nice colours from ColorBrewer2
     colours = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c',
                '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']
     c0 = [colours[i] for i in range(len(colours)) if i % 2 == 0]
     c1 = [colours[i] for i in range(len(colours)) if i % 2 == 1]
     colours = c1 + c0
-    
     
     styles = ['-', '--', ':']
     
@@ -80,6 +80,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
             for i in range(5): stuff[i].add(line[i])
         except ValueError:
             print('Error: unparseable line\n  "{}"'.format(" ".join(line)))
+            sys.exit(-1)
 
     # Get the list of algorithms we care about.
     # algs = sorted([alg for alg in stuff[0] if i_care(alg)])
@@ -153,17 +154,21 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
 def get_caches():
     """Use lscpu to determine cache sizes"""
     caches = [0]*3
-    output = subprocess.check_output('lscpu').decode("utf-8")
-    for line in output.splitlines():
-        m = re.match(r'L(\w+) cache:\s*(\d+)K$', line)
-        if m:
-            if m.group(1) == '1d':
-                caches[0] = 1024*int(m.group(2))
-            elif m.group(1) == '2':
-                caches[1] = 1024*int(m.group(2))
-            elif m.group(1) == '3':
-                caches[2] = 1024*int(m.group(2))
-    return [caches, None][caches == [0]*3]
+    try:
+        output = subprocess.check_output('lscpu').decode("utf-8")
+        for line in output.splitlines():
+            m = re.match(r'L(\w+) cache:\s*(\d+)K$', line)
+            if m:
+                if m.group(1) == '1d':
+                    caches[0] = 1024*int(m.group(2))
+                elif m.group(1) == '2':
+                    caches[1] = 1024*int(m.group(2))
+                elif m.group(1) == '3':
+                    caches[2] = 1024*int(m.group(2))
+    except OSError:
+        sys.err.write("Warning: Unable to determine cache sizes using lscpu\n")
+
+    return caches
 	
     
 def make_plots():

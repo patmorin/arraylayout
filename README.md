@@ -61,6 +61,8 @@ you need
 - python with matplotlib
 - pdflatex
 
+You will also need roughly 10GB of free RAM.
+
 Using the preceding script will generate PDF and SVG figures in the
 scripts/figs-rcr directory.  You can view the resulting SVG files in a
 browser by opening scripts/figs-rcr/index.html

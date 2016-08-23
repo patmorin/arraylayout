@@ -1,0 +1,122 @@
+<html>
+<head>
+   <title>arraylayouts: RCR ouput</title>
+   <style type="text/css">
+       tr.spacer {
+           height:6em;
+       }
+       td {
+           text-align:center;
+           padding: 1em;
+           border: 1px solid black;
+       }
+       tr {
+          max-width: 50em;
+       }
+   </style>
+   <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+          inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+          displayMath: [ ["$$","$$"], ["\\[","\\]"] ],
+          processEscapes: true
+        },
+        "HTML-CSS": { availableFonts: ["TeX"] }
+      });
+    </script> 
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"> </script>
+</head>
+<body>
+<div class="content">
+<h1>arraylayouts: RCR output</h1>
+
+<table align="center">
+    <tr><td>
+      <img src="sorted-i.svg"/> <br/> Figure 4: The running time of branchy
+      binary search and <code>stl::lower_bound()</code>
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+    <img src="sorted-ii.svg"/> <br/> Figure 5:The running time of branchy binary search when all data
+    fits into L3 cache.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+      <img src="sorted-iii.svg"/> <br/> Figure 6: The running times of branchy binary search versus
+    branch-free binary search when all data
+    fits into L2 cache.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="sorted-iv.svg"/> <br/> Figure 7: The running times of branchy binary search versus
+    branch-free binary search for large values of $n$.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="sorted-v.svg"/> <br/> Figure 8: Branch-free binary search with explicit prefetching is competitive
+    for small values of $n$ and a clear winner for large values of $n$.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="eytzinger-i.svg"/> <br/> Figure 10: The performance of branchy and branch-free Eytzinger search.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="eytzinger-ii.svg"/> <br/> Figure 11: The performance of branch-free Eytzinger with prefetching.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="eytzinger-iii.svg"/> <br/> Figure 12: Eytzinger versus binary search for small values of $n$.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="mixed-i.svg"/> <br/> Figure 13: Performance of the branch-free mixed layout (without prefetching).
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="mixed-ii.svg"/> <br/> Figure 14: Performance of the branch-free mixed layout with prefetching.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="btree-i.svg"/> <br/> Figure 16: The performance of Btree search algorithms.}
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="btree-ii.svg"/> <br/> Figure 17: The performance of Btree search for small values of $n$.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="veb-i.svg"/> <br/> Figure 18: The performance of the vEB layout.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="fetchers-4-i.svg"/> <br/>
+       <img src="fetchers-8-i.svg"/> <br/>
+       <img src="fetchers-16-i.svg"/> <br/> Figure 19: The effects of deeper prefetching in the Eytzinger search algorithm.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="bktrees-i.svg"/> <br/> Figure 20: Testing $(Bk+1)$-ary trees.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="threads2.svg"/> <br/> 
+       <img src="threads4.svg"/> <br/>
+       <img src="threads8.svg"/> <br/> Figure 21: The performance of searches with two, four, and eight threads.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="64bit.svg"/> <br/>
+       <img src="128bit.svg"/> <br/> Figure 22: The performance of algorithms on 64-bit and 128-bit data.
+    </td></tr>
+    <tr class="spacer"></tr>
+    <tr><td>
+       <img src="masking-iii.svg"/> <br/>
+       <img src="masking-iv.svg"/> <br/> Figure 24: The impact of masking prefetches.
+    </td></tr>
+</table>
+</div>
+</body>
+</html>

@@ -3,25 +3,8 @@ import sys
 import subprocess
 import re
 from collections import defaultdict
-import matplotlib as mpl
-
-mpl.use("pgf")
-pgf_with_pdflatex = {
-	"font.family": "serif",
-    "font.size": 9,
-    "text.usetex" : True,
-    "pgf.rcfonts": False,
-    "pgf.texsystem": "pdflatex",
-    "pgf.preamble": [
-         r"\usepackage[utf8]{inputenc}",
-         r"\usepackage[T1]{fontenc}",
-         r"\usepackage{kpfonts}",
-         ]
-}
-mpl.rcParams.update(pgf_with_pdflatex)
 
 import matplotlib.pyplot as plt
-
 
 def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
               title=r'running time of $2\times 10^6$ searches on $n$ values',
@@ -158,12 +141,12 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                      linestyle=":", color=colours[i], linewidth=1)
 
     plt.legend(loc='upper left', framealpha=0.8)
-    if filename:
-        filename += ".pdf"
-        print("Writing {}".format(filename))
-        plt.savefig(filename, format='pdf', bbox_inches='tight')
-    else:
-        plt.show()
+    fmt = 'pdf'
+    if plt.get_backend().lower() == 'svg':
+        fmt = 'svg'
+    filename += "." + fmt
+    print("Writing {}".format(filename))
+    plt.savefig(filename, format=fmt, bbox_inches='tight')
     plt.close()
 
 
@@ -183,7 +166,8 @@ def get_caches():
     return [caches, None][caches == [0]*3]
 	
     
-if __name__ == "__main__":
+def make_plots():
+    
     #lines = open('data/lauteschwein-sorted-g++.dat').read().splitlines()
     lines = open('data-rcr/alldata.dat').read().splitlines()
 

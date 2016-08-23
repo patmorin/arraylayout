@@ -62,35 +62,3 @@ you need a Python installation with matplotlib and a LaTeX installation.
 Using the preceding script will generate PDF and SVG figures in the
 scripts/figs-rcr directory.  You can view the resulting SVG files in a
 browser by opening scripts/figs-rcr/index.html
-
-If you care about the PDFs, they have the following relationships to
-figures in the paper:
-
-    sorted-i.pdf -> Fig. 4
-    sorted-ii.pdf -> Fig. 5
-    sorted-iii.pdf -> Fig. 6
-    sorted-iv.pdf -> Fig. 7
-    sorted-v.pdf -> Fig. 8
-    None -> Fig. 9 (specific hardware)
-    eytzinger-i.pdf -> Fig. 10
-    eytzinger-ii.pdf -> Fig. 11
-    eytzinger-iii.pdf -> Fig. 12
-    mixed-i.pdf -> Fig. 13
-    mixed-ii.pdf -> Fig. 14
-    btree-i.pdf -> Fig. 16
-    btree-ii.pdf -> Fig. 17
-    veb-i.pdf -> Fig. 18
-    fetchers-4-i.pdf -> Fig. 19 (top)
-    fetchers-8-i.pdf -> Fig. 19 (middle)
-    fetchers-16-i.pdf -> Fig. 19 (bottom)
-    bktrees-i.pdf -> Fig. 20
-    threads2.pdf -> Fig. 21 (top)
-    threads4.pdf -> Fig. 21 (middle)
-    threads8.pdf -> Fig. 21 (bottom)
-    64bit.pdf -> Fig. 22
-    128bit.pdf -> Fig. 22
-    None -> Fig. 23 (specific hardware)
-    masking-iii.pdf -> Fig. 24 (top)
-    masking-iv.pdf -> Fig. 24 (bottom)
-    
-

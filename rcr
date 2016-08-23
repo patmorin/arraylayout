@@ -1,26 +1,33 @@
 #!/bin/bash -ex
 
+# First, make the executables
 cd src
 make clean
 make main
 make main-mt
 cd ../scripts
-datadir=data-rcr
-if [ -d $datadir ]; then
-    rm -f $datadir/*
-else
-    mkdir $datadir
+if [ ! -L main-mt ]; then
+    ln -s ../src/main-mt .
 fi
 if [ ! -L main ]; then
     ln -s ../src/main .
 fi
-if [ ! -L main-mt ]; then
-    ln -s ../src/main-mt .
+
+# Next, make the data
+datadir=data-rcr
+if [ -d $datadir && -f $datadir/alldata.dat && -f $datadir/alldata-mt-2.dat
+     && -f $datadir/alldata-mt-4.dat && -f $datadir/alldata-mt-8.dat ]; then
+   echo "All data appears to be present" 
+    rm -f $datadir/*.dat
+else
+    mkdir $datadir
 fi
 python experiments-rcr.py
+
+# Finally, make the figures
 figdir=figs-rcr
 if [ -d $figdir ]; then
-    rm -f $figdir/*
+    rm -f $figdir/*.pdf $figdir/*.svg
 else
     mkdir $figdir
 fi

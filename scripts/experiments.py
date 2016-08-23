@@ -14,7 +14,9 @@ if __name__ == "__main__":
         while n*size < 5*2**30:
             cmd = 'numactl -C 3 ./main {} {} {} {} >> {}'.format(dt, it, int(n), m, datafile)
             print cmd
-            os.system(cmd)
+            if os.system(cmd) != 0:
+                sys.stderr.write("Error while executing '{}': Aborting!\n")
+                sys.exit(-1)
             n *= base
     
         

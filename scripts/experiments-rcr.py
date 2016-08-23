@@ -17,7 +17,9 @@ if __name__ == "__main__":
             cmd = 'numactl -C 3 ./main {} {} {} {} >> {}'
             cmd = cmd.format(dt, it, int(n), m, datafile)
             print cmd
-            os.system(cmd)
+            if os.system(cmd) != 0:
+                sys.stderr.write("Error while executing '{}': Aborting!\n")
+                sys.exit(-1)
             while int(n*base) == int(n):
                 n *= base
             n *= base
@@ -33,8 +35,10 @@ if __name__ == "__main__":
                 cmd = './main-mt {} {} {} {} {} >> {}'
                 cmd = cmd.format(dt, it, int(n), m, nt, datafile)
                 print cmd
-                os.system(cmd)
-                while int(n*base) == int(n):
+                if os.system(cmd) != 0:
+                    sys.stderr.write("Error while executing '{}': Aborting!\n")
+                    sys.exit(-1)
+               while int(n*base) == int(n):
                     n *= base
                 n *= base
 

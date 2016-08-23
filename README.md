@@ -8,7 +8,6 @@ These are the sources (LaTeX, C++, and Python) for the paper
   by Paul-Virak Khuong and Pat Morin
 
 
-
 ## About
 This project is about trying different memory layouts for searching in
 an array, with a focus on improving performance for the most common-case:
@@ -61,7 +60,9 @@ you need
 - python with matplotlib
 - pdflatex
 
-You will also need roughly 10GB of free RAM.
+To fully recreate the data in the paper, you will need at least 15GB
+of free RAM. The experiments will scale down to use at most 2/3 of your
+available RAM otherwise.
 
 Using the preceding script will generate PDF and SVG figures in the
 scripts/figs-rcr directory.  You can view the resulting SVG files in a

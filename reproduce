@@ -1,0 +1,31 @@
+#!/bin/bash -ex
+
+cd src
+make clean
+make main
+make main-mt
+cd ../scripts
+datdir=data-rcr
+if [ -d $datadir ]; then
+    rm -f $datadir/*
+else
+    mkdir $datadir
+fi
+if [ ! -L main ]; then
+    ln -s ../src/main .
+fi
+if [ ! -L main-mt ]; then
+    ln -s ../src/main-mt .
+fi
+python experiments-rcr.py
+figdir=figs-rcr
+if [ -d $figdir ]; then
+    rm -f $figdir/*
+else
+    mkdir $figdir
+fi
+python snarf-rcr.py
+
+echo "All done. Look at the PDF files in the scripts/figs-rcr/ directory"
+
+

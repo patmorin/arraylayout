@@ -5,7 +5,7 @@ if __name__ == "__main__":
     N = 5*2**30
     base = 1.258925412
     itypes = ["uint64"]
-    datadir = "run_data"
+    datadir = "data-rcr"
 
     dtypes = [("uint32", 4), ("uint64", 8), ("uint128", 16)]
     datafile = datadir + os.path.sep + "alldata.dat"

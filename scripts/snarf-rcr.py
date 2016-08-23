@@ -193,7 +193,7 @@ def get_caches():
     
 if __name__ == "__main__":
     #lines = open('data/lauteschwein-sorted-g++.dat').read().splitlines()
-    lines = open('run_data/alldata.dat').read().splitlines()
+    lines = open('data-rcr/alldata.dat').read().splitlines()
 
     # Figure out the cache sizes
     caches = get_caches()
@@ -262,21 +262,21 @@ if __name__ == "__main__":
 
 
     # multithread results
-    lines = open('run_data/alldata-mt-2.dat').read().splitlines()    
+    lines = open('data-rcr/alldata-mt-2.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
               2**30, 'figs-2/threads2', caches, 'uint32', '', 
               'completion time for 2 threads (s)')
-    lines = open('run_data/alldata-mt-4.dat').read().splitlines()    
+    lines = open('data-rcr/alldata-mt-4.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
               2**30, 'figs-2/threads4', caches, 'uint32', '',
               'completion time for 4 threads (s)')
-    lines = open('run_data/alldata-mt-8.dat').read().splitlines()    
+    lines = open('data-rcr/alldata-mt-8.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
               2**30, 'figs-2/threads8', caches, 'uint32', '',
               'completion time for 8 threads (s)')
 
     # bqtree results
-    lines = open('run_data/alldata.dat').read().splitlines()
+    lines = open('data-rcr/alldata.dat').read().splitlines()
     make_plot(lines, ['bqtree16_{}'.format(i) for i in range(2,17)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a', 'bqtree16_1'], 
               2**30, 'figs-2/bktrees-i', [], 'uint32')

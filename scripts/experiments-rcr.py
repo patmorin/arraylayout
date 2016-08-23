@@ -15,14 +15,29 @@ def get_cpu_number():
         pass
     sys.err.write("Warning: Unable to select CPU ID, using 0\n")
     return 0
-    
+
+def get_free_ram():
+    try:
+        output = subprocess.check_output('free').decode("utf-8")
+        for line in output.splitlines():
+            m = re.match(r'Mem:\s+\d+\s+\d+\s+(\d+)', line)
+            if m:
+                return int(m.group(1))
+    except OSError:
+        pass
+    sys.err.write("Warning: Unable to determine available RAM, using 1GB\n")
+    return 2**30
+   
 if __name__ == "__main__":
-    N = 5*2**30
+    ram = get_free_ram()
+    N = min(ram//3, 5*2**30)
+    print("Detected {} bytes of free RAM, using {} bytes".format(ram, 2*N))
     base = 1.258925412
     itypes = ["uint64"]
     datadir = "data-rcr"
 
     cpu = get_cpu_number()
+    print("Pinning to CPU {}".format(cpu))
 
     dtypes = [("uint32", 4), ("uint64", 8), ("uint128", 16)]
     datafile = datadir + os.path.sep + "alldata.dat"

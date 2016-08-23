@@ -24,8 +24,9 @@ if [ -d $figdir ]; then
 else
     mkdir $figdir
 fi
-python snarf-rcr.py
+python snarf-rcr-svg.py
+python snarf-rcr-pdf.py
 
-echo "All done. Look at the PDF files in the scripts/figs-rcr/ directory"
+echo "All done. Look at scripts/figs-rcr/index.html"
 
 

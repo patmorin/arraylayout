@@ -5,9 +5,11 @@ Experiments with memory layouts for binary search.
 
 These are the sources (LaTeX, C++, and Python) for the paper
 
-  ARRAY LAYOUTS FOR COMPARISON-BASED SEARCHING
+  [ARRAY LAYOUTS FOR COMPARISON-BASED SEARCHING](http://arxiv.org/abs/1509.05053)
 
   by Paul-Virak Khuong and Pat Morin
+
+
 
 ## About
 This project is about trying different memory layouts for searching in
@@ -41,11 +43,12 @@ http://cglab.ca/~morin/misc/arraylayout-v2/
 
 ## Reproducible Computational Results
 
-This work is in the proccess of earning Reproducible Computational Result
-certificate from the Journal of Experimental Algorithmics.  To achieve
-this, we have developed scripts that allow anyone with a suitable system
-to reproduce the computational results (in this case, figures) in the
-paper.
+This work is in the proccess of earning a [Reproducible Computational
+Result](http://jea.acm.org/rcr_initiative.cfm) certificate from the
+[ACM Journal of Experimental Algorithmics](http://jea.acm.org/).
+To achieve this, we have developed scripts that allow anyone with a
+suitable system to reproduce the computational results (in this case,
+figures) in the paper.
 
 If you want to try and reproduce our results, execute
 

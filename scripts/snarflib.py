@@ -166,7 +166,7 @@ def get_caches():
                 elif m.group(1) == '3':
                     caches[2] = 1024*int(m.group(2))
     except OSError:
-        sys.err.write("Warning: Unable to determine cache sizes using lscpu\n")
+        sys.stderr.write("Warning: Unable to determine cache sizes using lscpu\n")
 
     return caches
 	

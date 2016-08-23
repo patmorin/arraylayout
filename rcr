@@ -1,11 +1,17 @@
-#!/bin/bash -ex
+#!/bin/bash
+
+# exit at the first error
+set -o errexit
+
+srcdir=src
+scriptdir=scripts
 
 # First, make the executables
-cd src
+cd $srcdir
 make clean
 make main
 make main-mt
-cd ../scripts
+cd ../$scriptdir
 if [ ! -L main-mt ]; then
     ln -s ../src/main-mt .
 fi
@@ -15,14 +21,22 @@ fi
 
 # Next, make the data
 datadir=data-rcr
-if [ -d $datadir && -f $datadir/alldata.dat && -f $datadir/alldata-mt-2.dat
-     && -f $datadir/alldata-mt-4.dat && -f $datadir/alldata-mt-8.dat ]; then
-   echo "All data appears to be present" 
-    rm -f $datadir/*.dat
-else
-    mkdir $datadir
+wipedata=1
+if [[ -d $datadir && -f $datadir/alldata.dat && -f $datadir/alldata-mt-2.dat
+     && -f $datadir/alldata-mt-4.dat && -f $datadir/alldata-mt-8.dat ]]; then
+   read -p "All data appears to be present, reuse it (not recommended)? " -n 1 -r
+   echo
+   if [[ $REPLY =~ ^[Yy]$ ]]; then
+      echo "OK, reusing existing data"
+      wipedata=0 # do dangerous stuff
+   fi
 fi
-python experiments-rcr.py
+if [[ $wipedata -ne 0 ]]; then
+   echo "Wiping any existing data"
+    rm -rf $datadir
+    mkdir $datadir
+    python experiments-rcr.py
+fi
 
 # Finally, make the figures
 figdir=figs-rcr
@@ -34,6 +48,14 @@ fi
 python snarf-rcr-svg.py
 python snarf-rcr-pdf.py
 
-echo "All done. Look at scripts/figs-rcr/index.html"
+echo "All done. Look at scripts/figs-rcr/index.html."
+
+echo "Now making a tarball that you can send me if you want..."
+lscpu > $figdir/lscpu.txt
+cat /proc/cpuinfo > $figdir/cpuinfo.txt
+cd ..
+tar cf rcr.tgz $scriptdir/$figdir
+echo "If you got this far, I would love to see the output."
+echo "Help out by sending ./rcr.tgz to morin@scs.carleton.ca"
 
 

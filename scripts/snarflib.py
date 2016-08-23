@@ -79,7 +79,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
             d[alg][dt][it][int(n)] = (float(btime), float(stime), cs)	
             for i in range(5): stuff[i].add(line[i])
         except ValueError:
-            print('Warning: unparseable line\n  "{}"'.format(" ".join(line)))
+            print('Error: unparseable line\n  "{}"'.format(" ".join(line)))
 
     # Get the list of algorithms we care about.
     # algs = sorted([alg for alg in stuff[0] if i_care(alg)])

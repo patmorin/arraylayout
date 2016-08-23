@@ -175,7 +175,7 @@ void run_test1_b(T *a, I n, I m, I nthreads, const std::string &name) {
 	for (auto &th : threads) th.join();
 	stop = std::chrono::high_resolution_clock::now();
 	elapsed = stop - start;
-	std::cout << " " << elapsed.count() << " mt" << std::endl;
+	std::cout << " " << elapsed.count() << " mt" << nthreads << std::endl;
 }
 
 
@@ -326,8 +326,6 @@ int main(int argc, char *argv[]) {
 		std::exit(-1);
 	}
 
-    std::cout << "n = " << n << ", m = " << m << ", nthreads = " 
-              << nthreads << std::endl;
 	if (dt == 0 && it == 0)
 		run_it<std::uint32_t,std::uint32_t>(n, m, nthreads);
 	else if (dt == 0 && it == 1)

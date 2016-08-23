@@ -43,7 +43,7 @@ http://cglab.ca/~morin/misc/arraylayout-v2/
 
 ## Reproducible Computational Results
 
-This work is in the proccess of earning a [Reproducible Computational
+This work is in the process of earning a [Reproducible Computational
 Result](http://jea.acm.org/rcr_initiative.cfm) certificate from the
 [ACM Journal of Experimental Algorithmics](http://jea.acm.org/).
 To achieve this, we have developed scripts that allow anyone with a

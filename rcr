@@ -5,7 +5,7 @@ make clean
 make main
 make main-mt
 cd ../scripts
-datdir=data-rcr
+datadir=data-rcr
 if [ -d $datadir ]; then
     rm -f $datadir/*
 else

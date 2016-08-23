@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 if os.system(cmd) != 0:
                     sys.stderr.write("Error while executing '{}': Aborting!\n")
                     sys.exit(-1)
-               while int(n*base) == int(n):
+                while int(n*base) == int(n):
                     n *= base
                 n *= base
 

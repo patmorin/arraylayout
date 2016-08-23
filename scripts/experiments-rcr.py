@@ -18,7 +18,7 @@ def get_cpu_number():
 
 def get_free_ram():
     try:
-        output = subprocess.check_output('free -b').decode("utf-8")
+        output = subprocess.check_output(['free', '-b']).decode("utf-8")
         for line in output.splitlines():
             m = re.match(r'Mem:\s+\d+\s+\d+\s+(\d+)', line)
             if m:

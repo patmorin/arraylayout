@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import sys
 import subprocess
@@ -5,6 +6,7 @@ import re
 import itertools
 
 def get_cpu_number():
+    """Use lscpu to get the last CPU number on NUMA node 0"""
     try:
         output = subprocess.check_output('lscpu').decode("utf-8")
         for line in output.splitlines():
@@ -17,21 +19,26 @@ def get_cpu_number():
     return 0
 
 def get_free_ram():
+    """Use free -b to determine the amount of free RAM"""
     try:
         output = subprocess.check_output(['free', '-b']).decode("utf-8")
-        for line in output.splitlines():
-            m = re.match(r'Mem:\s+\d+\s+\d+\s+(\d+)', line)
-            if m:
-                return int(m.group(1))
+        lines = output.splitlines()
+        m = re.match(r'\w+:' + '(\s+(\d+))'*6, lines[1])
+        if m:
+            return int(m.group(6))
     except OSError:
         pass
-    sys.stderr.write("Warning: Unable to determine available RAM, using 1GB\n")
-    return 2**30
-   
+    sys.stderr.write("Warning: Unable to determine free RAM, using 1GB\n")
+    return 10**9
+
+def b2gb(n):
+    return n/10**9
+
 if __name__ == "__main__":
     ram = get_free_ram()
     N = min(ram//3, 5*2**30)
-    print("Detected {} bytes of free RAM, using {} bytes".format(ram, 2*N))
+    msg = "Detected {:.2g}GB of free RAM, using {:.2g}GB"
+    print(msg.format(b2gb(ram), b2gb(2*N)))
     base = 1.258925412
     itypes = ["uint64"]
     datadir = "data-rcr"

@@ -119,12 +119,12 @@ mixed_array<T,I,W>::mixed_array(ForwardIterator a0, I n0) {
 	// Figure out how much is at the leaves
 	I q = (n - m)/B; // the number of full leaves
 	I r = (n - m)%B; // number of items in the last partial leaf
-    //std::cout << "n = " << n << ", B = " << B << ", m = " << m << ", q = " << q 
-    //         << ", r = " << r << std::endl;
+    std::cout << "n = " << n << ", B = " << B << ", m = " << m << ", q = " << q 
+             << ", r = " << r << std::endl;
 
 	// Copy the Eytzinger part 
 	T *atmp = new T[m]; 
-    for (I i = 0; i < q; i++) {
+    for (I i = 0; i < std::min(m, q); i++) {
 		atmp[i] = a0[B+(B+1)*i];
 		//std::cout << "atmp[" << i << "]=" << atmp[i] << std::endl;
     }

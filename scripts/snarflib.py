@@ -92,17 +92,21 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
     # Collect the (n, searchtime) pairs for each algorithm.
     itype = 'uint64'
     ymax = 0
+    xmax_t = xmax;
+    gtxmax = [n for n in ns if n >= xmax]
+    if gtxmax: xmax_t = min(gtxmax)
     for alg in algs:
         for n in ns:
             if n in d[alg][dtype][itype]:
                 search_time = d[alg][dtype][itype][n][1]
-                if n <= xmax:
+                if n <= xmax_t:
                     if search_time > ymax:
                         ymax = search_time
                     data[alg].append((n, search_time))
 
     # Don't make x-axis any longer than necessary
-    xmax = min(xmax, max(ns))
+    maxn = max([max(d[alg][dtype][itype]) for alg in algs])
+    xmax = min(xmax, maxn)
 
     # Plot everything.
     width,height = 6.8, 3.5

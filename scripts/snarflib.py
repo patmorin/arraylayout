@@ -101,6 +101,9 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                         ymax = search_time
                     data[alg].append((n, search_time))
 
+    # Don't make x-axis any longer than necessary
+    xmax = min(xmax, max(ns))
+
     # Plot everything.
     width,height = 6.8, 3.5
     if not title or '-bit' in title: height = 2.6
@@ -153,7 +156,7 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
 
 def get_caches():
     """Use lscpu to determine cache sizes"""
-    caches = [0]*3
+    caches = [-1]*3
     try:
         output = subprocess.check_output('lscpu').decode("utf-8")
         for line in output.splitlines():
@@ -168,12 +171,14 @@ def get_caches():
     except OSError:
         pass
 
-    caches = [32, 256, 8192]
-    errmsg = "Warning: Unable to determine cache sizes using lscpu\n"
-    errmsg +="         using defaults (L1={}K, L2={}K, L3={}K)\n"
-    errmsg.format(caches[0], caches[1], caches[2])
-    sys.stderr.write(errmsg)
-    return [x*1024 for x in caches]
+    if -1 in caches:
+        caches = [32, 256, 8192]
+        errmsg = "Warning: Unable to determine cache sizes using lscpu\n"
+        errmsg +="         using defaults (L1={}K, L2={}K, L3={}K)\n"
+        errmsg = errmsg.format(caches[0], caches[1], caches[2])
+        sys.stderr.write(errmsg)
+        caches = [x*1024 for x in caches]
+    return caches
 	
     
 def make_plots():
@@ -192,9 +197,9 @@ def make_plots():
     # Plots of binary search on Intel 4790K
     make_plot(lines, ['sorted', 'sorted_stl'], maxn, 'figs-rcr/sorted-i', caches)
 
-    make_plot(lines, ['sorted'], 2**21, 'figs-rcr/sorted-ii', caches[:2])
+    make_plot(lines, ['sorted'], caches[2], 'figs-rcr/sorted-ii', caches[:2])
 
-    make_plot(lines, ['sorted', 'sorted_bf', 'fake'], 2**16, 'figs-rcr/sorted-iii')
+    make_plot(lines, ['sorted', 'sorted_bf', 'fake'], caches[1], 'figs-rcr/sorted-iii', caches[:1])
 
     make_plot(lines, ['sorted', 'sorted_bf'], maxn, 'figs-rcr/sorted-iv', caches)
 
@@ -217,7 +222,7 @@ def make_plots():
                       'eytzinger_bfp', 'eytzinger_bfp_a'], maxn, 'figs-rcr/eytzinger-ii', caches)
 
     make_plot(lines, ['sorted_bf', 'sorted_bfp', 'eytzinger_branchy',  
-                      'eytzinger_bf', 'eytzinger_bfp_a'], 2**16, 
+                      'eytzinger_bf', 'eytzinger_bfp_a'], caches[1], 
                       'figs-rcr/eytzinger-iii', caches[:1])
 
     make_plot(lines, ['sorted_bf', 'eytzinger_bfp_a', 'btree16_naive_a', 
@@ -225,7 +230,7 @@ def make_plots():
               caches)
 
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_naive_a', 'btree16_a', 
-                      'btree16_bf_a', 'sorted_bf'], 2**20, 'figs-rcr/btree-ii', caches[:2])
+                      'btree16_bf_a', 'sorted_bf'], caches[2], 'figs-rcr/btree-ii', caches[:2])
 
     make_plot(lines, ['veb', 'veb2'], maxn, 'figs-rcr/veb-all', caches)
 
@@ -235,38 +240,38 @@ def make_plots():
     # 64 bit results
     # lines = open('data/lauteschwein-all64-g++.dat').read().splitlines()
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted_bfp'], 
-              2**31, 'figs-rcr/64bit', [x/2 for x in caches], 'uint64',
+              maxn//2, 'figs-rcr/64bit', [x/2 for x in caches], 'uint64',
               r'running time of $2\times 10^6$ searches on $n$ 64-bit values')
 
     # 128 bit results
     # lines = open('data/lauteschwein-all128-g++.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a', 'sorted_bfp'], 
-              2**30, 'figs-rcr/128bit', [x/4 for x in caches], 'uint128',
+              maxn//4, 'figs-rcr/128bit', [x/4 for x in caches], 'uint128',
               r'running time of $2\times 10^6$ searches on $n$ 128-bit values')
 
 
     # multithread results
     lines = open('data-rcr/alldata-mt-2.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs-rcr/threads2', caches, 'uint32', '', 
+              maxn, 'figs-rcr/threads2', caches, 'uint32', '', 
               'completion time for 2 threads (s)')
     lines = open('data-rcr/alldata-mt-4.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs-rcr/threads4', caches, 'uint32', '',
+              maxn, 'figs-rcr/threads4', caches, 'uint32', '',
               'completion time for 4 threads (s)')
     lines = open('data-rcr/alldata-mt-8.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs-rcr/threads8', caches, 'uint32', '',
+              maxn, 'figs-rcr/threads8', caches, 'uint32', '',
               'completion time for 8 threads (s)')
 
     # bqtree results
     lines = open('data-rcr/alldata.dat').read().splitlines()
     make_plot(lines, ['bqtree16_{}'.format(i) for i in range(2,17)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a', 'bqtree16_1'], 
-              2**30, 'figs-rcr/bktrees-i', [], 'uint32')
+              maxn, 'figs-rcr/bktrees-i', [], 'uint32')
     make_plot(lines, ['bqtree16_{}'.format(i) for i in range(6,11)] 
                      + ['eytzinger_bfp_a', 'btree16_bf_a'], 
-              2**30, 'figs-rcr/bktrees-ii', [], 'uint32')
+              maxn, 'figs-rcr/bktrees-ii', [], 'uint32')
 
     # using a prefetch mask on the Intel E3-1230
     """lines = open('data/mirzakhani.dat').read().splitlines()
@@ -279,16 +284,16 @@ def make_plots():
     # using a prefetch mask on the Intel 4790K
     # lines = open('data/lauteschwein-masking-mixed.dat').read().splitlines()
     make_plot(lines, ['eytzinger_bfp_a', 'eytzinger_bfpm_a', 'btree16_bf_a'], 
-              2**30, 'figs-rcr/masking-iii', caches)
+              maxn, 'figs-rcr/masking-iii', caches)
     make_plot(lines, ['eytzinger_bfp_a', 'eytzinger_bfpm_a', 'btree16_bf_a'], 
-              2**21, 'figs-rcr/masking-iv', caches[:2])
+              caches[2], 'figs-rcr/masking-iv', caches[:2])
 
     # Eytzinger versus mixed
     # lines = open('run_data/alldata.dat').read().splitlines()    
     make_plot(lines, ['eytzinger_bf_a', 'sorted_bf', 'esmixed'],
-              2**30, 'figs-rcr/mixed-i', caches)
+              maxn, 'figs-rcr/mixed-i', caches)
     make_plot(lines, ['eytzinger_bfp_a', 'esmixed_pf'], 
-              2**30, 'figs-rcr/mixed-ii', caches)
+              maxn, 'figs-rcr/mixed-ii', caches)
 
 
     # Eytzinger with deeper prefetching
@@ -296,12 +301,12 @@ def make_plots():
         #lines = open('run_data/alldata.dat'.format(s)).read().splitlines()
         make_plot(lines, ['eytzinger_bfp_a'] + 
                          ['fetcher_{}'.format(i) for i in [1,2]],
-                  2**30, 'figs-rcr/fetchers-{}-i'.format(s), 
+                  4*maxn/s, 'figs-rcr/fetchers-{}-i'.format(s), 
                   [4*x/s for x in caches], 'uint{}'.format(8*s),
                   r'running time of $2\times10^6$ searches on $n$ {}-bit values'.format(s*8))
         make_plot(lines, ['eytzinger_bfp_a'] +
                          ['fetcher_{}'.format(i) for i in [1,2]],
-                  2**23/s, 'figs-rcr/fetchers-{}-ii'.format(s), 
+                  4*caches[2]/s, 'figs-rcr/fetchers-{}-ii'.format(s), 
                   [4*x/s for x in caches[:2]], 'uint{}'.format(8*s),
                   r'running time of $2\times10^6$ searches on $n$ {}-bit values'.format(s*8))
 

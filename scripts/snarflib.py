@@ -166,9 +166,14 @@ def get_caches():
                 elif m.group(1) == '3':
                     caches[2] = 1024*int(m.group(2))
     except OSError:
-        sys.stderr.write("Warning: Unable to determine cache sizes using lscpu\n")
+        pass
 
-    return caches
+    caches = [32, 256, 8192]
+    errmsg = "Warning: Unable to determine cache sizes using lscpu\n"
+    errmsg +="         using defaults (L1={}K, L2={}K, L3={}K)\n"
+    errmsg.format(caches[0], caches[1], caches[2])
+    sys.stderr.write(errmsg)
+    return [x*1024 for x in caches]
 	
     
 def make_plots():

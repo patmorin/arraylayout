@@ -11,7 +11,7 @@ def get_cpu_number():
     try:
         output = subprocess.check_output('lscpu').decode("utf-8")
         for line in output.splitlines():
-            m = re.match(r'^NUMA node0.*:\s*\d+-(\d+)', line)
+            m = re.match(r'NUMA node0.*:\s*\d+-(\d+)', line)
             if m:
                 return m.group(1)
     except OSError:

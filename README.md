@@ -54,7 +54,7 @@ For this to work, you will need (at least) the following software installed
 - python with matplotlib
 - pdflatex
 
-To fully recreate the data in the paper, you will need at least 15GB
+To fully replicate the experiments in the paper, you will need at least 15GB
 of free RAM. The experiments will scale down to use at most 2/3 of your
 available RAM otherwise.
 

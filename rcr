@@ -6,20 +6,9 @@ set -o errexit
 srcdir=src
 scriptdir=scripts
 
-# First, make the executables
-cd $srcdir
-make clean
-make main
-make main-mt
-cd ../$scriptdir
-if [ ! -L main-mt ]; then
-    ln -s ../src/main-mt .
-fi
-if [ ! -L main ]; then
-    ln -s ../src/main .
-fi
+cd $scriptdir
 
-# Next, make the data
+# Make the data
 datadir=data-rcr
 wipedata=1
 if [[ -d $datadir && -f $datadir/alldata.dat && -f $datadir/alldata-mt-2.dat
@@ -32,13 +21,29 @@ if [[ -d $datadir && -f $datadir/alldata.dat && -f $datadir/alldata-mt-2.dat
    fi
 fi
 if [[ $wipedata -ne 0 ]]; then
-   echo "Wiping any existing data"
+    # Clean everything and regenerate
+    echo "Wiping any existing data"
+
+    # Compile programs
+    cd ../$srcdir
+    make clean
+    make main
+    make main-mt
+    cd ../$scriptdir
+    if [ ! -L main-mt ]; then
+        ln -s ../src/main-mt .
+    fi
+    if [ ! -L main ]; then
+        ln -s ../src/main .
+    fi
+
+    # generate the data
     rm -rf $datadir
     mkdir $datadir
     python experiments-rcr.py
 fi
 
-# Finally, make the figures
+# Make the figures
 figdir=figs-rcr
 if [ -d $figdir ]; then
     rm -f $figdir/*.pdf $figdir/*.svg

@@ -32,12 +32,6 @@ free RAM, which you can check with
 
     free -h
 
-## Results
-
-A webpage with some collected results is being maintained here:
-
-http://cglab.ca/~morin/misc/arraylayout-v2/
-
 ## Replicated Computational Results
 
 This work is in the process of earning a [Replicated Computational
@@ -67,3 +61,12 @@ available RAM otherwise.
 Using the preceding script will generate PDF and SVG figures in the
 scripts/figs-rcr directory.  You can view the resulting SVG files in a
 browser by opening scripts/figs-rcr/index.html
+
+## Results
+
+A webpage describing this work and with some collected results is being
+maintained here:
+
+http://cglab.ca/~morin/misc/arraylayout-v2/
+
+

@@ -28,6 +28,8 @@ protected:
 	using base_array<T,I>::a;
 	using base_array<T,I>::n;
 
+	int nprime;
+
 	// We always prefetch multiplier*i + offset
 	static const I multiplier = 64/sizeof(T);
 	static const I offset = multiplier + multiplier/2;
@@ -200,6 +202,12 @@ eytzinger_array<T,I,aligned>::eytzinger_array(ForwardIterator a0, I n0) {
 		throw std::out_of_range(ss.str());
 	}
 	n = n0;
+	nprime = 0;
+	I x = 1;
+	while (nprime + x <= n) {
+		nprime += x;
+		x *= 2;
+	}
 	if (aligned) {
 		assert(posix_memalign((void **)&a, 64, sizeof(T) * (n+1)) == 0);
 		a++;
@@ -240,10 +248,12 @@ template<typename T, typename I, bool aligned>
 template<bool prefetch>
 I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T x) const {
 	I i = 0;
-	while (i < n) {
+	while (i < nprime) {
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
+	i = (i < n) ? i : (i-1)/2;
+	i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	I j = (i+1) >> __builtin_ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }

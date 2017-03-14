@@ -14,7 +14,7 @@ import matplotlib as mpl
 mpl.use("pgf")
 pgf_with_pdflatex = {
 	"font.family": "serif",
-    "font.size": 9,
+    "font.size": 8,
     "text.usetex" : True,
     "pgf.rcfonts": False,
     "pgf.texsystem": "pdflatex",
@@ -121,8 +121,8 @@ def make_plot(lines, algs, xmax, filename=None, caches=None, dtype='uint32',
                     data[alg].append((n, search_time))
 
     # Plot everything.
-    width,height = 6.8, 3.5
-    if not title or '-bit' in title: height = 2.6
+    width,height = 6, 3
+    if not title or '-bit' in title: height = 2.4
     plt.figure(figsize=(width,height))
     plt.ioff()
     plt.xscale('log', basex=2)

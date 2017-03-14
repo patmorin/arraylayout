@@ -1,14 +1,14 @@
-\documentclass{patmorin}
+\documentclass[format=acmsmall, review=false, screen=true]{acmart}
 \listfiles
 \usepackage{amsthm,amsmath,graphicx,wrapfig}
 \usepackage{pat}
 %\usepackage{coffee4}
-\usepackage[letterpaper]{hyperref}
-\usepackage[dvipsnames]{color}
-\definecolor{linkblue}{named}{Blue}
-\hypersetup{colorlinks=true, linkcolor=linkblue,  anchorcolor=linkblue,
-citecolor=linkblue, filecolor=linkblue, menucolor=linkblue, pagecolor=linkblue,
-urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
+%\usepackage[letterpaper]{hyperref}
+%\usepackage[dvipsnames]{xcolor}
+%\definecolor{linkblue}{named}{Blue}
+%\hypersetup{colorlinks=true, linkcolor=linkblue,  anchorcolor=linkblue,
+%citecolor=linkblue, filecolor=linkblue, menucolor=linkblue, pagecolor=linkblue,
+%urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
 
 \usepackage[skip=0pt]{caption}
 
@@ -23,18 +23,50 @@ urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
 \usepackage{mdframed}
 \surroundwithmdframed{minted}
 
-\title{\MakeUppercase{Array Layouts for Comparison-Based Searching}\thanks{This research is partially funded by NSERC.}}
-\author{Paul-Virak Khuong\footnote{AppNexus, \email{pvk@pvk.ca}}\,\, 
-    and Pat Morin\footnote{Carleton University, \email{morin@scs.carleton.ca}}}
+% Metadata Information
+\acmJournal{JEA}
+\acmVolume{22}
+\acmNumber{2}
+\acmArticle{0}
+\acmYear{2017}
+\acmMonth{6}
+\copyrightyear{2017}
+%\acmArticleSeq{9}
+
+% Copyright
+%\setcopyright{acmcopyright}
+\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\setcopyright{usgov}
+%\setcopyright{usgovmixed}
+%\setcopyright{cagov}
+%\setcopyright{cagovmixed}
+
+% DOI
+\acmDOI{0000001.0000001}
+
+% Paper history
+\received{September 2015}
+\received[revised]{August 2016}
+\received[accepted]{January 2017}
 
 
-\usepackage{lineno}
-\linenumbers
+
 
 \begin{document}
-\begin{titlepage}
-\maketitle
-
+\title{Array Layouts for Comparison-Based Searching}
+\author{Paul-Virak Khuong}
+\affiliation{
+  \institution{AppNexus}
+  \city{Montreal}
+  \country{Canada}
+}
+\author{Pat Morin}
+\affiliation{
+  \institution{Carleton University}
+  \city{Ottawa}
+  \country{Canada}
+}
 
 \begin{abstract}
   We attempt to determine the best order and search algorithm to store
@@ -61,13 +93,18 @@ urlcolor=linkblue, pdfcreator=Me, pdfproducer=Me} \setlength{\parskip}{1ex}
   to reduce cache latency.
 \end{abstract}
 
-\end{titlepage}
 
-\pagenumbering{roman}
-\tableofcontents
-\newpage
 
-\pagenumbering{arabic}
+\keywords{Binary search, data layouts, microprocessor architecture, 
+   caching, pipelining}
+\thanks{This research is partially funded by NSERC.}
+
+%\author{Paul-Virak Khuong\footnote{AppNexus, \email{pvk@pvk.ca}}\,\, 
+%    and Pat Morin\footnote{Carleton University, \email{morin@scs.carleton.ca}}}
+
+\maketitle
+
+
 \section{Introduction}
 
 A sorted array combined with binary search represents \emph{the} classic
@@ -157,7 +194,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   binary search tree.
 
   \begin{figure}
-    \begin{center}\includegraphics{eytzinger}\end{center}
+    \begin{center}\includegraphics[scale=0.9]{eytzinger}\end{center}
     \caption{The Eytzinger layout}
     \figlabel{eytzinger}
   \end{figure}
@@ -174,7 +211,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   they are encountered in a breadth-first search.
 
   \begin{figure}
-    \begin{center}\includegraphics{btree}\end{center}
+    \begin{center}\includegraphics[scale=0.9]{btree}\end{center}
     \caption{The Btree layout with $B=2$}
     \figlabel{btree}
   \end{figure}
@@ -196,7 +233,7 @@ n=\log_2 n$ denotes the binary logarithm of $n$):
   array location $A[2^{1+\lfloor{h/2\rfloor}}-1]$.
 
   \begin{figure}
-    \begin{center}\includegraphics{veb}\end{center}
+    \begin{center}\includegraphics[scale=0.9]{veb}\end{center}
     \caption{The vEB layout}
     \figlabel{veb}
   \end{figure}

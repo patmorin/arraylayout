@@ -162,16 +162,16 @@ def get_caches():
     """Use lscpu to determine cache sizes"""
     caches = [-1]*3
     try:
-        output = subprocess.check_output('lscpu').decode("utf-8")
+        output = subprocess.check_output(['lscpu', '-B']).decode("utf-8")
         for line in output.splitlines():
-            m = re.match(r'L(\w+) cache:\s*(\d+)K$', line)
+            m = re.match(r'L(\w+) cache:\s*(\d+)$', line)
             if m:
                 if m.group(1) == '1d':
-                    caches[0] = 1024*int(m.group(2))
+                    caches[0] = int(m.group(2))
                 elif m.group(1) == '2':
-                    caches[1] = 1024*int(m.group(2))
+                    caches[1] = int(m.group(2))
                 elif m.group(1) == '3':
-                    caches[2] = 1024*int(m.group(2))
+                    caches[2] = int(m.group(2))
     except OSError:
         pass
 

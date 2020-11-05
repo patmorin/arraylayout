@@ -16,6 +16,7 @@
 #include <cstdint>
 
 
+#include "bits.h"
 #include "base_array.h"
 
 namespace fbs {
@@ -160,7 +161,7 @@ I __attribute__ ((noinline)) mixed_array<T,I,W>::_search(T x) const {
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I j = (i+1) >> __builtin_ffs(~(i+1));
+	I j = (i+1) >> ffs(~(i+1));
 	j = (j == 0) ? n : j-1;
 
 	// Make i point to the first element of a block

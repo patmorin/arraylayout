@@ -17,6 +17,7 @@
 
 #include <bitset>
 
+#include "bits.h"
 #include "base_array.h"
 
 namespace fbs {
@@ -134,7 +135,7 @@ I __attribute__ ((noinline)) eytzinger_array_deeppf<T,I,C,aligned>::search(T x) 
 		}
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I j = (i+1) >> __builtin_ffs(~(i+1));
+	I j = (i+1) >> ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 
@@ -150,7 +151,7 @@ protected:
 	using eytzinger_array<T, I, aligned>::offset;
 	I rolled_iterations;
 	static const unsigned char unrolled_iterations =
-			multiplier == 0 ? 0 : 31 - __builtin_clz(multiplier);
+			multiplier == 0 ? 0 : 31 - clz(multiplier);
 
 public:
 	template<typename ForwardIterator>
@@ -231,7 +232,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchy_search(T x) 
 			return i;
 		}
 	}
-	I j = (i+1) >> __builtin_ffs(~(i+1));
+	I j = (i+1) >> ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 
@@ -244,7 +245,7 @@ I __attribute__ ((noinline)) eytzinger_array<T,I,aligned>::_branchfree_search(T 
 		if (prefetch) __builtin_prefetch(a+(multiplier*i + offset));
 		i = (x <= a[i]) ? (2*i + 1) : (2*i + 2);
 	}
-	I j = (i+1) >> __builtin_ffs(~(i+1));
+	I j = (i+1) >> ffs(~(i+1));
 	return (j == 0) ? n : j-1;
 }
 
@@ -256,7 +257,7 @@ I __attribute__ ((noinline)) eytzinger_array_bfpm<T,I,aligned>::search(T x) cons
 		__builtin_prefetch(a + ((multiplier * i + offset) & mask));
 		i = (x <= a[i]) ? (2 * i + 1) : (2 * i + 2);
 	}
-	I j = (i + 1) >> __builtin_ffs(~(i + 1));
+	I j = (i + 1) >> ffs(~(i + 1));
 	return (j == 0) ? n : j - 1;
 }
 
@@ -288,7 +289,7 @@ I __attribute__ ((noinline)) eytzinger_array_unrolled<T, I, aligned>::search(T x
 		}
 	}
 	i++;
-	I j = i >> (1 + __builtin_ctzl(~i));
+	I j = i >> (1 + ctz(~i));
 	return (j == 0) ? n : j - 1;
 }
 

@@ -49,7 +49,7 @@ def run_batch(cpu, dtypes, itypes, nt, datafile, N):
             else:
                 cmd = './main-mt {} {} {} {} {} >> {}'
                 cmd = cmd.format(dt, it, int(n), m, nt, datafile)
-            print cmd
+            print(cmd)
             if os.system(cmd) != 0:
                 errmsg = "Error while executing '{}': Aborting!\n".format(cmd)
                 sys.stderr.write(errmsg)
@@ -86,14 +86,12 @@ if __name__ == "__main__":
     open(datafile, "w").close()
 
     # Now do the real work
-    for ((dt, size), it) in itertools.product(dtypes, itypes):
-        run_batch(cpu, dtypes, itypes, 1, datafile, N)
+    run_batch(cpu, dtypes, itypes, 1, datafile, N)
 
     # Rerun the 32-bit tests using 2, 4, and 8 threads
     for nt in [2, 4, 8]:
         dtypes = [("uint32", 4)]
         datafile = datadir + os.path.sep + "alldata-mt-{}.dat".format(nt)
         open(datafile, "w").close() # clobber the data file
-        for ((dt, size), it) in itertools.product(dtypes, itypes):
-            run_batch(0, dtypes, itypes, nt, datafile, N)
+        run_batch(0, dtypes, itypes, nt, datafile, N)
 

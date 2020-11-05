@@ -49,7 +49,7 @@ def run_batch(cpu, dtypes, itypes, nt, datafile, N):
             else:
                 cmd = './main-mt {} {} {} {} {} >> {}'
                 cmd = cmd.format(dt, it, int(n), m, nt, datafile)
-            print cmd
+            print(cmd)
             if os.system(cmd) != 0:
                 errmsg = "Error while executing '{}': Aborting!\n".format(cmd)
                 sys.stderr.write(errmsg)
